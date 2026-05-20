@@ -5,16 +5,23 @@ import { ApiError } from "../http/apiError.js";
 import { DeepReadingModel, type DeepReadingDocument } from "../models/DeepReading.js";
 import type { UserDocument } from "../models/User.js";
 import type { AppDependencies } from "../types/appDependencies.js";
-import { drawCards, type CardDraw } from "./cardDrawService.js";
+import { drawCards, getCardForPrompt, type CardDraw } from "./cardDrawService.js";
 import { generateSummaryWithFallback } from "./dailyReadingService.js";
 import { parseLocale } from "./localeService.js";
 import { cleanReadingMarkdown } from "./markdownService.js";
 
-const positions = [
-  { position: "core", positionLabel: "問題核心" },
-  { position: "hiddenInfluence", positionLabel: "隱藏影響" },
-  { position: "advice", positionLabel: "行動建議" }
-] as const;
+const positions = {
+  "zh-TW": [
+    { position: "core", positionLabel: "問題核心" },
+    { position: "hiddenInfluence", positionLabel: "隱藏影響" },
+    { position: "advice", positionLabel: "行動建議" }
+  ],
+  en: [
+    { position: "core", positionLabel: "Core question" },
+    { position: "hiddenInfluence", positionLabel: "Hidden influence" },
+    { position: "advice", positionLabel: "Action advice" }
+  ]
+} as const;
 
 type CreateDeepReadingInput = {
   locale?: unknown;
@@ -41,14 +48,17 @@ export async function createDeepReading(
   const draftCards = parseDraftCards(input.draftCards);
   const selectedIndexes = parseSelectedIndexes(input.selectedIndexes);
   const selectedCards = selectedIndexes.map((selectedIndex, order) => ({
-    ...positions[order],
+    ...positions[locale][order],
     ...draftCards[selectedIndex]
   }));
   const markdownResult = cleanReadingMarkdown(
     await dependencies.llmService.generateDeepReading({
       locale,
       question,
-      selectedCards
+      selectedCards: selectedCards.map((card) => ({
+        ...card,
+        ...getCardForPrompt(card)
+      }))
     })
   );
   const summary = await generateSummaryWithFallback(dependencies, locale, "deep", markdownResult, 60);

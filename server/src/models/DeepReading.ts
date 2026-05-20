@@ -28,7 +28,7 @@ const deepReadingSchema = new Schema<DeepReadingAttrs>(
     },
     question: {
       type: String,
-      required: true,
+      default: "",
       maxlength: 1000
     },
     selectedCards: {

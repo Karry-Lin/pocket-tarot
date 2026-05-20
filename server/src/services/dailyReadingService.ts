@@ -2,7 +2,7 @@ import { ApiError } from "../http/apiError.js";
 import { DailyReadingModel } from "../models/DailyReading.js";
 import type { UserDocument } from "../models/User.js";
 import type { AppDependencies } from "../types/appDependencies.js";
-import { drawCards } from "./cardDrawService.js";
+import { drawCards, getCardForPrompt } from "./cardDrawService.js";
 import { cleanReadingMarkdown, fallbackSummary } from "./markdownService.js";
 import { getTaipeiTimeContext } from "./timeContextService.js";
 import { parseLocale } from "./localeService.js";
@@ -52,7 +52,7 @@ export async function createTodayDailyReading(
   const markdownResult = cleanReadingMarkdown(
     await dependencies.llmService.generateDailyReading({
       locale,
-      card,
+      card: getCardForPrompt(card),
       timeContext,
       weather
     })
