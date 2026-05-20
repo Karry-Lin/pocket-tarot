@@ -34,6 +34,8 @@ Daily and deep reading repositories expose controller-request adapter methods so
 
 `lib/domain/use_cases/deep_reading_controller.dart` owns the divination room state transition for draft creation, three-card selection, result creation, saved-history loading, and history visibility toggles.
 
+`DivinationScreen` starts drafts, records three-card selection, and renders result markdown/summary through `deepReadingControllerProvider`.
+
 `lib/domain/use_cases/profile_controller.dart` owns profile snapshot loading, display name edits, local language/weather settings, and sign-out state transitions.
 
 ## Auth Gate

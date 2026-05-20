@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocket_tarot/data/repositories/auth_gate_repository.dart';
 import 'package:pocket_tarot/data/repositories/daily_reading_repository.dart';
+import 'package:pocket_tarot/data/repositories/deep_reading_repository.dart';
 import 'package:pocket_tarot/data/repositories/local_settings_repository.dart';
 import 'package:pocket_tarot/data/repositories/profile_repository.dart';
 import 'package:pocket_tarot/data/services/api_client.dart';
@@ -12,6 +13,7 @@ import 'package:pocket_tarot/data/services/firebase_auth_service.dart';
 import 'package:pocket_tarot/domain/use_cases/app_startup_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/auth_gate_evaluator.dart';
 import 'package:pocket_tarot/domain/use_cases/daily_reading_controller.dart';
+import 'package:pocket_tarot/domain/use_cases/deep_reading_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final firebaseInitializationProvider = FutureProvider<void>((ref) async {
@@ -64,6 +66,10 @@ final dailyReadingRepositoryProvider = Provider<DailyReadingRepository>((ref) {
   return DailyReadingRepository(ref.watch(apiClientProvider));
 });
 
+final deepReadingRepositoryProvider = Provider<DeepReadingRepository>((ref) {
+  return DeepReadingRepository(ref.watch(apiClientProvider));
+});
+
 final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) {
   return SharedPreferences.getInstance();
 });
@@ -99,6 +105,24 @@ final dailyReadingControllerProvider = FutureProvider<DailyReadingController>((
     createToday: dailyReadingRepository.createTodayFromRequest,
     loadSettings: localSettingsRepository.load,
     requestLocation: ref.watch(dailyReadingLocationLoaderProvider),
+    systemLocaleCode: ref.watch(systemLocaleCodeProvider),
+  );
+});
+
+final deepReadingControllerProvider = FutureProvider<DeepReadingController>((
+  ref,
+) async {
+  final localSettingsRepository = await ref.watch(
+    localSettingsRepositoryProvider.future,
+  );
+  final deepReadingRepository = ref.watch(deepReadingRepositoryProvider);
+
+  return DeepReadingController(
+    createDraft: deepReadingRepository.createDraft,
+    createReading: deepReadingRepository.createReadingFromRequest,
+    fetchHistory: deepReadingRepository.fetchHistory,
+    setHistoryVisibility: deepReadingRepository.setHistoryVisibility,
+    loadSettings: localSettingsRepository.load,
     systemLocaleCode: ref.watch(systemLocaleCodeProvider),
   );
 });

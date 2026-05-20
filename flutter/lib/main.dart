@@ -10,6 +10,7 @@ import 'package:pocket_tarot/domain/models/tarot_card.dart';
 import 'package:pocket_tarot/domain/use_cases/app_startup_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/auth_form_validator.dart';
 import 'package:pocket_tarot/domain/use_cases/daily_reading_controller.dart';
+import 'package:pocket_tarot/domain/use_cases/deep_reading_controller.dart';
 import 'package:pocket_tarot/l10n/generated/app_localizations.dart';
 import 'package:pocket_tarot/ui/core/widgets/safe_markdown_body.dart';
 
@@ -930,70 +931,125 @@ class _DailyErrorPanel extends StatelessWidget {
   }
 }
 
-class DivinationScreen extends ConsumerWidget {
+class DivinationScreen extends ConsumerStatefulWidget {
   const DivinationScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(appStateProvider);
-    final controller = ref.read(appStateProvider.notifier);
+  ConsumerState<DivinationScreen> createState() => _DivinationScreenState();
+}
+
+class _DivinationScreenState extends ConsumerState<DivinationScreen> {
+  final TextEditingController _questionController = TextEditingController();
+  DeepReadingState _deepState = const DeepReadingState.initial();
+
+  @override
+  void dispose() {
+    _questionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _startDraft() async {
+    final controller = await ref.read(deepReadingControllerProvider.future);
+    await controller.startDraft(_questionController.text);
+    if (mounted) {
+      setState(() => _deepState = controller.state);
+    }
+  }
+
+  Future<void> _createResult() async {
+    final controller = await ref.read(deepReadingControllerProvider.future);
+    await controller.createResult();
+    if (mounted) {
+      setState(() => _deepState = controller.state);
+    }
+  }
+
+  Future<void> _toggleCard(int index) async {
+    final controller = await ref.read(deepReadingControllerProvider.future);
+    controller.toggleSelection(index);
+    if (mounted) {
+      setState(() => _deepState = controller.state);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controllerAsync = ref.watch(deepReadingControllerProvider);
 
     return ScreenFrame(
       title: '占卜館',
-      trailing: '${state.selectedIndexes.length}/3',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const AuthField(label: '想問的問題', maxLines: 3),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: const [
-              PromptChip(text: '工作方向'),
-              PromptChip(text: '感情狀態'),
-              PromptChip(text: '下一步選擇'),
-            ],
+      trailing: '${_deepState.selectedIndexes.length}/3',
+      child: controllerAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) =>
+            InfoPanel(title: '占卜館載入失敗', child: Text(error.toString())),
+        data: (_) => _deepContent(context),
+      ),
+    );
+  }
+
+  Widget _deepContent(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AuthField(label: '想問的問題', controller: _questionController, maxLines: 3),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: const [
+            PromptChip(text: '工作方向'),
+            PromptChip(text: '感情狀態'),
+            PromptChip(text: '下一步選擇'),
+          ],
+        ),
+        const SizedBox(height: 18),
+        if (_deepState.status == DeepReadingStatus.initial)
+          FilledButton.icon(
+            onPressed: _startDraft,
+            icon: const Icon(Icons.grid_3x3),
+            label: const Text('展開 9 張牌'),
+          )
+        else if (_deepState.status == DeepReadingStatus.drafting ||
+            _deepState.status == DeepReadingStatus.creating)
+          const Center(child: CircularProgressIndicator())
+        else ...[
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 0.68,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount: _deepState.draftCards.length,
+            itemBuilder: (context, index) => SelectableCardBack(
+              selected: _deepState.selectedIndexes.contains(index),
+              order: _deepState.selectedIndexes.indexOf(index) + 1,
+              onTap: () => _toggleCard(index),
+            ),
           ),
           const SizedBox(height: 18),
-          if (!state.deepDraftStarted)
-            FilledButton.icon(
-              onPressed: controller.startDeepDraft,
-              icon: const Icon(Icons.grid_3x3),
-              label: const Text('展開 9 張牌'),
-            )
-          else ...[
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 0.68,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: 9,
-              itemBuilder: (context, index) => SelectableCardBack(
-                selected: state.selectedIndexes.contains(index),
-                order: state.selectedIndexes.indexOf(index) + 1,
-                onTap: () => controller.toggleCard(index),
-              ),
-            ),
+          FilledButton.icon(
+            onPressed: _deepState.selectedIndexes.length == 3
+                ? _createResult
+                : null,
+            icon: const Icon(Icons.auto_fix_high),
+            label: const Text('產生解讀'),
+          ),
+          if (_deepState.status == DeepReadingStatus.resultReady &&
+              _deepState.reading != null) ...[
             const SizedBox(height: 18),
-            FilledButton.icon(
-              onPressed: state.selectedIndexes.length == 3
-                  ? controller.createDeepResult
-                  : null,
-              icon: const Icon(Icons.auto_fix_high),
-              label: const Text('產生解讀'),
-            ),
-            if (state.deepResultReady) ...[
-              const SizedBox(height: 18),
-              const DeepResultPanel(),
-            ],
+            DeepResultPanel(reading: _deepState.reading!),
+          ],
+          if (_deepState.status == DeepReadingStatus.error &&
+              _deepState.errorMessage != null) ...[
+            const SizedBox(height: 12),
+            InfoPanel(title: '占卜產生失敗', child: Text(_deepState.errorMessage!)),
           ],
         ],
-      ),
+      ],
     );
   }
 }
@@ -1466,19 +1522,21 @@ class SelectableCardBack extends StatelessWidget {
 }
 
 class DeepResultPanel extends StatelessWidget {
-  const DeepResultPanel({super.key});
+  const DeepResultPanel({super.key, required this.reading});
+
+  final DeepReading reading;
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         InfoPanel(
           title: '深度解讀',
-          child: SafeMarkdownBody(data: _deepDemoMarkdown),
+          child: SafeMarkdownBody(data: reading.markdownResult),
         ),
-        SizedBox(height: 10),
-        SummaryStrip(text: '先辨識壓力，再拆小行動。'),
+        const SizedBox(height: 10),
+        SummaryStrip(text: reading.summary),
       ],
     );
   }
@@ -1565,14 +1623,3 @@ Future<void> _showNameDialog(
     ),
   );
 }
-
-const _deepDemoMarkdown = '''
-## 問題核心
-月亮指出你需要先承認模糊感，而不是急著排除它。
-
-## 隱藏影響
-星星讓你重新看見期待，但也提醒你不要只靠願望前進。
-
-## 行動建議
-節制建議把節奏拆小，讓判斷和情緒重新對齊。
-''';
