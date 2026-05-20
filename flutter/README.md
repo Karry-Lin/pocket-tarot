@@ -26,6 +26,8 @@ The library tab reads the complete 78-card catalog from `assets/data/tarot_cards
 
 `lib/domain/use_cases/daily_reading_controller.dart` owns the homepage daily reading state transition for loading today's result, empty state, and creating a reading with locale/weather request inputs.
 
+`lib/domain/use_cases/deep_reading_controller.dart` owns the divination room state transition for draft creation, three-card selection, result creation, saved-history loading, and history visibility toggles.
+
 ## Auth Gate
 
 `lib/domain/use_cases/auth_gate_evaluator.dart` contains the tested auth gate decision chain from splash/network check through login, email verification, profile registration, pending activation, deleted account, and app shell routing.
