@@ -18,6 +18,29 @@ final firebaseAuthServiceProvider = Provider<FirebaseAuthService>((ref) {
   return FirebaseAuthService();
 });
 
+final authActionsProvider = Provider<AuthActions>((ref) {
+  final authService = ref.watch(firebaseAuthServiceProvider);
+
+  return AuthActions(
+    signInWithEmail: ({required email, required password}) async {
+      await authService.signInWithEmail(email: email, password: password);
+    },
+    registerWithEmail:
+        ({required displayName, required email, required password}) async {
+          await authService.registerWithEmail(
+            displayName: displayName,
+            email: email,
+            password: password,
+          );
+        },
+    signInWithGoogle: () async {
+      await authService.signInWithGoogle();
+    },
+    sendPasswordResetEmail: authService.sendPasswordResetEmail,
+    signOut: authService.signOut,
+  );
+});
+
 final apiClientProvider = Provider<PocketTarotApiClient>((ref) {
   final authService = ref.watch(firebaseAuthServiceProvider);
   return PocketTarotApiClient(tokenProvider: authService.getIdToken);
@@ -58,3 +81,25 @@ final appStartupControllerProvider = Provider<AppStartupController>((ref) {
     evaluateAuthGate: ref.watch(authGateEvaluatorProvider).evaluate,
   );
 });
+
+class AuthActions {
+  const AuthActions({
+    required this.signInWithEmail,
+    required this.registerWithEmail,
+    required this.signInWithGoogle,
+    required this.sendPasswordResetEmail,
+    required this.signOut,
+  });
+
+  final Future<void> Function({required String email, required String password})
+  signInWithEmail;
+  final Future<void> Function({
+    required String displayName,
+    required String email,
+    required String password,
+  })
+  registerWithEmail;
+  final Future<void> Function() signInWithGoogle;
+  final Future<void> Function(String email) sendPasswordResetEmail;
+  final Future<void> Function() signOut;
+}

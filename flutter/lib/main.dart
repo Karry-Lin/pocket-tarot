@@ -428,14 +428,14 @@ class SplashNetworkBlockedScreen extends StatelessWidget {
 
 enum EmailAuthMode { signIn, register, resetPassword }
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _displayNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -443,6 +443,9 @@ class _LoginScreenState extends State<LoginScreen> {
       TextEditingController();
   EmailAuthMode _mode = EmailAuthMode.signIn;
   Map<AuthFormField, String> _errors = const {};
+  String? _formError;
+  String? _formMessage;
+  bool _submitting = false;
 
   @override
   void dispose() {
@@ -513,10 +516,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
               const SizedBox(height: 16),
-              _PrimaryEmailAuthButton(mode: _mode, onPressed: _submit),
+              if (_formError != null || _formMessage != null) ...[
+                Text(
+                  _formError ?? _formMessage!,
+                  style: TextStyle(
+                    color: _formError == null
+                        ? Theme.of(context).colorScheme.secondary
+                        : Theme.of(context).colorScheme.error,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+              ],
+              _PrimaryEmailAuthButton(
+                mode: _mode,
+                onPressed: _submitting ? null : _submit,
+              ),
               const SizedBox(height: 10),
               OutlinedButton.icon(
-                onPressed: () => context.go('/pending'),
+                onPressed: _submitting ? null : _signInWithGoogle,
                 icon: const Icon(Icons.g_mobiledata),
                 label: const Text('Google 登入'),
               ),
@@ -554,10 +572,12 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _mode = mode;
       _errors = const {};
+      _formError = null;
+      _formMessage = null;
     });
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final result = switch (_mode) {
       EmailAuthMode.signIn => AuthFormValidator.validateEmailSignIn(
         email: _emailController.text,
@@ -575,21 +595,86 @@ class _LoginScreenState extends State<LoginScreen> {
     };
 
     if (!result.isValid) {
-      setState(() => _errors = result.errors);
+      setState(() {
+        _errors = result.errors;
+        _formError = null;
+        _formMessage = null;
+      });
       return;
     }
 
-    setState(() => _errors = const {});
+    setState(() {
+      _errors = const {};
+      _formError = null;
+      _formMessage = null;
+      _submitting = true;
+    });
 
-    switch (_mode) {
-      case EmailAuthMode.signIn:
-        context.go('/pending');
-      case EmailAuthMode.register:
-        context.go('/verify-email');
-      case EmailAuthMode.resetPassword:
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('重設信已送出')));
+    try {
+      final authActions = ref.read(authActionsProvider);
+      switch (_mode) {
+        case EmailAuthMode.signIn:
+          await authActions.signInWithEmail(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
+          if (mounted) {
+            context.go('/splash');
+          }
+        case EmailAuthMode.register:
+          await authActions.registerWithEmail(
+            displayName: _displayNameController.text.trim(),
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
+          if (mounted) {
+            context.go('/verify-email');
+          }
+        case EmailAuthMode.resetPassword:
+          await authActions.sendPasswordResetEmail(
+            _emailController.text.trim(),
+          );
+          if (mounted) {
+            setState(() => _formMessage = '重設信已送出');
+          }
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _formError = '操作失敗，請稍後再試';
+          _formMessage = null;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _formError = null;
+      _formMessage = null;
+      _submitting = true;
+    });
+
+    try {
+      await ref.read(authActionsProvider).signInWithGoogle();
+      if (mounted) {
+        context.go('/splash');
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _formError = 'Google 登入失敗，請稍後再試';
+          _formMessage = null;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
     }
   }
 }
@@ -598,7 +683,7 @@ class _PrimaryEmailAuthButton extends StatelessWidget {
   const _PrimaryEmailAuthButton({required this.mode, required this.onPressed});
 
   final EmailAuthMode mode;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {

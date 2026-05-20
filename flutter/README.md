@@ -54,7 +54,7 @@ The app router starts at `/splash`; `StartupScreen` runs the startup controller,
 
 `lib/domain/use_cases/auth_form_validator.dart` owns Email login, registration, and password-reset form validation rules.
 
-`LoginScreen` exposes Email sign-in, registration, and password-reset modes with widget-tested validation; the submit actions still use demo navigation until the Firebase flow is fully wired into the UI.
+`LoginScreen` exposes Email sign-in, registration, password-reset, and Google sign-in modes with widget-tested validation. Submit actions delegate through `authActionsProvider`; successful sign-in returns to `/splash` for auth gate routing, registration routes to `/verify-email`, and password reset shows an inline confirmation.
 
 ## Local Settings
 
