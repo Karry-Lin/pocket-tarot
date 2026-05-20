@@ -1,5 +1,6 @@
 import 'package:pocket_tarot/data/services/api_client.dart';
 import 'package:pocket_tarot/domain/models/api_reading_models.dart';
+import 'package:pocket_tarot/domain/use_cases/daily_reading_controller.dart';
 
 class DailyReadingRepository {
   const DailyReadingRepository(this._apiClient);
@@ -37,6 +38,16 @@ class DailyReadingRepository {
     });
 
     return DailyReading.fromJson((json['data']! as Map).cast<String, Object?>());
+  }
+
+  Future<DailyReading> createTodayFromRequest(DailyReadingCreateRequest request) {
+    return createToday(
+      locale: request.locale,
+      weatherEnabled: request.weatherEnabled,
+      latitude: request.latitude,
+      longitude: request.longitude,
+      permissionDenied: request.permissionDenied,
+    );
   }
 
   String _weatherStatus({required bool weatherEnabled, required bool permissionDenied}) {

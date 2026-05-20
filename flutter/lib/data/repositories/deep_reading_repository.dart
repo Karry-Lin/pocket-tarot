@@ -1,5 +1,6 @@
 import 'package:pocket_tarot/data/services/api_client.dart';
 import 'package:pocket_tarot/domain/models/api_reading_models.dart';
+import 'package:pocket_tarot/domain/use_cases/deep_reading_controller.dart';
 
 class DeepReadingRepository {
   const DeepReadingRepository(this._apiClient);
@@ -29,6 +30,15 @@ class DeepReadingRepository {
     });
 
     return DeepReading.fromJson((json['data']! as Map).cast<String, Object?>());
+  }
+
+  Future<DeepReading> createReadingFromRequest(DeepReadingCreateRequest request) {
+    return createReading(
+      locale: request.locale,
+      question: request.question,
+      draftCards: request.draftCards,
+      selectedIndexes: request.selectedIndexes,
+    );
   }
 
   Future<List<DeepReadingHistoryItem>> fetchHistory() async {
