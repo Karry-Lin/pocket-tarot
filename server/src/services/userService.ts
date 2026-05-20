@@ -22,7 +22,10 @@ type AdminUserFilter = {
 };
 
 export async function registerProfile(firebaseUser: DecodedFirebaseToken, input: RegisterProfileInput) {
-  const providerIds = parseProviderIds(input.providerIds, firebaseUser.providerIds);
+  const providerIds = parseProviderIds(
+    firebaseUser.providerIds.length > 0 ? firebaseUser.providerIds : input.providerIds,
+    []
+  );
 
   if (!firebaseUser.email) {
     throw new ApiError(422, "VALIDATION_ERROR", "Firebase token 缺少 email");

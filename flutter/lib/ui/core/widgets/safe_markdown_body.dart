@@ -74,6 +74,10 @@ bool _isForbiddenLine(String line) {
     return true;
   }
 
+  if (RegExp(r'\[[^\]]+]\([^)]*\)').hasMatch(line)) {
+    return true;
+  }
+
   if (_looksLikeMarkdownTable(line) || _looksLikeMarkdownTableDivider(line)) {
     return true;
   }

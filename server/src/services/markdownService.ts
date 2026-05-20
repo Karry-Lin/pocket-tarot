@@ -7,13 +7,27 @@ export function cleanReadingMarkdown(markdown: string) {
     throw new ApiError(502, "LLM_UNAVAILABLE", "LLM 回應為空");
   }
 
-  if (/<\/?[a-z][\s\S]*>/i.test(cleaned) || /!\[[^\]]*]\([^)]*\)/.test(cleaned) || /```/.test(cleaned)) {
+  if (containsUnsupportedMarkdown(cleaned)) {
     throw new ApiError(502, "LLM_UNAVAILABLE", "LLM 回應格式不符合預期", {
       internalCode: "LLM_INVALID_RESPONSE"
     });
   }
 
   return cleaned;
+}
+
+function containsUnsupportedMarkdown(markdown: string) {
+  return (
+    /<\/?[a-z][\s\S]*>/i.test(markdown) ||
+    /!\[[^\]]*]\([^)]*\)/.test(markdown) ||
+    /\[[^\]]+]\([^)]*\)/.test(markdown) ||
+    /```/.test(markdown) ||
+    markdown.split("\n").some((line) => looksLikeMarkdownTable(line.trim()))
+  );
+}
+
+function looksLikeMarkdownTable(line: string) {
+  return (line.match(/\|/g)?.length ?? 0) >= 2;
 }
 
 export function fallbackSummary(markdown: string, maxLength: number) {

@@ -35,21 +35,21 @@ export interface LlmService {
 export class ChatCompletionsLlmService implements LlmService {
   async generateDailyReading(context: DailyReadingPromptContext): Promise<string> {
     return this.complete(
-      `Create a daily tarot reading in ${context.locale}. Context: ${JSON.stringify(context)}`,
+      buildDailyReadingPrompt(context),
       envNumber("LLM_READING_TEMPERATURE", 0.8)
     );
   }
 
   async generateDeepReading(context: DeepReadingPromptContext): Promise<string> {
     return this.complete(
-      `Create a three-card tarot reading in ${context.locale}. Context: ${JSON.stringify(context)}`,
+      buildDeepReadingPrompt(context),
       envNumber("LLM_READING_TEMPERATURE", 0.8)
     );
   }
 
   async generateSummary(context: SummaryPromptContext): Promise<string> {
     return this.complete(
-      `Summarize this ${context.readingType} tarot reading in ${context.locale}, one plain sentence only: ${context.markdownResult}`,
+      buildSummaryPrompt(context),
       envNumber("LLM_SUMMARY_TEMPERATURE", 0.3)
     );
   }
@@ -86,6 +86,66 @@ export class ChatCompletionsLlmService implements LlmService {
 
     throw new ApiError(502, "LLM_UNAVAILABLE", "LLM 服務不可用");
   }
+}
+
+function buildDailyReadingPrompt(context: DailyReadingPromptContext) {
+  const sections =
+    context.locale === "zh-TW"
+      ? ["## 今日牌義", "## 今日提醒", "## 行動建議"]
+      : ["## Card Meaning", "## Daily Reminder", "## Action Advice"];
+
+  return [
+    `Create a daily tarot reading in ${context.locale}.`,
+    "Use exactly these markdown sections in this order:",
+    ...sections,
+    safeMarkdownInstruction(),
+    `Context JSON: ${JSON.stringify(context)}`
+  ].join("\n");
+}
+
+function buildDeepReadingPrompt(context: DeepReadingPromptContext) {
+  const sections =
+    context.locale === "zh-TW"
+      ? ["## 問題核心", "## 隱藏影響", "## 行動建議", "## 總結"]
+      : ["## Core Question", "## Hidden Influence", "## Action Advice", "## Summary"];
+  const questionInstruction =
+    context.question.trim().length === 0
+      ? "The question is empty. Treat it as「未指定問題的整體狀態占卜」and do not ask for more information."
+      : "Answer the user's question directly.";
+
+  return [
+    `Create a three-card tarot reading in ${context.locale}.`,
+    questionInstruction,
+    "Use exactly these markdown sections in this order:",
+    ...sections,
+    safeMarkdownInstruction(),
+    `Context JSON: ${JSON.stringify(context)}`
+  ].join("\n");
+}
+
+function buildSummaryPrompt(context: SummaryPromptContext) {
+  const limit =
+    context.locale === "zh-TW"
+      ? context.readingType === "daily"
+        ? "40 Chinese characters"
+        : "60 Chinese characters"
+      : context.readingType === "daily"
+        ? "25 English words"
+        : "35 English words";
+
+  return [
+    `Summarize this ${context.readingType} tarot reading in ${context.locale}.`,
+    `Return one plain sentence within ${limit}.`,
+    "Do not use markdown. Do not use meta phrases like 'based on the above'.",
+    `Markdown result: ${context.markdownResult}`
+  ].join("\n");
+}
+
+function safeMarkdownInstruction() {
+  return [
+    "Use only headings, paragraphs, bold, italic, ordered or unordered lists, blockquotes, and horizontal rules.",
+    "Do not use HTML, images, tables, code blocks, or links."
+  ].join(" ");
 }
 
 type ChatCompletionRequest = {
