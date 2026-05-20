@@ -9,6 +9,9 @@ class TarotCard {
     required this.uprightMeaning,
     required this.reversedMeaning,
     required this.keywords,
+    required this.enUprightMeaning,
+    required this.enReversedMeaning,
+    required this.enKeywords,
   });
 
   final String id;
@@ -18,6 +21,9 @@ class TarotCard {
   final String uprightMeaning;
   final String reversedMeaning;
   final List<String> keywords;
+  final String enUprightMeaning;
+  final String enReversedMeaning;
+  final List<String> enKeywords;
 
   factory TarotCard.fromJson(Map<String, Object?> json) {
     return TarotCard(
@@ -28,6 +34,9 @@ class TarotCard {
       uprightMeaning: json['uprightMeaning']! as String,
       reversedMeaning: json['reversedMeaning']! as String,
       keywords: (json['keywords']! as List<Object?>).cast<String>(),
+      enUprightMeaning: json['enUprightMeaning']! as String,
+      enReversedMeaning: json['enReversedMeaning']! as String,
+      enKeywords: (json['enKeywords']! as List<Object?>).cast<String>(),
     );
   }
 
@@ -44,6 +53,9 @@ class TarotCard {
       uprightMeaning,
       reversedMeaning,
       ...keywords,
+      enUprightMeaning,
+      enReversedMeaning,
+      ...enKeywords,
     ].any((value) => value.toLowerCase().contains(normalized));
   }
 }

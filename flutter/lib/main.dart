@@ -1176,8 +1176,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         fit: BoxFit.cover,
                       ),
                     ),
-                    title: Text(card.zhName),
-                    subtitle: Text('${card.enName}\n${card.id}'),
+                    title: Text(_primaryCardName(card, l10n)),
+                    subtitle: Text(
+                      '${_secondaryCardName(card, l10n)}\n${card.id}',
+                    ),
                     isThreeLine: true,
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () => showModalBottomSheet<void>(
@@ -1792,10 +1794,21 @@ class CardDetailSheet extends StatelessWidget {
         children: [
           Center(child: Image.asset(imagePath, height: 220, fit: BoxFit.cover)),
           const SizedBox(height: 16),
-          Text(card.zhName, style: Theme.of(context).textTheme.headlineSmall),
-          Text(card.enName, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            _primaryCardName(card, l10n),
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          Text(
+            _secondaryCardName(card, l10n),
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           const SizedBox(height: 8),
-          Text(l10n.cardMeaningText(card.uprightMeaning, card.reversedMeaning)),
+          Text(
+            l10n.cardMeaningText(
+              _uprightCardMeaning(card, l10n),
+              _reversedCardMeaning(card, l10n),
+            ),
+          ),
         ],
       ),
     );
@@ -1813,6 +1826,30 @@ String _imageForCardId(String cardId) {
     'major-14-temperance' => 'assets/images/cards/temperance.jpg',
     _ => 'assets/images/card-back.png',
   };
+}
+
+String _primaryCardName(TarotCard card, AppLocalizations l10n) {
+  return _usesChineseCardText(l10n) ? card.zhName : card.enName;
+}
+
+String _secondaryCardName(TarotCard card, AppLocalizations l10n) {
+  return _usesChineseCardText(l10n) ? card.enName : card.zhName;
+}
+
+String _uprightCardMeaning(TarotCard card, AppLocalizations l10n) {
+  return _usesChineseCardText(l10n)
+      ? card.uprightMeaning
+      : card.enUprightMeaning;
+}
+
+String _reversedCardMeaning(TarotCard card, AppLocalizations l10n) {
+  return _usesChineseCardText(l10n)
+      ? card.reversedMeaning
+      : card.enReversedMeaning;
+}
+
+bool _usesChineseCardText(AppLocalizations l10n) {
+  return l10n.localeName.toLowerCase().startsWith('zh');
 }
 
 String _categoryLabel(TarotCategory category, AppLocalizations l10n) {
