@@ -231,6 +231,30 @@ abstract class AppLocalizations {
   /// **'Send reset email'**
   String get sendPasswordReset;
 
+  /// No description provided for @emailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid Email'**
+  String get emailInvalid;
+
+  /// No description provided for @passwordInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters'**
+  String get passwordInvalid;
+
+  /// No description provided for @displayNameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name must be 1-16 characters'**
+  String get displayNameInvalid;
+
+  /// No description provided for @confirmPasswordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password must match password'**
+  String get confirmPasswordMismatch;
+
   /// No description provided for @verifyEmailTitle.
   ///
   /// In en, this message translates to:

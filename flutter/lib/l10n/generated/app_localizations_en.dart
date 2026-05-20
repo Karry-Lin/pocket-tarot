@@ -76,6 +76,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sendPasswordReset => 'Send reset email';
 
   @override
+  String get emailInvalid => 'Enter a valid Email';
+
+  @override
+  String get passwordInvalid => 'Password must be at least 6 characters';
+
+  @override
+  String get displayNameInvalid => 'Display name must be 1-16 characters';
+
+  @override
+  String get confirmPasswordMismatch => 'Confirm password must match password';
+
+  @override
   String get verifyEmailTitle => 'Verify Email';
 
   @override

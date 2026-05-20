@@ -509,19 +509,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
+    final validationMessages = AuthFormValidationMessages(
+      emailInvalid: l10n.emailInvalid,
+      passwordInvalid: l10n.passwordInvalid,
+      displayNameInvalid: l10n.displayNameInvalid,
+      confirmPasswordMismatch: l10n.confirmPasswordMismatch,
+    );
     final result = switch (_mode) {
       EmailAuthMode.signIn => AuthFormValidator.validateEmailSignIn(
         email: _emailController.text,
         password: _passwordController.text,
+        messages: validationMessages,
       ),
       EmailAuthMode.register => AuthFormValidator.validateEmailRegistration(
         displayName: _displayNameController.text,
         email: _emailController.text,
         password: _passwordController.text,
         confirmPassword: _confirmPasswordController.text,
+        messages: validationMessages,
       ),
       EmailAuthMode.resetPassword => AuthFormValidator.validatePasswordReset(
         email: _emailController.text,
+        messages: validationMessages,
       ),
     };
 

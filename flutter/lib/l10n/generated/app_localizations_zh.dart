@@ -75,6 +75,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sendPasswordReset => '送出重設信';
 
   @override
+  String get emailInvalid => '請輸入有效的 Email';
+
+  @override
+  String get passwordInvalid => '密碼至少需要 6 個字元';
+
+  @override
+  String get displayNameInvalid => '暱稱長度必須為 1-16 字';
+
+  @override
+  String get confirmPasswordMismatch => '確認密碼必須和密碼相同';
+
+  @override
   String get verifyEmailTitle => '確認 Email';
 
   @override
@@ -336,6 +348,18 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get sendPasswordReset => '送出重設信';
+
+  @override
+  String get emailInvalid => '請輸入有效的 Email';
+
+  @override
+  String get passwordInvalid => '密碼至少需要 6 個字元';
+
+  @override
+  String get displayNameInvalid => '暱稱長度必須為 1-16 字';
+
+  @override
+  String get confirmPasswordMismatch => '確認密碼必須和密碼相同';
 
   @override
   String get verifyEmailTitle => '確認 Email';
