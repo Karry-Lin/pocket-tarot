@@ -32,6 +32,8 @@ Daily and deep reading repositories expose controller-request adapter methods so
 
 `HomeScreen` loads and draws through `dailyReadingControllerProvider`; rendered card markdown and summary come from the API reading model instead of static demo content.
 
+`lib/data/services/device_location_service.dart` wraps Geolocator permission checks and current-position loading for daily reading weather requests. Location failures fall back to a permission-denied weather request so drawing can continue.
+
 `lib/domain/use_cases/deep_reading_controller.dart` owns the divination room state transition for draft creation, three-card selection, result creation, saved-history loading, and history visibility toggles.
 
 `DivinationScreen` starts drafts, fills question prompt chips into the question field, records three-card selection, renders result markdown/summary plus selected card positions/orientations, toggles saved-history visibility, and loads saved history through `deepReadingControllerProvider`.

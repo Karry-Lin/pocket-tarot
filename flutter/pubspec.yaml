@@ -45,6 +45,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_markdown_plus: ^1.0.7
+  geolocator: ^14.0.2
 
 dev_dependencies:
   flutter_test:

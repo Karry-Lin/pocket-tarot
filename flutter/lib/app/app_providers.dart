@@ -9,6 +9,7 @@ import 'package:pocket_tarot/data/repositories/local_settings_repository.dart';
 import 'package:pocket_tarot/data/repositories/profile_repository.dart';
 import 'package:pocket_tarot/data/services/api_client.dart';
 import 'package:pocket_tarot/data/services/api_health_service.dart';
+import 'package:pocket_tarot/data/services/device_location_service.dart';
 import 'package:pocket_tarot/data/services/firebase_auth_service.dart';
 import 'package:pocket_tarot/domain/use_cases/app_startup_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/auth_gate_evaluator.dart';
@@ -87,9 +88,13 @@ final systemLocaleCodeProvider = Provider<String Function()>((ref) {
   return () => PlatformDispatcher.instance.locale.toLanguageTag();
 });
 
+final deviceLocationServiceProvider = Provider<DeviceLocationService>((ref) {
+  return DeviceLocationService();
+});
+
 final dailyReadingLocationLoaderProvider = Provider<DailyReadingLocationLoader>(
   (ref) {
-    return () async => const DailyReadingLocationResult.permissionDenied();
+    return ref.watch(deviceLocationServiceProvider).loadDailyReadingLocation;
   },
 );
 
