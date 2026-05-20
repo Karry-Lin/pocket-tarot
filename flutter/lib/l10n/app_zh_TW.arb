@@ -1,5 +1,34 @@
 {
   "appTitle": "口袋塔羅",
+  "startupFailedTitle": "啟動檢查失敗",
+  "tryAgainLater": "請稍後再試",
+  "startupCheckingTitle": "啟動檢查中",
+  "startupCheckingMessage": "正在確認連線與帳號狀態",
+  "networkBlockedTitle": "目前無法連線",
+  "networkBlockedMessage": "請檢查網路後重試",
+  "retryCheck": "重新檢查",
+  "loginTagline": "每日一張，深度三張，把今天的選擇握在手心。",
+  "displayNameLabel": "暱稱",
+  "passwordLabel": "密碼",
+  "confirmPasswordLabel": "確認密碼",
+  "googleLogin": "Google 登入",
+  "loginAction": "登入",
+  "registerAction": "註冊",
+  "forgotPassword": "忘記密碼",
+  "passwordResetSent": "重設信已送出",
+  "formFailure": "操作失敗，請稍後再試",
+  "googleFailure": "Google 登入失敗，請稍後再試",
+  "emailLogin": "Email 登入",
+  "createAccount": "建立帳號",
+  "sendPasswordReset": "送出重設信",
+  "verifyEmailTitle": "確認 Email",
+  "verifyEmailMessage": "驗證信已送出，完成後回到 App 繼續建立 profile。",
+  "verifyEmailAction": "我已完成驗證",
+  "pendingTitle": "等待啟用",
+  "pendingMessage": "帳號已建立，管理員啟用後即可進入完整功能。",
+  "accountDeletedTitle": "帳號已刪除",
+  "accountDeletedMessage": "這個帳號已停用且無法繼續使用。如有疑問，請聯絡服務維運人員。",
+  "accountDeletedAction": "回到登入",
   "navHome": "首頁",
   "navDivination": "占卜館",
   "navLibrary": "圖書館",
@@ -10,5 +39,75 @@
   "dailyEmptyMessage": "天氣、時間與當下狀態會一起送進解讀，結果只保留今天這一筆。",
   "dailyDrawButton": "抽今日牌",
   "dailyLoadFailed": "今日抽牌載入失敗",
-  "retryLoad": "重新載入"
+  "retryLoad": "重新載入",
+  "divinationTitle": "占卜館",
+  "divinationLoadFailed": "占卜館載入失敗",
+  "questionLabel": "想問的問題",
+  "promptWork": "工作方向",
+  "promptLove": "感情狀態",
+  "promptNextStep": "下一步選擇",
+  "startDraft": "展開 9 張牌",
+  "createReading": "產生解讀",
+  "readingCreateFailed": "占卜產生失敗",
+  "libraryTitle": "塔羅圖書館",
+  "libraryLoadFailed": "牌庫載入失敗",
+  "searchCardsLabel": "搜尋牌名或關鍵字",
+  "cardsCount": "顯示 {count} 張牌",
+  "@cardsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "categoryAll": "全部",
+  "categoryMajor": "大阿爾克那",
+  "categoryWands": "權杖",
+  "categoryCups": "聖杯",
+  "categorySwords": "寶劍",
+  "categoryPentacles": "錢幣",
+  "profileTitle": "個人檔案",
+  "profileLoadFailed": "個人檔案載入失敗",
+  "profileLoadFallback": "無法載入個人檔案",
+  "profileStats": "每日抽牌 {dailyCount} 次 · 深度占卜 {deepCount} 次",
+  "@profileStats": {
+    "placeholders": {
+      "dailyCount": {
+        "type": "int"
+      },
+      "deepCount": {
+        "type": "int"
+      }
+    }
+  },
+  "localeSystem": "系統",
+  "localeZh": "繁中",
+  "localeEn": "English",
+  "weatherToggle": "每日抽牌使用天氣",
+  "editDisplayName": "編輯暱稱",
+  "signOut": "登出",
+  "deepResultTitle": "深度解讀",
+  "saveToHistory": "保存到歷史紀錄",
+  "selectedCardsTitle": "抽到的三張牌",
+  "historyTitle": "歷史紀錄",
+  "loadHistory": "載入歷史",
+  "emptyHistory": "尚未保存占卜紀錄",
+  "unnamedQuestion": "未命名問題",
+  "upright": "正位",
+  "reversed": "逆位",
+  "cardMeaningText": "正位：{uprightMeaning}\n逆位：{reversedMeaning}",
+  "@cardMeaningText": {
+    "placeholders": {
+      "uprightMeaning": {
+        "type": "String"
+      },
+      "reversedMeaning": {
+        "type": "String"
+      }
+    }
+  },
+  "editNameTitle": "編輯暱稱",
+  "nicknameLabel": "暱稱",
+  "cancel": "取消",
+  "save": "儲存"
 }

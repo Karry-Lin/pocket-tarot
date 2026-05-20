@@ -1,22 +1,4 @@
-enum TarotCategory {
-  all,
-  major,
-  wands,
-  cups,
-  swords,
-  pentacles;
-
-  String get label {
-    return switch (this) {
-      TarotCategory.all => '全部',
-      TarotCategory.major => '大阿爾克那',
-      TarotCategory.wands => '權杖',
-      TarotCategory.cups => '聖杯',
-      TarotCategory.swords => '寶劍',
-      TarotCategory.pentacles => '錢幣',
-    };
-  }
-}
+enum TarotCategory { all, major, wands, cups, swords, pentacles }
 
 class TarotCard {
   const TarotCard({

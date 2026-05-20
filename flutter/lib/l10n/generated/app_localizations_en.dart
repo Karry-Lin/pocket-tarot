@@ -12,6 +12,97 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Pocket Tarot';
 
   @override
+  String get startupFailedTitle => 'Startup check failed';
+
+  @override
+  String get tryAgainLater => 'Please try again later';
+
+  @override
+  String get startupCheckingTitle => 'Checking startup';
+
+  @override
+  String get startupCheckingMessage => 'Checking connection and account status';
+
+  @override
+  String get networkBlockedTitle => 'Unable to connect';
+
+  @override
+  String get networkBlockedMessage => 'Check your network and try again';
+
+  @override
+  String get retryCheck => 'Recheck';
+
+  @override
+  String get loginTagline =>
+      'A daily card and a deep three-card reading, held in your hand.';
+
+  @override
+  String get displayNameLabel => 'Display name';
+
+  @override
+  String get passwordLabel => 'Password';
+
+  @override
+  String get confirmPasswordLabel => 'Confirm password';
+
+  @override
+  String get googleLogin => 'Google sign-in';
+
+  @override
+  String get loginAction => 'Sign in';
+
+  @override
+  String get registerAction => 'Register';
+
+  @override
+  String get forgotPassword => 'Forgot password';
+
+  @override
+  String get passwordResetSent => 'Password reset email sent';
+
+  @override
+  String get formFailure => 'Something went wrong. Please try again later.';
+
+  @override
+  String get googleFailure => 'Google sign-in failed. Please try again later.';
+
+  @override
+  String get emailLogin => 'Email sign-in';
+
+  @override
+  String get createAccount => 'Create account';
+
+  @override
+  String get sendPasswordReset => 'Send reset email';
+
+  @override
+  String get verifyEmailTitle => 'Verify Email';
+
+  @override
+  String get verifyEmailMessage =>
+      'The verification email has been sent. Return to the app after verifying to continue creating your profile.';
+
+  @override
+  String get verifyEmailAction => 'I have verified';
+
+  @override
+  String get pendingTitle => 'Waiting for activation';
+
+  @override
+  String get pendingMessage =>
+      'Your account has been created. Full access is available after admin activation.';
+
+  @override
+  String get accountDeletedTitle => 'Account deleted';
+
+  @override
+  String get accountDeletedMessage =>
+      'This account is disabled and cannot continue. Contact operations if you have questions.';
+
+  @override
+  String get accountDeletedAction => 'Back to login';
+
+  @override
   String get navHome => 'Daily';
 
   @override
@@ -44,4 +135,139 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retryLoad => 'Reload';
+
+  @override
+  String get divinationTitle => 'Reading Room';
+
+  @override
+  String get divinationLoadFailed => 'Reading room failed to load';
+
+  @override
+  String get questionLabel => 'Question';
+
+  @override
+  String get promptWork => 'Work direction';
+
+  @override
+  String get promptLove => 'Relationship status';
+
+  @override
+  String get promptNextStep => 'Next choice';
+
+  @override
+  String get startDraft => 'Reveal 9 cards';
+
+  @override
+  String get createReading => 'Generate reading';
+
+  @override
+  String get readingCreateFailed => 'Reading failed';
+
+  @override
+  String get libraryTitle => 'Tarot Library';
+
+  @override
+  String get libraryLoadFailed => 'Card library failed to load';
+
+  @override
+  String get searchCardsLabel => 'Search card name or keyword';
+
+  @override
+  String cardsCount(int count) {
+    return 'Showing $count cards';
+  }
+
+  @override
+  String get categoryAll => 'All';
+
+  @override
+  String get categoryMajor => 'Major Arcana';
+
+  @override
+  String get categoryWands => 'Wands';
+
+  @override
+  String get categoryCups => 'Cups';
+
+  @override
+  String get categorySwords => 'Swords';
+
+  @override
+  String get categoryPentacles => 'Pentacles';
+
+  @override
+  String get profileTitle => 'Profile';
+
+  @override
+  String get profileLoadFailed => 'Profile failed to load';
+
+  @override
+  String get profileLoadFallback => 'Unable to load profile';
+
+  @override
+  String profileStats(int dailyCount, int deepCount) {
+    return 'Daily readings $dailyCount · deep readings $deepCount';
+  }
+
+  @override
+  String get localeSystem => 'System';
+
+  @override
+  String get localeZh => 'Traditional Chinese';
+
+  @override
+  String get localeEn => 'English';
+
+  @override
+  String get weatherToggle => 'Use weather for daily reading';
+
+  @override
+  String get editDisplayName => 'Edit display name';
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get deepResultTitle => 'Deep Reading';
+
+  @override
+  String get saveToHistory => 'Save to history';
+
+  @override
+  String get selectedCardsTitle => 'Selected three cards';
+
+  @override
+  String get historyTitle => 'History';
+
+  @override
+  String get loadHistory => 'Load history';
+
+  @override
+  String get emptyHistory => 'No saved readings yet';
+
+  @override
+  String get unnamedQuestion => 'Untitled question';
+
+  @override
+  String get upright => 'Upright';
+
+  @override
+  String get reversed => 'Reversed';
+
+  @override
+  String cardMeaningText(String uprightMeaning, String reversedMeaning) {
+    return 'Upright: $uprightMeaning\nReversed: $reversedMeaning';
+  }
+
+  @override
+  String get editNameTitle => 'Edit display name';
+
+  @override
+  String get nicknameLabel => 'Display name';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get save => 'Save';
 }

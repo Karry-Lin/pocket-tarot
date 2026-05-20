@@ -235,6 +235,8 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return switch (_state.status) {
       AppStartupStatus.initial ||
       AppStartupStatus.checking => const SplashCheckingScreen(),
@@ -242,8 +244,8 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
         onRetry: _checkStartup,
       ),
       AppStartupStatus.error => SplashNetworkBlockedScreen(
-        title: '啟動檢查失敗',
-        message: _state.errorMessage ?? '請稍後再試',
+        title: l10n.startupFailedTitle,
+        message: _state.errorMessage ?? l10n.tryAgainLater,
         onRetry: _checkStartup,
       ),
       AppStartupStatus.ready => const SplashCheckingScreen(),
@@ -256,6 +258,8 @@ class SplashCheckingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return AppBackdrop(
       child: SafeArea(
         child: Padding(
@@ -272,13 +276,13 @@ class SplashCheckingScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                '啟動檢查中',
+                l10n.startupCheckingTitle,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
               Text(
-                '正在確認連線與帳號狀態',
+                l10n.startupCheckingMessage,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
@@ -295,17 +299,21 @@ class SplashCheckingScreen extends StatelessWidget {
 class SplashNetworkBlockedScreen extends StatelessWidget {
   const SplashNetworkBlockedScreen({
     super.key,
-    this.title = '目前無法連線',
-    this.message = '請檢查網路後重試',
+    this.title,
+    this.message,
     this.onRetry,
   });
 
-  final String title;
-  final String message;
+  final String? title;
+  final String? message;
   final VoidCallback? onRetry;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final resolvedTitle = title ?? l10n.networkBlockedTitle;
+    final resolvedMessage = message ?? l10n.networkBlockedMessage;
+
     return AppBackdrop(
       child: SafeArea(
         child: Padding(
@@ -322,13 +330,13 @@ class SplashNetworkBlockedScreen extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               Text(
-                title,
+                resolvedTitle,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
               Text(
-                message,
+                resolvedMessage,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
@@ -336,7 +344,7 @@ class SplashNetworkBlockedScreen extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('重新檢查'),
+                label: Text(l10n.retryCheck),
               ),
             ],
           ),
@@ -378,6 +386,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return AppBackdrop(
       child: SafeArea(
         child: SingleChildScrollView(
@@ -400,14 +410,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                '每日一張，深度三張，把今天的選擇握在手心。',
+                l10n.loginTagline,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 32),
               if (_mode == EmailAuthMode.register) ...[
                 AuthField(
-                  label: '暱稱',
+                  label: l10n.displayNameLabel,
                   controller: _displayNameController,
                   errorText: _errors[AuthFormField.displayName],
                 ),
@@ -421,7 +431,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 12),
               if (_mode != EmailAuthMode.resetPassword)
                 AuthField(
-                  label: '密碼',
+                  label: l10n.passwordLabel,
                   controller: _passwordController,
                   obscureText: true,
                   errorText: _errors[AuthFormField.password],
@@ -429,7 +439,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (_mode == EmailAuthMode.register) ...[
                 const SizedBox(height: 12),
                 AuthField(
-                  label: '確認密碼',
+                  label: l10n.confirmPasswordLabel,
                   controller: _confirmPasswordController,
                   obscureText: true,
                   errorText: _errors[AuthFormField.confirmPassword],
@@ -456,7 +466,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               OutlinedButton.icon(
                 onPressed: _submitting ? null : _signInWithGoogle,
                 icon: const Icon(Icons.g_mobiledata),
-                label: const Text('Google 登入'),
+                label: Text(l10n.googleLogin),
               ),
               const SizedBox(height: 4),
               Wrap(
@@ -466,17 +476,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   if (_mode != EmailAuthMode.signIn)
                     TextButton(
                       onPressed: () => _switchMode(EmailAuthMode.signIn),
-                      child: const Text('登入'),
+                      child: Text(l10n.loginAction),
                     ),
                   if (_mode != EmailAuthMode.register)
                     TextButton(
                       onPressed: () => _switchMode(EmailAuthMode.register),
-                      child: const Text('註冊'),
+                      child: Text(l10n.registerAction),
                     ),
                   if (_mode != EmailAuthMode.resetPassword)
                     TextButton(
                       onPressed: () => _switchMode(EmailAuthMode.resetPassword),
-                      child: const Text('忘記密碼'),
+                      child: Text(l10n.forgotPassword),
                     ),
                 ],
               ),
@@ -498,6 +508,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     final result = switch (_mode) {
       EmailAuthMode.signIn => AuthFormValidator.validateEmailSignIn(
         email: _emailController.text,
@@ -555,13 +566,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             _emailController.text.trim(),
           );
           if (mounted) {
-            setState(() => _formMessage = '重設信已送出');
+            setState(() => _formMessage = l10n.passwordResetSent);
           }
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _formError = '操作失敗，請稍後再試';
+          _formError = l10n.formFailure;
           _formMessage = null;
         });
       }
@@ -573,6 +584,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
+    final l10n = AppLocalizations.of(context)!;
+
     setState(() {
       _formError = null;
       _formMessage = null;
@@ -587,7 +600,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _formError = 'Google 登入失敗，請稍後再試';
+          _formError = l10n.googleFailure;
           _formMessage = null;
         });
       }
@@ -607,10 +620,11 @@ class _PrimaryEmailAuthButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final label = switch (mode) {
-      EmailAuthMode.signIn => 'Email 登入',
-      EmailAuthMode.register => '建立帳號',
-      EmailAuthMode.resetPassword => '送出重設信',
+      EmailAuthMode.signIn => l10n.emailLogin,
+      EmailAuthMode.register => l10n.createAccount,
+      EmailAuthMode.resetPassword => l10n.sendPasswordReset,
     };
     final icon = switch (mode) {
       EmailAuthMode.signIn => Icons.login,
@@ -631,11 +645,13 @@ class VerifyEmailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return GateScaffold(
       icon: Icons.mark_email_unread,
-      title: '確認 Email',
-      message: '驗證信已送出，完成後回到 App 繼續建立 profile。',
-      actionLabel: '我已完成驗證',
+      title: l10n.verifyEmailTitle,
+      message: l10n.verifyEmailMessage,
+      actionLabel: l10n.verifyEmailAction,
       onAction: () => context.go('/splash'),
     );
   }
@@ -646,11 +662,13 @@ class PendingActivationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return GateScaffold(
       icon: Icons.hourglass_bottom,
-      title: '等待啟用',
-      message: '帳號已建立，管理員啟用後即可進入完整功能。',
-      actionLabel: '重新檢查',
+      title: l10n.pendingTitle,
+      message: l10n.pendingMessage,
+      actionLabel: l10n.retryCheck,
       onAction: () => context.go('/splash'),
     );
   }
@@ -661,11 +679,13 @@ class AccountDeletedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return GateScaffold(
       icon: Icons.no_accounts,
-      title: '帳號已刪除',
-      message: '這個帳號已停用且無法繼續使用。如有疑問，請聯絡服務維運人員。',
-      actionLabel: '回到登入',
+      title: l10n.accountDeletedTitle,
+      message: l10n.accountDeletedMessage,
+      actionLabel: l10n.accountDeletedAction,
       onAction: () => context.go('/login'),
     );
   }
@@ -797,7 +817,7 @@ class DailyResultCard extends StatelessWidget {
         CardPreview(
           imagePath: _imageForCardId(reading.card.cardId),
           title:
-              '${reading.card.cardId} / ${_orientationLabel(reading.card.orientation)}',
+              '${reading.card.cardId} / ${_orientationLabel(reading.card.orientation, l10n)}',
         ),
         const SizedBox(height: 18),
         InfoPanel(
@@ -931,40 +951,49 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   @override
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(deepReadingControllerProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return ScreenFrame(
-      title: '占卜館',
+      title: l10n.divinationTitle,
       trailing: '${_deepState.selectedIndexes.length}/3',
       child: controllerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) =>
-            InfoPanel(title: '占卜館載入失敗', child: Text(error.toString())),
+        error: (error, stackTrace) => InfoPanel(
+          title: l10n.divinationLoadFailed,
+          child: Text(error.toString()),
+        ),
         data: (_) => _deepContent(context),
       ),
     );
   }
 
   Widget _deepContent(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AuthField(label: '想問的問題', controller: _questionController, maxLines: 3),
+        AuthField(
+          label: l10n.questionLabel,
+          controller: _questionController,
+          maxLines: 3,
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
             PromptChip(
-              text: '工作方向',
-              onPressed: () => _applyQuestionTemplate('工作方向'),
+              text: l10n.promptWork,
+              onPressed: () => _applyQuestionTemplate(l10n.promptWork),
             ),
             PromptChip(
-              text: '感情狀態',
-              onPressed: () => _applyQuestionTemplate('感情狀態'),
+              text: l10n.promptLove,
+              onPressed: () => _applyQuestionTemplate(l10n.promptLove),
             ),
             PromptChip(
-              text: '下一步選擇',
-              onPressed: () => _applyQuestionTemplate('下一步選擇'),
+              text: l10n.promptNextStep,
+              onPressed: () => _applyQuestionTemplate(l10n.promptNextStep),
             ),
           ],
         ),
@@ -973,7 +1002,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
           FilledButton.icon(
             onPressed: _startDraft,
             icon: const Icon(Icons.grid_3x3),
-            label: const Text('展開 9 張牌'),
+            label: Text(l10n.startDraft),
           )
         else if (_deepState.status == DeepReadingStatus.drafting ||
             _deepState.status == DeepReadingStatus.creating)
@@ -1001,7 +1030,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
                 ? _createResult
                 : null,
             icon: const Icon(Icons.auto_fix_high),
-            label: const Text('產生解讀'),
+            label: Text(l10n.createReading),
           ),
           if (_deepState.reading != null) ...[
             const SizedBox(height: 18),
@@ -1014,7 +1043,10 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
           if (_deepState.status == DeepReadingStatus.error &&
               _deepState.errorMessage != null) ...[
             const SizedBox(height: 12),
-            InfoPanel(title: '占卜產生失敗', child: Text(_deepState.errorMessage!)),
+            InfoPanel(
+              title: l10n.readingCreateFailed,
+              child: Text(_deepState.errorMessage!),
+            ),
           ],
         ],
         const SizedBox(height: 18),
@@ -1053,14 +1085,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   Widget build(BuildContext context) {
     final cardsAsync = ref.watch(tarotCardsProvider);
     final repository = ref.watch(tarotCatalogRepositoryProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return ScreenFrame(
-      title: '塔羅圖書館',
+      title: l10n.libraryTitle,
       trailing: '78',
       child: cardsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) =>
-            InfoPanel(title: '牌庫載入失敗', child: Text('$error')),
+            InfoPanel(title: l10n.libraryLoadFailed, child: Text('$error')),
         data: (cards) {
           final categorized = repository.filterByCategory(cards, _category);
           final filtered = repository.search(categorized, _query);
@@ -1072,7 +1105,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 controller: _searchController,
                 onChanged: (value) => setState(() => _query = value),
                 decoration: InputDecoration(
-                  labelText: '搜尋牌名或關鍵字',
+                  labelText: l10n.searchCardsLabel,
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: _query.isEmpty
                       ? null
@@ -1097,7 +1130,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 children: [
                   for (final category in TarotCategory.values)
                     ChoiceChip(
-                      label: Text(category.label),
+                      label: Text(_categoryLabel(category, l10n)),
                       selected: _category == category,
                       onSelected: (_) => setState(() => _category = category),
                     ),
@@ -1105,7 +1138,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               ),
               const SizedBox(height: 16),
               Text(
-                '顯示 ${filtered.length} 張牌',
+                l10n.cardsCount(filtered.length),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 8),
@@ -1208,20 +1241,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(profileControllerProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return ScreenFrame(
-      title: '個人檔案',
+      title: l10n.profileTitle,
       trailing: _profileState.snapshot?.user.displayName,
       child: controllerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) =>
-            InfoPanel(title: '個人檔案載入失敗', child: Text(error.toString())),
+        error: (error, stackTrace) => InfoPanel(
+          title: l10n.profileLoadFailed,
+          child: Text(error.toString()),
+        ),
         data: (_) => _profileContent(context),
       ),
     );
   }
 
   Widget _profileContent(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final snapshot = _profileState.snapshot;
     final settings =
         _profileState.settings ??
@@ -1237,16 +1274,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     if (snapshot == null) {
       return InfoPanel(
-        title: '個人檔案載入失敗',
+        title: l10n.profileLoadFailed,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(_profileState.errorMessage ?? '無法載入個人檔案'),
+            Text(_profileState.errorMessage ?? l10n.profileLoadFallback),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: _loadProfile,
               icon: const Icon(Icons.refresh),
-              label: const Text('重新載入'),
+              label: Text(l10n.retryLoad),
             ),
           ],
         ),
@@ -1259,15 +1296,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         InfoPanel(
           title: snapshot.user.displayName,
           child: Text(
-            '${snapshot.user.email}\n每日抽牌 ${snapshot.stats.dailyReadingCount} 次 · 深度占卜 ${snapshot.stats.deepReadingCount} 次',
+            '${snapshot.user.email}\n${l10n.profileStats(snapshot.stats.dailyReadingCount, snapshot.stats.deepReadingCount)}',
           ),
         ),
         const SizedBox(height: 12),
         SegmentedButton<LocaleMode>(
-          segments: const [
-            ButtonSegment(value: LocaleMode.system, label: Text('系統')),
-            ButtonSegment(value: LocaleMode.zhTw, label: Text('繁中')),
-            ButtonSegment(value: LocaleMode.en, label: Text('English')),
+          segments: [
+            ButtonSegment(
+              value: LocaleMode.system,
+              label: Text(l10n.localeSystem),
+            ),
+            ButtonSegment(value: LocaleMode.zhTw, label: Text(l10n.localeZh)),
+            ButtonSegment(value: LocaleMode.en, label: Text(l10n.localeEn)),
           ],
           selected: {settings.localeMode},
           onSelectionChanged: (value) => _setLocaleMode(value.first),
@@ -1276,18 +1316,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         SwitchListTile(
           value: settings.weatherEnabled,
           onChanged: _setWeatherEnabled,
-          title: const Text('每日抽牌使用天氣'),
+          title: Text(l10n.weatherToggle),
           secondary: const Icon(Icons.cloud),
         ),
         OutlinedButton.icon(
           onPressed: () => _showNameDialog(context, _updateDisplayName),
           icon: const Icon(Icons.edit),
-          label: const Text('編輯暱稱'),
+          label: Text(l10n.editDisplayName),
         ),
         TextButton.icon(
           onPressed: _signOut,
           icon: const Icon(Icons.logout),
-          label: const Text('登出'),
+          label: Text(l10n.signOut),
         ),
       ],
     );
@@ -1380,6 +1420,8 @@ class GateScaffold extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
     return AppBackdrop(
       child: SafeArea(
         child: Padding(
@@ -1413,7 +1455,7 @@ class GateScaffold extends ConsumerWidget {
                     }
                   }
                 },
-                child: const Text('登出'),
+                child: Text(l10n.signOut),
               ),
             ],
           ),
@@ -1612,11 +1654,13 @@ class DeepResultPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         InfoPanel(
-          title: '深度解讀',
+          title: l10n.deepResultTitle,
           child: SafeMarkdownBody(data: reading.markdownResult),
         ),
         const SizedBox(height: 10),
@@ -1625,12 +1669,12 @@ class DeepResultPanel extends StatelessWidget {
         SwitchListTile(
           value: isSavedForHistory,
           onChanged: onHistoryVisibilityChanged,
-          title: const Text('保存到歷史紀錄'),
+          title: Text(l10n.saveToHistory),
           secondary: const Icon(Icons.bookmark_add),
         ),
         const SizedBox(height: 10),
         InfoPanel(
-          title: '抽到的三張牌',
+          title: l10n.selectedCardsTitle,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1638,7 +1682,7 @@ class DeepResultPanel extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
-                    '${card.positionLabel} · ${card.cardId} · ${_orientationLabel(card.orientation)}',
+                    '${card.positionLabel} · ${card.cardId} · ${_orientationLabel(card.orientation, l10n)}',
                   ),
                 ),
             ],
@@ -1661,15 +1705,17 @@ class DeepHistoryPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return InfoPanel(
-      title: '歷史紀錄',
+      title: l10n.historyTitle,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           OutlinedButton.icon(
             onPressed: onLoadHistory,
             icon: const Icon(Icons.history),
-            label: const Text('載入歷史'),
+            label: Text(l10n.loadHistory),
           ),
           if (state.status == DeepReadingStatus.historyLoading) ...[
             const SizedBox(height: 12),
@@ -1677,13 +1723,15 @@ class DeepHistoryPanel extends StatelessWidget {
           ] else if (state.status == DeepReadingStatus.historyReady &&
               state.history.isEmpty) ...[
             const SizedBox(height: 12),
-            const Text('尚未保存占卜紀錄'),
+            Text(l10n.emptyHistory),
           ] else if (state.history.isNotEmpty) ...[
             const SizedBox(height: 12),
             for (final item in state.history)
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(item.question.isEmpty ? '未命名問題' : item.question),
+                title: Text(
+                  item.question.isEmpty ? l10n.unnamedQuestion : item.question,
+                ),
                 subtitle: Text(item.summary),
                 trailing: const Icon(Icons.chevron_right),
               ),
@@ -1706,6 +1754,8 @@ class CardDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
       child: Column(
@@ -1717,7 +1767,7 @@ class CardDetailSheet extends StatelessWidget {
           Text(card.zhName, style: Theme.of(context).textTheme.headlineSmall),
           Text(card.enName, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          Text('正位：${card.uprightMeaning}\n逆位：${card.reversedMeaning}'),
+          Text(l10n.cardMeaningText(card.uprightMeaning, card.reversedMeaning)),
         ],
       ),
     );
@@ -1737,10 +1787,21 @@ String _imageForCardId(String cardId) {
   };
 }
 
-String _orientationLabel(String orientation) {
+String _categoryLabel(TarotCategory category, AppLocalizations l10n) {
+  return switch (category) {
+    TarotCategory.all => l10n.categoryAll,
+    TarotCategory.major => l10n.categoryMajor,
+    TarotCategory.wands => l10n.categoryWands,
+    TarotCategory.cups => l10n.categoryCups,
+    TarotCategory.swords => l10n.categorySwords,
+    TarotCategory.pentacles => l10n.categoryPentacles,
+  };
+}
+
+String _orientationLabel(String orientation, AppLocalizations l10n) {
   return switch (orientation) {
-    'upright' => '正位',
-    'reversed' => '逆位',
+    'upright' => l10n.upright,
+    'reversed' => l10n.reversed,
     _ => orientation,
   };
 }
@@ -1749,20 +1810,21 @@ Future<void> _showNameDialog(
   BuildContext context,
   Future<void> Function(String displayName) onSave,
 ) async {
+  final l10n = AppLocalizations.of(context)!;
   final textController = TextEditingController();
   await showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('編輯暱稱'),
+      title: Text(l10n.editNameTitle),
       content: TextField(
         controller: textController,
         maxLength: 16,
-        decoration: const InputDecoration(labelText: '暱稱'),
+        decoration: InputDecoration(labelText: l10n.nicknameLabel),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('取消'),
+          child: Text(l10n.cancel),
         ),
         FilledButton(
           onPressed: () async {
@@ -1771,7 +1833,7 @@ Future<void> _showNameDialog(
               Navigator.of(context).pop();
             }
           },
-          child: const Text('儲存'),
+          child: Text(l10n.save),
         ),
       ],
     ),

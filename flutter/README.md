@@ -70,7 +70,7 @@ Verify-email and pending-activation actions route back through `/splash` so auth
 
 `lib/data/repositories/local_settings_repository.dart` stores language mode and weather toggle in SharedPreferences. These settings are local-only and covered by `test/local_settings_test.dart`.
 
-`appLocaleProvider` loads the stored language mode into `MaterialApp.locale`; profile language changes invalidate the provider so the shell can switch between system language, `zh-TW`, and `en`. Bottom navigation and the daily reading home flow use generated l10n strings.
+`appLocaleProvider` loads the stored language mode into `MaterialApp.locale`; profile language changes invalidate the provider so the shell can switch between system language, `zh-TW`, and `en`. Main app UI strings in `main.dart` use generated l10n strings.
 
 ## Safe Markdown
 

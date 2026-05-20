@@ -3,6 +3,35 @@
   "@appTitle": {
     "description": "Application title"
   },
+  "startupFailedTitle": "Startup check failed",
+  "tryAgainLater": "Please try again later",
+  "startupCheckingTitle": "Checking startup",
+  "startupCheckingMessage": "Checking connection and account status",
+  "networkBlockedTitle": "Unable to connect",
+  "networkBlockedMessage": "Check your network and try again",
+  "retryCheck": "Recheck",
+  "loginTagline": "A daily card and a deep three-card reading, held in your hand.",
+  "displayNameLabel": "Display name",
+  "passwordLabel": "Password",
+  "confirmPasswordLabel": "Confirm password",
+  "googleLogin": "Google sign-in",
+  "loginAction": "Sign in",
+  "registerAction": "Register",
+  "forgotPassword": "Forgot password",
+  "passwordResetSent": "Password reset email sent",
+  "formFailure": "Something went wrong. Please try again later.",
+  "googleFailure": "Google sign-in failed. Please try again later.",
+  "emailLogin": "Email sign-in",
+  "createAccount": "Create account",
+  "sendPasswordReset": "Send reset email",
+  "verifyEmailTitle": "Verify Email",
+  "verifyEmailMessage": "The verification email has been sent. Return to the app after verifying to continue creating your profile.",
+  "verifyEmailAction": "I have verified",
+  "pendingTitle": "Waiting for activation",
+  "pendingMessage": "Your account has been created. Full access is available after admin activation.",
+  "accountDeletedTitle": "Account deleted",
+  "accountDeletedMessage": "This account is disabled and cannot continue. Contact operations if you have questions.",
+  "accountDeletedAction": "Back to login",
   "navHome": "Daily",
   "navDivination": "Reading",
   "navLibrary": "Library",
@@ -13,5 +42,75 @@
   "dailyEmptyMessage": "Weather, time, and your current state can be included in the reading. The result is kept for today only.",
   "dailyDrawButton": "Draw today's card",
   "dailyLoadFailed": "Daily reading failed to load",
-  "retryLoad": "Reload"
+  "retryLoad": "Reload",
+  "divinationTitle": "Reading Room",
+  "divinationLoadFailed": "Reading room failed to load",
+  "questionLabel": "Question",
+  "promptWork": "Work direction",
+  "promptLove": "Relationship status",
+  "promptNextStep": "Next choice",
+  "startDraft": "Reveal 9 cards",
+  "createReading": "Generate reading",
+  "readingCreateFailed": "Reading failed",
+  "libraryTitle": "Tarot Library",
+  "libraryLoadFailed": "Card library failed to load",
+  "searchCardsLabel": "Search card name or keyword",
+  "cardsCount": "Showing {count} cards",
+  "@cardsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "categoryAll": "All",
+  "categoryMajor": "Major Arcana",
+  "categoryWands": "Wands",
+  "categoryCups": "Cups",
+  "categorySwords": "Swords",
+  "categoryPentacles": "Pentacles",
+  "profileTitle": "Profile",
+  "profileLoadFailed": "Profile failed to load",
+  "profileLoadFallback": "Unable to load profile",
+  "profileStats": "Daily readings {dailyCount} · deep readings {deepCount}",
+  "@profileStats": {
+    "placeholders": {
+      "dailyCount": {
+        "type": "int"
+      },
+      "deepCount": {
+        "type": "int"
+      }
+    }
+  },
+  "localeSystem": "System",
+  "localeZh": "Traditional Chinese",
+  "localeEn": "English",
+  "weatherToggle": "Use weather for daily reading",
+  "editDisplayName": "Edit display name",
+  "signOut": "Sign out",
+  "deepResultTitle": "Deep Reading",
+  "saveToHistory": "Save to history",
+  "selectedCardsTitle": "Selected three cards",
+  "historyTitle": "History",
+  "loadHistory": "Load history",
+  "emptyHistory": "No saved readings yet",
+  "unnamedQuestion": "Untitled question",
+  "upright": "Upright",
+  "reversed": "Reversed",
+  "cardMeaningText": "Upright: {uprightMeaning}\nReversed: {reversedMeaning}",
+  "@cardMeaningText": {
+    "placeholders": {
+      "uprightMeaning": {
+        "type": "String"
+      },
+      "reversedMeaning": {
+        "type": "String"
+      }
+    }
+  },
+  "editNameTitle": "Edit display name",
+  "nicknameLabel": "Display name",
+  "cancel": "Cancel",
+  "save": "Save"
 }
