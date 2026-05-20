@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pocket_tarot/data/repositories/tarot_catalog_repository.dart';
+import 'package:pocket_tarot/domain/models/tarot_card.dart';
 import 'package:pocket_tarot/l10n/generated/app_localizations.dart';
 
 void main() {
@@ -9,6 +12,12 @@ void main() {
 }
 
 final appStateProvider = NotifierProvider<AppController, AppState>(AppController.new);
+final tarotCatalogRepositoryProvider = Provider<TarotCatalogRepository>((ref) {
+  return TarotCatalogRepository(rootBundle);
+});
+final tarotCardsProvider = FutureProvider<List<TarotCard>>((ref) {
+  return ref.watch(tarotCatalogRepositoryProvider).loadCards();
+});
 
 class AppState {
   const AppState({
@@ -386,42 +395,99 @@ class DivinationScreen extends ConsumerWidget {
   }
 }
 
-class LibraryScreen extends StatelessWidget {
+class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
 
   @override
+  ConsumerState<LibraryScreen> createState() => _LibraryScreenState();
+}
+
+class _LibraryScreenState extends ConsumerState<LibraryScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  TarotCategory _category = TarotCategory.all;
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final cards = [
-      ('月亮', 'major-18-moon', 'assets/images/cards/moon.jpg'),
-      ('星星', 'major-17-star', 'assets/images/cards/star.jpg'),
-      ('節制', 'major-14-temperance', 'assets/images/cards/temperance.jpg'),
-    ];
+    final cardsAsync = ref.watch(tarotCardsProvider);
+    final repository = ref.watch(tarotCatalogRepositoryProvider);
 
     return ScreenFrame(
       title: '塔羅圖書館',
       trailing: '78',
-      child: Column(
-        children: [
-          const AuthField(label: '搜尋牌名或關鍵字'),
-          const SizedBox(height: 16),
-          for (final card in cards)
-            Card(
-              child: ListTile(
-                leading: ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: Image.asset(card.$3, width: 42, height: 58, fit: BoxFit.cover),
-                ),
-                title: Text(card.$1),
-                subtitle: Text(card.$2),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => showModalBottomSheet<void>(
-                  context: context,
-                  showDragHandle: true,
-                  builder: (context) => CardDetailSheet(title: card.$1, imagePath: card.$3),
+      child: cardsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) => InfoPanel(title: '牌庫載入失敗', child: Text('$error')),
+        data: (cards) {
+          final categorized = repository.filterByCategory(cards, _category);
+          final filtered = repository.search(categorized, _query);
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: _searchController,
+                onChanged: (value) => setState(() => _query = value),
+                decoration: InputDecoration(
+                  labelText: '搜尋牌名或關鍵字',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _query.isEmpty
+                      ? null
+                      : IconButton(
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _query = '');
+                          },
+                          icon: const Icon(Icons.close),
+                        ),
+                  filled: true,
+                  fillColor: Colors.white.withValues(alpha: 0.06),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
               ),
-            ),
-        ],
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final category in TarotCategory.values)
+                    ChoiceChip(
+                      label: Text(category.label),
+                      selected: _category == category,
+                      onSelected: (_) => setState(() => _category = category),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text('顯示 ${filtered.length} 張牌', style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 8),
+              for (final card in filtered)
+                Card(
+                  child: ListTile(
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.asset(_imageForCard(card), width: 42, height: 58, fit: BoxFit.cover),
+                    ),
+                    title: Text(card.zhName),
+                    subtitle: Text('${card.enName}\n${card.id}'),
+                    isThreeLine: true,
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => showModalBottomSheet<void>(
+                      context: context,
+                      showDragHandle: true,
+                      builder: (context) => CardDetailSheet(card: card, imagePath: _imageForCard(card)),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -738,9 +804,9 @@ class DeepResultPanel extends StatelessWidget {
 }
 
 class CardDetailSheet extends StatelessWidget {
-  const CardDetailSheet({super.key, required this.title, required this.imagePath});
+  const CardDetailSheet({super.key, required this.card, required this.imagePath});
 
-  final String title;
+  final TarotCard card;
   final String imagePath;
 
   @override
@@ -753,13 +819,23 @@ class CardDetailSheet extends StatelessWidget {
         children: [
           Center(child: Image.asset(imagePath, height: 220, fit: BoxFit.cover)),
           const SizedBox(height: 16),
-          Text(title, style: Theme.of(context).textTheme.headlineSmall),
+          Text(card.zhName, style: Theme.of(context).textTheme.headlineSmall),
+          Text(card.enName, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          const Text('正位：直覺、流動、內在訊息。\n逆位：不安、逃避、尚未說出口的真相。'),
+          Text('正位：${card.uprightMeaning}\n逆位：${card.reversedMeaning}'),
         ],
       ),
     );
   }
+}
+
+String _imageForCard(TarotCard card) {
+  return switch (card.id) {
+    'major-18-moon' => 'assets/images/cards/moon.jpg',
+    'major-17-star' => 'assets/images/cards/star.jpg',
+    'major-14-temperance' => 'assets/images/cards/temperance.jpg',
+    _ => 'assets/images/card-back.png',
+  };
 }
 
 Future<void> _showNameDialog(BuildContext context, AppController controller) async {
