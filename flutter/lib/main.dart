@@ -892,6 +892,22 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     }
   }
 
+  Future<void> _updateHistoryVisibility(bool isSavedForHistory) async {
+    final controller = await ref.read(deepReadingControllerProvider.future);
+    await controller.updateHistoryVisibility(isSavedForHistory);
+    if (mounted) {
+      setState(() => _deepState = controller.state);
+    }
+  }
+
+  Future<void> _loadHistory() async {
+    final controller = await ref.read(deepReadingControllerProvider.future);
+    await controller.loadHistory();
+    if (mounted) {
+      setState(() => _deepState = controller.state);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(deepReadingControllerProvider);
@@ -958,10 +974,13 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
             icon: const Icon(Icons.auto_fix_high),
             label: const Text('產生解讀'),
           ),
-          if (_deepState.status == DeepReadingStatus.resultReady &&
-              _deepState.reading != null) ...[
+          if (_deepState.reading != null) ...[
             const SizedBox(height: 18),
-            DeepResultPanel(reading: _deepState.reading!),
+            DeepResultPanel(
+              reading: _deepState.reading!,
+              isSavedForHistory: _deepState.isResultSavedForHistory,
+              onHistoryVisibilityChanged: _updateHistoryVisibility,
+            ),
           ],
           if (_deepState.status == DeepReadingStatus.error &&
               _deepState.errorMessage != null) ...[
@@ -969,6 +988,8 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
             InfoPanel(title: '占卜產生失敗', child: Text(_deepState.errorMessage!)),
           ],
         ],
+        const SizedBox(height: 18),
+        DeepHistoryPanel(state: _deepState, onLoadHistory: _loadHistory),
       ],
     );
   }
@@ -1271,7 +1292,7 @@ class ScreenFrame extends StatelessWidget {
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 112),
               sliver: SliverToBoxAdapter(child: child),
             ),
           ],
@@ -1540,9 +1561,16 @@ class SelectableCardBack extends StatelessWidget {
 }
 
 class DeepResultPanel extends StatelessWidget {
-  const DeepResultPanel({super.key, required this.reading});
+  const DeepResultPanel({
+    super.key,
+    required this.reading,
+    required this.isSavedForHistory,
+    required this.onHistoryVisibilityChanged,
+  });
 
   final DeepReading reading;
+  final bool isSavedForHistory;
+  final ValueChanged<bool> onHistoryVisibilityChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -1555,7 +1583,59 @@ class DeepResultPanel extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         SummaryStrip(text: reading.summary),
+        const SizedBox(height: 10),
+        SwitchListTile(
+          value: isSavedForHistory,
+          onChanged: onHistoryVisibilityChanged,
+          title: const Text('保存到歷史紀錄'),
+          secondary: const Icon(Icons.bookmark_add),
+        ),
       ],
+    );
+  }
+}
+
+class DeepHistoryPanel extends StatelessWidget {
+  const DeepHistoryPanel({
+    super.key,
+    required this.state,
+    required this.onLoadHistory,
+  });
+
+  final DeepReadingState state;
+  final VoidCallback onLoadHistory;
+
+  @override
+  Widget build(BuildContext context) {
+    return InfoPanel(
+      title: '歷史紀錄',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          OutlinedButton.icon(
+            onPressed: onLoadHistory,
+            icon: const Icon(Icons.history),
+            label: const Text('載入歷史'),
+          ),
+          if (state.status == DeepReadingStatus.historyLoading) ...[
+            const SizedBox(height: 12),
+            const Center(child: CircularProgressIndicator()),
+          ] else if (state.status == DeepReadingStatus.historyReady &&
+              state.history.isEmpty) ...[
+            const SizedBox(height: 12),
+            const Text('尚未保存占卜紀錄'),
+          ] else if (state.history.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            for (final item in state.history)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(item.question.isEmpty ? '未命名問題' : item.question),
+                subtitle: Text(item.summary),
+                trailing: const Icon(Icons.chevron_right),
+              ),
+          ],
+        ],
+      ),
     );
   }
 }
