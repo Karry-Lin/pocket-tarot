@@ -6,11 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:pocket_tarot/app/app_providers.dart';
 import 'package:pocket_tarot/domain/models/api_reading_models.dart';
 import 'package:pocket_tarot/data/repositories/tarot_catalog_repository.dart';
+import 'package:pocket_tarot/domain/models/local_settings.dart';
 import 'package:pocket_tarot/domain/models/tarot_card.dart';
 import 'package:pocket_tarot/domain/use_cases/app_startup_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/auth_form_validator.dart';
 import 'package:pocket_tarot/domain/use_cases/daily_reading_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/deep_reading_controller.dart';
+import 'package:pocket_tarot/domain/use_cases/profile_controller.dart';
 import 'package:pocket_tarot/l10n/generated/app_localizations.dart';
 import 'package:pocket_tarot/ui/core/widgets/safe_markdown_body.dart';
 
@@ -19,94 +21,12 @@ Future<void> main() async {
   runApp(const ProviderScope(child: PocketTarotApp()));
 }
 
-final appStateProvider = NotifierProvider<AppController, AppState>(
-  AppController.new,
-);
 final tarotCatalogRepositoryProvider = Provider<TarotCatalogRepository>((ref) {
   return TarotCatalogRepository(rootBundle);
 });
 final tarotCardsProvider = FutureProvider<List<TarotCard>>((ref) {
   return ref.watch(tarotCatalogRepositoryProvider).loadCards();
 });
-
-class AppState {
-  const AppState({
-    this.displayName = '星語',
-    this.dailyDrawn = false,
-    this.deepDraftStarted = false,
-    this.selectedIndexes = const [],
-    this.deepResultReady = false,
-    this.weatherEnabled = true,
-    this.localeMode = 'system',
-  });
-
-  final String displayName;
-  final bool dailyDrawn;
-  final bool deepDraftStarted;
-  final List<int> selectedIndexes;
-  final bool deepResultReady;
-  final bool weatherEnabled;
-  final String localeMode;
-
-  AppState copyWith({
-    String? displayName,
-    bool? dailyDrawn,
-    bool? deepDraftStarted,
-    List<int>? selectedIndexes,
-    bool? deepResultReady,
-    bool? weatherEnabled,
-    String? localeMode,
-  }) {
-    return AppState(
-      displayName: displayName ?? this.displayName,
-      dailyDrawn: dailyDrawn ?? this.dailyDrawn,
-      deepDraftStarted: deepDraftStarted ?? this.deepDraftStarted,
-      selectedIndexes: selectedIndexes ?? this.selectedIndexes,
-      deepResultReady: deepResultReady ?? this.deepResultReady,
-      weatherEnabled: weatherEnabled ?? this.weatherEnabled,
-      localeMode: localeMode ?? this.localeMode,
-    );
-  }
-}
-
-class AppController extends Notifier<AppState> {
-  @override
-  AppState build() => const AppState();
-
-  void drawDailyCard() => state = state.copyWith(dailyDrawn: true);
-
-  void startDeepDraft() {
-    state = state.copyWith(
-      deepDraftStarted: true,
-      selectedIndexes: [],
-      deepResultReady: false,
-    );
-  }
-
-  void toggleCard(int index) {
-    final selected = [...state.selectedIndexes];
-    if (selected.contains(index)) {
-      selected.remove(index);
-    } else if (selected.length < 3) {
-      selected.add(index);
-    }
-    state = state.copyWith(selectedIndexes: selected);
-  }
-
-  void createDeepResult() => state = state.copyWith(deepResultReady: true);
-
-  void setWeatherEnabled(bool value) =>
-      state = state.copyWith(weatherEnabled: value);
-
-  void setLocaleMode(String value) => state = state.copyWith(localeMode: value);
-
-  void setDisplayName(String value) {
-    final next = value.trim();
-    if (next.isNotEmpty && next.length <= 16) {
-      state = state.copyWith(displayName: next);
-    }
-  }
-}
 
 class PocketTarotApp extends StatefulWidget {
   const PocketTarotApp({super.key, this.initialLocation = '/splash'});
@@ -1166,54 +1086,152 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   }
 }
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(appStateProvider);
-    final controller = ref.read(appStateProvider.notifier);
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  ProfileState _profileState = const ProfileState.initial();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadProfile());
+  }
+
+  Future<void> _loadProfile() async {
+    final controller = await ref.read(profileControllerProvider.future);
+    await controller.load();
+    if (mounted) {
+      setState(() => _profileState = controller.state);
+    }
+  }
+
+  Future<void> _setLocaleMode(LocaleMode localeMode) async {
+    final controller = await ref.read(profileControllerProvider.future);
+    await controller.setLocaleMode(localeMode);
+    if (mounted) {
+      setState(() => _profileState = controller.state);
+    }
+  }
+
+  Future<void> _setWeatherEnabled(bool weatherEnabled) async {
+    final controller = await ref.read(profileControllerProvider.future);
+    await controller.setWeatherEnabled(weatherEnabled);
+    if (mounted) {
+      setState(() => _profileState = controller.state);
+    }
+  }
+
+  Future<void> _updateDisplayName(String displayName) async {
+    final controller = await ref.read(profileControllerProvider.future);
+    await controller.updateDisplayName(displayName);
+    if (mounted) {
+      setState(() => _profileState = controller.state);
+    }
+  }
+
+  Future<void> _signOut() async {
+    final controller = await ref.read(profileControllerProvider.future);
+    await controller.signOut();
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => _profileState = controller.state);
+    if (controller.state.status == ProfileStatus.signedOut) {
+      context.go('/login');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controllerAsync = ref.watch(profileControllerProvider);
 
     return ScreenFrame(
       title: '個人檔案',
-      trailing: state.displayName,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          InfoPanel(
-            title: state.displayName,
-            child: const Text('user@example.com\n每日抽牌 7 次 · 深度占卜 3 次'),
-          ),
-          const SizedBox(height: 12),
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'system', label: Text('系統')),
-              ButtonSegment(value: 'zh-TW', label: Text('繁中')),
-              ButtonSegment(value: 'en', label: Text('English')),
-            ],
-            selected: {state.localeMode},
-            onSelectionChanged: (value) =>
-                controller.setLocaleMode(value.first),
-          ),
-          const SizedBox(height: 12),
-          SwitchListTile(
-            value: state.weatherEnabled,
-            onChanged: controller.setWeatherEnabled,
-            title: const Text('每日抽牌使用天氣'),
-            secondary: const Icon(Icons.cloud),
-          ),
-          OutlinedButton.icon(
-            onPressed: () => _showNameDialog(context, controller),
-            icon: const Icon(Icons.edit),
-            label: const Text('編輯暱稱'),
-          ),
-          TextButton.icon(
-            onPressed: () => context.go('/login'),
-            icon: const Icon(Icons.logout),
-            label: const Text('登出'),
-          ),
-        ],
+      trailing: _profileState.snapshot?.user.displayName,
+      child: controllerAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) =>
+            InfoPanel(title: '個人檔案載入失敗', child: Text(error.toString())),
+        data: (_) => _profileContent(context),
       ),
+    );
+  }
+
+  Widget _profileContent(BuildContext context) {
+    final snapshot = _profileState.snapshot;
+    final settings =
+        _profileState.settings ??
+        const LocalSettings(
+          localeMode: LocaleMode.system,
+          weatherEnabled: true,
+        );
+
+    if (_profileState.status == ProfileStatus.initial ||
+        _profileState.status == ProfileStatus.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (snapshot == null) {
+      return InfoPanel(
+        title: '個人檔案載入失敗',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(_profileState.errorMessage ?? '無法載入個人檔案'),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _loadProfile,
+              icon: const Icon(Icons.refresh),
+              label: const Text('重新載入'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InfoPanel(
+          title: snapshot.user.displayName,
+          child: Text(
+            '${snapshot.user.email}\n每日抽牌 ${snapshot.stats.dailyReadingCount} 次 · 深度占卜 ${snapshot.stats.deepReadingCount} 次',
+          ),
+        ),
+        const SizedBox(height: 12),
+        SegmentedButton<LocaleMode>(
+          segments: const [
+            ButtonSegment(value: LocaleMode.system, label: Text('系統')),
+            ButtonSegment(value: LocaleMode.zhTw, label: Text('繁中')),
+            ButtonSegment(value: LocaleMode.en, label: Text('English')),
+          ],
+          selected: {settings.localeMode},
+          onSelectionChanged: (value) => _setLocaleMode(value.first),
+        ),
+        const SizedBox(height: 12),
+        SwitchListTile(
+          value: settings.weatherEnabled,
+          onChanged: _setWeatherEnabled,
+          title: const Text('每日抽牌使用天氣'),
+          secondary: const Icon(Icons.cloud),
+        ),
+        OutlinedButton.icon(
+          onPressed: () => _showNameDialog(context, _updateDisplayName),
+          icon: const Icon(Icons.edit),
+          label: const Text('編輯暱稱'),
+        ),
+        TextButton.icon(
+          onPressed: _signOut,
+          icon: const Icon(Icons.logout),
+          label: const Text('登出'),
+        ),
+      ],
     );
   }
 }
@@ -1595,7 +1613,7 @@ String _orientationLabel(String orientation) {
 
 Future<void> _showNameDialog(
   BuildContext context,
-  AppController controller,
+  Future<void> Function(String displayName) onSave,
 ) async {
   final textController = TextEditingController();
   await showDialog<void>(
@@ -1613,9 +1631,11 @@ Future<void> _showNameDialog(
           child: const Text('取消'),
         ),
         FilledButton(
-          onPressed: () {
-            controller.setDisplayName(textController.text);
-            Navigator.of(context).pop();
+          onPressed: () async {
+            await onSave(textController.text);
+            if (context.mounted) {
+              Navigator.of(context).pop();
+            }
           },
           child: const Text('儲存'),
         ),

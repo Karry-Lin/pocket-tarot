@@ -38,6 +38,8 @@ Daily and deep reading repositories expose controller-request adapter methods so
 
 `lib/domain/use_cases/profile_controller.dart` owns profile snapshot loading, display name edits, local language/weather settings, and sign-out state transitions.
 
+`ProfileScreen` displays profile stats and persists language/weather/name/sign-out actions through `profileControllerProvider`.
+
 ## Auth Gate
 
 Run `flutterfire configure` before testing signed-in auth flows so platform Firebase options are available.

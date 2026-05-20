@@ -14,6 +14,7 @@ import 'package:pocket_tarot/domain/use_cases/app_startup_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/auth_gate_evaluator.dart';
 import 'package:pocket_tarot/domain/use_cases/daily_reading_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/deep_reading_controller.dart';
+import 'package:pocket_tarot/domain/use_cases/profile_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final firebaseInitializationProvider = FutureProvider<void>((ref) async {
@@ -124,6 +125,24 @@ final deepReadingControllerProvider = FutureProvider<DeepReadingController>((
     setHistoryVisibility: deepReadingRepository.setHistoryVisibility,
     loadSettings: localSettingsRepository.load,
     systemLocaleCode: ref.watch(systemLocaleCodeProvider),
+  );
+});
+
+final profileControllerProvider = FutureProvider<ProfileController>((
+  ref,
+) async {
+  final localSettingsRepository = await ref.watch(
+    localSettingsRepositoryProvider.future,
+  );
+  final profileRepository = ref.watch(profileRepositoryProvider);
+  final authActions = ref.watch(authActionsProvider);
+
+  return ProfileController(
+    fetchProfile: profileRepository.fetchMe,
+    updateDisplayName: profileRepository.updateDisplayName,
+    loadSettings: localSettingsRepository.load,
+    saveSettings: localSettingsRepository.save,
+    signOut: authActions.signOut,
   );
 });
 
