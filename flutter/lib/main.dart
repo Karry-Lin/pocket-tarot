@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pocket_tarot/data/repositories/tarot_catalog_repository.dart';
 import 'package:pocket_tarot/domain/models/tarot_card.dart';
 import 'package:pocket_tarot/l10n/generated/app_localizations.dart';
+import 'package:pocket_tarot/ui/core/widgets/safe_markdown_body.dart';
 
 void main() {
   runApp(const ProviderScope(child: PocketTarotApp()));
@@ -324,8 +325,8 @@ class DailyResultCard extends StatelessWidget {
         const CardPreview(imagePath: 'assets/images/cards/moon.jpg', title: '月亮 / 正位'),
         const SizedBox(height: 18),
         InfoPanel(
-          title: '今日牌義',
-          child: Text('月亮提醒你先辨識不安的來源。放慢判斷，今天適合把感覺寫下來，再決定下一步。', style: Theme.of(context).textTheme.bodyMedium),
+          title: '牌義解讀',
+          child: const SafeMarkdownBody(data: _dailyDemoMarkdown),
         ),
         const SizedBox(height: 12),
         const SummaryStrip(text: '今天適合放慢腳步，看清內在不安。'),
@@ -791,11 +792,7 @@ class DeepResultPanel extends StatelessWidget {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InfoPanel(title: '問題核心', child: Text('月亮指出你需要先承認模糊感，而不是急著排除它。')),
-        SizedBox(height: 10),
-        InfoPanel(title: '隱藏影響', child: Text('星星讓你重新看見期待，但也提醒你不要只靠願望前進。')),
-        SizedBox(height: 10),
-        InfoPanel(title: '行動建議', child: Text('節制建議把節奏拆小，讓判斷和情緒重新對齊。')),
+        InfoPanel(title: '深度解讀', child: SafeMarkdownBody(data: _deepDemoMarkdown)),
         SizedBox(height: 10),
         SummaryStrip(text: '先辨識壓力，再拆小行動。'),
       ],
@@ -858,3 +855,19 @@ Future<void> _showNameDialog(BuildContext context, AppController controller) asy
     ),
   );
 }
+
+const _dailyDemoMarkdown = '''
+## 今日牌義
+月亮提醒你先辨識不安的來源。放慢判斷，今天適合把感覺寫下來，再決定下一步。
+''';
+
+const _deepDemoMarkdown = '''
+## 問題核心
+月亮指出你需要先承認模糊感，而不是急著排除它。
+
+## 隱藏影響
+星星讓你重新看見期待，但也提醒你不要只靠願望前進。
+
+## 行動建議
+節制建議把節奏拆小，讓判斷和情緒重新對齊。
+''';

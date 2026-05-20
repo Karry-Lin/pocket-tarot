@@ -31,3 +31,7 @@ The library tab reads the complete 78-card catalog from `assets/data/tarot_cards
 ## Local Settings
 
 `lib/data/repositories/local_settings_repository.dart` stores language mode and weather toggle in SharedPreferences. These settings are local-only and covered by `test/local_settings_test.dart`.
+
+## Safe Markdown
+
+LLM reading output is rendered through `lib/ui/core/widgets/safe_markdown_body.dart`. The renderer keeps headings, paragraphs, emphasis, lists, blockquotes, and horizontal rules, while stripping HTML, images, tables, and code blocks before display.
