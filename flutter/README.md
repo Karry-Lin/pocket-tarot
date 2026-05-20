@@ -46,6 +46,8 @@ Run `flutterfire configure` before testing signed-in auth flows so platform Fire
 
 The app router starts at `/splash`; `StartupScreen` runs the startup controller, routes ready states, and keeps the user on a retryable blocked screen when network/API checks fail. The router also includes blocked-state routes for `/account-deleted`, `/verify-email`, and `/pending`.
 
+Verify-email and pending-activation actions route back through `/splash` so auth/profile state is rechecked. Gate sign-out buttons delegate through `authActionsProvider`.
+
 `lib/data/repositories/auth_gate_repository.dart` adapts Firebase session state and profile API errors into that auth gate contract, including `PROFILE_NOT_FOUND` and `ACCOUNT_DELETED`.
 
 ## Firebase Auth Service

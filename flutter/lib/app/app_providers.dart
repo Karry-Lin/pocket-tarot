@@ -68,7 +68,7 @@ final authGateEvaluatorProvider = Provider<AuthGateEvaluator>((ref) {
     networkChecker: apiHealthService.isAvailable,
     authSessionLoader: () async {
       await ref.read(firebaseInitializationProvider.future);
-      return ref.read(authGateRepositoryProvider).loadSession();
+      return ref.read(authGateRepositoryProvider).loadSession(reload: true);
     },
     profileLoader: () => ref.read(authGateRepositoryProvider).loadProfile(),
     profileRegistrar: () =>

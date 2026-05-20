@@ -716,7 +716,7 @@ class VerifyEmailScreen extends StatelessWidget {
       title: '確認 Email',
       message: '驗證信已送出，完成後回到 App 繼續建立 profile。',
       actionLabel: '我已完成驗證',
-      onAction: () => context.go('/pending'),
+      onAction: () => context.go('/splash'),
     );
   }
 }
@@ -730,8 +730,8 @@ class PendingActivationScreen extends StatelessWidget {
       icon: Icons.hourglass_bottom,
       title: '等待啟用',
       message: '帳號已建立，管理員啟用後即可進入完整功能。',
-      actionLabel: 'Demo 啟用',
-      onAction: () => context.go('/home'),
+      actionLabel: '重新檢查',
+      onAction: () => context.go('/splash'),
     );
   }
 }
@@ -1138,7 +1138,7 @@ class AppBackdrop extends StatelessWidget {
   }
 }
 
-class GateScaffold extends StatelessWidget {
+class GateScaffold extends ConsumerWidget {
   const GateScaffold({
     super.key,
     required this.icon,
@@ -1155,7 +1155,7 @@ class GateScaffold extends StatelessWidget {
   final VoidCallback onAction;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return AppBackdrop(
       child: SafeArea(
         child: Padding(
@@ -1180,7 +1180,15 @@ class GateScaffold extends StatelessWidget {
               const SizedBox(height: 24),
               FilledButton(onPressed: onAction, child: Text(actionLabel)),
               TextButton(
-                onPressed: () => context.go('/login'),
+                onPressed: () async {
+                  try {
+                    await ref.read(authActionsProvider).signOut();
+                  } finally {
+                    if (context.mounted) {
+                      context.go('/login');
+                    }
+                  }
+                },
                 child: const Text('登出'),
               ),
             ],
