@@ -99,14 +99,37 @@ class AppController extends Notifier<AppState> {
 }
 
 class PocketTarotApp extends StatefulWidget {
-  const PocketTarotApp({super.key});
+  const PocketTarotApp({super.key, this.initialLocation = '/splash'});
+
+  final String initialLocation;
 
   @override
   State<PocketTarotApp> createState() => _PocketTarotAppState();
 }
 
 class _PocketTarotAppState extends State<PocketTarotApp> {
-  late final GoRouter _router = createRouter();
+  late GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = createRouter(initialLocation: widget.initialLocation);
+  }
+
+  @override
+  void didUpdateWidget(PocketTarotApp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialLocation != widget.initialLocation) {
+      _router.dispose();
+      _router = createRouter(initialLocation: widget.initialLocation);
+    }
+  }
+
+  @override
+  void dispose() {
+    _router.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,13 +152,15 @@ class _PocketTarotAppState extends State<PocketTarotApp> {
   }
 }
 
-GoRouter createRouter() {
+GoRouter createRouter({String initialLocation = '/splash'}) {
   return GoRouter(
-    initialLocation: '/login',
+    initialLocation: initialLocation,
     routes: [
+      GoRoute(path: '/splash', builder: (context, state) => const SplashNetworkBlockedScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/verify-email', builder: (context, state) => const VerifyEmailScreen()),
       GoRoute(path: '/pending', builder: (context, state) => const PendingActivationScreen()),
+      GoRoute(path: '/account-deleted', builder: (context, state) => const AccountDeletedScreen()),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) => AppShell(navigationShell: navigationShell),
         branches: [
@@ -183,6 +208,38 @@ ThemeData buildTheme() {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: paper.withValues(alpha: 0.08))),
     ),
   );
+}
+
+class SplashNetworkBlockedScreen extends StatelessWidget {
+  const SplashNetworkBlockedScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBackdrop(
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(child: Image.asset('assets/images/pocket-tarot-logo.png', height: 108)),
+              const SizedBox(height: 24),
+              Text('目前無法連線', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 8),
+              Text('請檢查網路後重試', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.refresh),
+                label: const Text('重新檢查'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class LoginScreen extends StatelessWidget {
@@ -257,6 +314,21 @@ class PendingActivationScreen extends StatelessWidget {
       message: '帳號已建立，管理員啟用後即可進入完整功能。',
       actionLabel: 'Demo 啟用',
       onAction: () => context.go('/home'),
+    );
+  }
+}
+
+class AccountDeletedScreen extends StatelessWidget {
+  const AccountDeletedScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GateScaffold(
+      icon: Icons.no_accounts,
+      title: '帳號已刪除',
+      message: '這個帳號已停用且無法繼續使用。如有疑問，請聯絡服務維運人員。',
+      actionLabel: '回到登入',
+      onAction: () => context.go('/login'),
     );
   }
 }
