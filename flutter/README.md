@@ -30,6 +30,8 @@ Daily and deep reading repositories expose controller-request adapter methods so
 
 `lib/domain/use_cases/daily_reading_controller.dart` owns the homepage daily reading state transition for loading today's result, empty state, and creating a reading with locale/weather request inputs.
 
+`HomeScreen` loads and draws through `dailyReadingControllerProvider`; rendered card markdown and summary come from the API reading model instead of static demo content.
+
 `lib/domain/use_cases/deep_reading_controller.dart` owns the divination room state transition for draft creation, three-card selection, result creation, saved-history loading, and history visibility toggles.
 
 `lib/domain/use_cases/profile_controller.dart` owns profile snapshot loading, display name edits, local language/weather settings, and sign-out state transitions.

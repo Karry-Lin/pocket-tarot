@@ -1,12 +1,18 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:ui' show PlatformDispatcher;
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pocket_tarot/data/repositories/auth_gate_repository.dart';
+import 'package:pocket_tarot/data/repositories/daily_reading_repository.dart';
+import 'package:pocket_tarot/data/repositories/local_settings_repository.dart';
 import 'package:pocket_tarot/data/repositories/profile_repository.dart';
 import 'package:pocket_tarot/data/services/api_client.dart';
 import 'package:pocket_tarot/data/services/api_health_service.dart';
 import 'package:pocket_tarot/data/services/firebase_auth_service.dart';
 import 'package:pocket_tarot/domain/use_cases/app_startup_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/auth_gate_evaluator.dart';
+import 'package:pocket_tarot/domain/use_cases/daily_reading_controller.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final firebaseInitializationProvider = FutureProvider<void>((ref) async {
   if (Firebase.apps.isEmpty) {
@@ -52,6 +58,49 @@ final apiHealthServiceProvider = Provider<ApiHealthService>((ref) {
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return ProfileRepository(ref.watch(apiClientProvider));
+});
+
+final dailyReadingRepositoryProvider = Provider<DailyReadingRepository>((ref) {
+  return DailyReadingRepository(ref.watch(apiClientProvider));
+});
+
+final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) {
+  return SharedPreferences.getInstance();
+});
+
+final localSettingsRepositoryProvider = FutureProvider<LocalSettingsRepository>(
+  (ref) async {
+    return LocalSettingsRepository(
+      await ref.watch(sharedPreferencesProvider.future),
+    );
+  },
+);
+
+final systemLocaleCodeProvider = Provider<String Function()>((ref) {
+  return () => PlatformDispatcher.instance.locale.toLanguageTag();
+});
+
+final dailyReadingLocationLoaderProvider = Provider<DailyReadingLocationLoader>(
+  (ref) {
+    return () async => const DailyReadingLocationResult.permissionDenied();
+  },
+);
+
+final dailyReadingControllerProvider = FutureProvider<DailyReadingController>((
+  ref,
+) async {
+  final localSettingsRepository = await ref.watch(
+    localSettingsRepositoryProvider.future,
+  );
+  final dailyReadingRepository = ref.watch(dailyReadingRepositoryProvider);
+
+  return DailyReadingController(
+    fetchToday: dailyReadingRepository.fetchToday,
+    createToday: dailyReadingRepository.createTodayFromRequest,
+    loadSettings: localSettingsRepository.load,
+    requestLocation: ref.watch(dailyReadingLocationLoaderProvider),
+    systemLocaleCode: ref.watch(systemLocaleCodeProvider),
+  );
 });
 
 final authGateRepositoryProvider = Provider<AuthGateRepository>((ref) {

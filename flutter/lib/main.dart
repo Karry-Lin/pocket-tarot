@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pocket_tarot/app/app_providers.dart';
+import 'package:pocket_tarot/domain/models/api_reading_models.dart';
 import 'package:pocket_tarot/data/repositories/tarot_catalog_repository.dart';
 import 'package:pocket_tarot/domain/models/tarot_card.dart';
 import 'package:pocket_tarot/domain/use_cases/app_startup_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/auth_form_validator.dart';
+import 'package:pocket_tarot/domain/use_cases/daily_reading_controller.dart';
 import 'package:pocket_tarot/l10n/generated/app_localizations.dart';
 import 'package:pocket_tarot/ui/core/widgets/safe_markdown_body.dart';
 
@@ -777,45 +779,105 @@ class AppShell extends StatelessWidget {
   }
 }
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(appStateProvider);
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  DailyReadingState _dailyState = const DailyReadingState.initial();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadToday());
+  }
+
+  Future<void> _loadToday() async {
+    final controller = await ref.read(dailyReadingControllerProvider.future);
+    await controller.loadToday();
+    if (mounted) {
+      setState(() => _dailyState = controller.state);
+    }
+  }
+
+  Future<void> _drawToday() async {
+    final controller = await ref.read(dailyReadingControllerProvider.future);
+    await controller.drawToday();
+    if (mounted) {
+      setState(() => _dailyState = controller.state);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final controllerAsync = ref.watch(dailyReadingControllerProvider);
 
     return ScreenFrame(
       title: '今日指引',
       trailing: 'Asia/Taipei',
-      child: state.dailyDrawn
-          ? const DailyResultCard()
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const CardPreview(
-                  imagePath: 'assets/images/card-back.png',
-                  title: '今天的牌還在牌堆裡',
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  '天氣、時間與當下狀態會一起送進解讀，結果只保留今天這一筆。',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 18),
-                FilledButton.icon(
-                  onPressed: () =>
-                      ref.read(appStateProvider.notifier).drawDailyCard(),
-                  icon: const Icon(Icons.style),
-                  label: const Text('抽今日牌'),
-                ),
-              ],
-            ),
+      child: controllerAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stackTrace) =>
+            _DailyErrorPanel(message: error.toString(), onRetry: _loadToday),
+        data: (_) => _dailyContent(context),
+      ),
     );
+  }
+
+  Widget _dailyContent(BuildContext context) {
+    return switch (_dailyState.status) {
+      DailyReadingStatus.initial || DailyReadingStatus.loading => const Center(
+        child: CircularProgressIndicator(),
+      ),
+      DailyReadingStatus.empty => _DailyEmptyState(onDraw: _drawToday),
+      DailyReadingStatus.creating => const Center(
+        child: CircularProgressIndicator(),
+      ),
+      DailyReadingStatus.loaded => DailyResultCard(
+        reading: _dailyState.reading!,
+      ),
+      DailyReadingStatus.error => _DailyErrorPanel(
+        message: _dailyState.errorMessage ?? '今日抽牌載入失敗',
+        onRetry: _loadToday,
+      ),
+    };
   }
 }
 
 class DailyResultCard extends StatelessWidget {
-  const DailyResultCard({super.key});
+  const DailyResultCard({super.key, required this.reading});
+
+  final DailyReading reading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        CardPreview(
+          imagePath: _imageForCardId(reading.card.cardId),
+          title:
+              '${reading.card.cardId} / ${_orientationLabel(reading.card.orientation)}',
+        ),
+        const SizedBox(height: 18),
+        InfoPanel(
+          title: '牌義解讀',
+          child: SafeMarkdownBody(data: reading.markdownResult),
+        ),
+        const SizedBox(height: 12),
+        SummaryStrip(text: reading.summary),
+      ],
+    );
+  }
+}
+
+class _DailyEmptyState extends StatelessWidget {
+  const _DailyEmptyState({required this.onDraw});
+
+  final VoidCallback onDraw;
 
   @override
   Widget build(BuildContext context) {
@@ -823,17 +885,47 @@ class DailyResultCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const CardPreview(
-          imagePath: 'assets/images/cards/moon.jpg',
-          title: '月亮 / 正位',
+          imagePath: 'assets/images/card-back.png',
+          title: '今天的牌還在牌堆裡',
         ),
         const SizedBox(height: 18),
-        InfoPanel(
-          title: '牌義解讀',
-          child: const SafeMarkdownBody(data: _dailyDemoMarkdown),
+        Text(
+          '天氣、時間與當下狀態會一起送進解讀，結果只保留今天這一筆。',
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
-        const SizedBox(height: 12),
-        const SummaryStrip(text: '今天適合放慢腳步，看清內在不安。'),
+        const SizedBox(height: 18),
+        FilledButton.icon(
+          onPressed: onDraw,
+          icon: const Icon(Icons.style),
+          label: const Text('抽今日牌'),
+        ),
       ],
+    );
+  }
+}
+
+class _DailyErrorPanel extends StatelessWidget {
+  const _DailyErrorPanel({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return InfoPanel(
+      title: '今日抽牌載入失敗',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(message),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('重新載入'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1423,11 +1515,23 @@ class CardDetailSheet extends StatelessWidget {
 }
 
 String _imageForCard(TarotCard card) {
-  return switch (card.id) {
+  return _imageForCardId(card.id);
+}
+
+String _imageForCardId(String cardId) {
+  return switch (cardId) {
     'major-18-moon' => 'assets/images/cards/moon.jpg',
     'major-17-star' => 'assets/images/cards/star.jpg',
     'major-14-temperance' => 'assets/images/cards/temperance.jpg',
     _ => 'assets/images/card-back.png',
+  };
+}
+
+String _orientationLabel(String orientation) {
+  return switch (orientation) {
+    'upright' => '正位',
+    'reversed' => '逆位',
+    _ => orientation,
   };
 }
 
@@ -1461,11 +1565,6 @@ Future<void> _showNameDialog(
     ),
   );
 }
-
-const _dailyDemoMarkdown = '''
-## 今日牌義
-月亮提醒你先辨識不安的來源。放慢判斷，今天適合把感覺寫下來，再決定下一步。
-''';
 
 const _deepDemoMarkdown = '''
 ## 問題核心
