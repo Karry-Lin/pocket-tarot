@@ -75,3 +75,4 @@ Verify-email and pending-activation actions route back through `/splash` so auth
 ## Safe Markdown
 
 LLM reading output is rendered through `lib/ui/core/widgets/safe_markdown_body.dart`. The renderer keeps headings, paragraphs, emphasis, lists, blockquotes, and horizontal rules, while stripping HTML, images, tables, and code blocks before display.
+Links are also stripped so rendered readings stay within the documented safe subset.
