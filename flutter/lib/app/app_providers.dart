@@ -140,6 +140,7 @@ final deepReadingControllerProvider = FutureProvider<DeepReadingController>((
     createDraft: deepReadingRepository.createDraft,
     createReading: deepReadingRepository.createReadingFromRequest,
     fetchHistory: deepReadingRepository.fetchHistory,
+    fetchSavedReading: deepReadingRepository.fetchById,
     setHistoryVisibility: deepReadingRepository.setHistoryVisibility,
     loadSettings: localSettingsRepository.load,
     systemLocaleCode: ref.watch(systemLocaleCodeProvider),

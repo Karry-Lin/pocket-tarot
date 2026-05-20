@@ -970,6 +970,14 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     }
   }
 
+  Future<void> _openHistoryReading(String id) async {
+    final controller = await ref.read(deepReadingControllerProvider.future);
+    await controller.loadSavedReading(id);
+    if (mounted) {
+      setState(() => _deepState = controller.state);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(deepReadingControllerProvider);
@@ -1072,7 +1080,11 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
           ],
         ],
         const SizedBox(height: 18),
-        DeepHistoryPanel(state: _deepState, onLoadHistory: _loadHistory),
+        DeepHistoryPanel(
+          state: _deepState,
+          onLoadHistory: _loadHistory,
+          onOpenHistory: _openHistoryReading,
+        ),
       ],
     );
   }
@@ -1729,10 +1741,12 @@ class DeepHistoryPanel extends StatelessWidget {
     super.key,
     required this.state,
     required this.onLoadHistory,
+    required this.onOpenHistory,
   });
 
   final DeepReadingState state;
   final VoidCallback onLoadHistory;
+  final ValueChanged<String> onOpenHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -1765,6 +1779,7 @@ class DeepHistoryPanel extends StatelessWidget {
                 ),
                 subtitle: Text(item.summary),
                 trailing: const Icon(Icons.chevron_right),
+                onTap: () => onOpenHistory(item.id),
               ),
           ],
         ],

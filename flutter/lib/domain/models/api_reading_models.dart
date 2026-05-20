@@ -109,6 +109,28 @@ class DeepReading {
       createdAt: DateTime.parse(json['createdAt']! as String),
     );
   }
+
+  DeepReading copyWith({
+    String? id,
+    String? question,
+    List<SelectedReadingCard>? selectedCards,
+    String? markdownResult,
+    String? summary,
+    String? resultLocale,
+    bool? isSavedForHistory,
+    DateTime? createdAt,
+  }) {
+    return DeepReading(
+      id: id ?? this.id,
+      question: question ?? this.question,
+      selectedCards: selectedCards ?? this.selectedCards,
+      markdownResult: markdownResult ?? this.markdownResult,
+      summary: summary ?? this.summary,
+      resultLocale: resultLocale ?? this.resultLocale,
+      isSavedForHistory: isSavedForHistory ?? this.isSavedForHistory,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }
 
 class DeepReadingHistoryItem {

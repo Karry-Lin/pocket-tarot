@@ -5,6 +5,7 @@ typedef DeepDraftCreator = Future<List<CardDraw>> Function();
 typedef DeepReadingCreator =
     Future<DeepReading> Function(DeepReadingCreateRequest request);
 typedef DeepHistoryFetcher = Future<List<DeepReadingHistoryItem>> Function();
+typedef SavedDeepReadingFetcher = Future<DeepReading> Function(String id);
 typedef DeepHistoryVisibilitySetter =
     Future<HistoryVisibility> Function({
       required String id,
@@ -107,12 +108,14 @@ class DeepReadingController {
     required DeepDraftCreator createDraft,
     required DeepReadingCreator createReading,
     required DeepHistoryFetcher fetchHistory,
+    required SavedDeepReadingFetcher fetchSavedReading,
     required DeepHistoryVisibilitySetter setHistoryVisibility,
     required DeepLocalSettingsLoader loadSettings,
     required DeepSystemLocaleCodeLoader systemLocaleCode,
   }) : _createDraft = createDraft,
        _createReading = createReading,
        _fetchHistory = fetchHistory,
+       _fetchSavedReading = fetchSavedReading,
        _setHistoryVisibility = setHistoryVisibility,
        _loadSettings = loadSettings,
        _systemLocaleCode = systemLocaleCode;
@@ -120,6 +123,7 @@ class DeepReadingController {
   final DeepDraftCreator _createDraft;
   final DeepReadingCreator _createReading;
   final DeepHistoryFetcher _fetchHistory;
+  final SavedDeepReadingFetcher _fetchSavedReading;
   final DeepHistoryVisibilitySetter _setHistoryVisibility;
   final DeepLocalSettingsLoader _loadSettings;
   final DeepSystemLocaleCodeLoader _systemLocaleCode;
@@ -209,6 +213,24 @@ class DeepReadingController {
       _state = _state.copyWith(
         status: DeepReadingStatus.historyReady,
         history: history,
+      );
+    } catch (error) {
+      _state = _state.copyWith(
+        status: DeepReadingStatus.error,
+        errorMessage: error.toString(),
+      );
+    }
+  }
+
+  Future<void> loadSavedReading(String id) async {
+    _state = _state.copyWith(status: DeepReadingStatus.historyLoading);
+
+    try {
+      final reading = await _fetchSavedReading(id);
+      _state = _state.copyWith(
+        status: DeepReadingStatus.resultReady,
+        reading: reading,
+        resultHistorySaved: reading.isSavedForHistory,
       );
     } catch (error) {
       _state = _state.copyWith(
