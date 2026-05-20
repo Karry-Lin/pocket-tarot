@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 
 import { ApiError } from "../http/apiError.js";
+import { DailyReadingModel } from "../models/DailyReading.js";
+import { DeepReadingModel } from "../models/DeepReading.js";
 import { UserModel, type UserDocument } from "../models/User.js";
 import type { DecodedFirebaseToken } from "./firebaseAuthService.js";
 
@@ -72,14 +74,25 @@ export async function registerProfile(firebaseUser: DecodedFirebaseToken, input:
 
 export async function getUserMe(firebaseUser: DecodedFirebaseToken) {
   const user = await findCurrentUser(firebaseUser);
+  const [dailyReadingCount, deepReadingCount] = await Promise.all([
+    DailyReadingModel.countDocuments({ userId: user._id }),
+    DeepReadingModel.countDocuments({ userId: user._id })
+  ]);
 
   return {
     user,
     stats: {
-      dailyReadingCount: 0,
-      deepReadingCount: 0
+      dailyReadingCount,
+      deepReadingCount
     }
   };
+}
+
+export async function getActiveUser(firebaseUser: DecodedFirebaseToken) {
+  const user = await findCurrentUser(firebaseUser);
+  ensureActive(user);
+
+  return user;
 }
 
 export async function updateCurrentUser(firebaseUser: DecodedFirebaseToken, input: UpdateProfileInput) {

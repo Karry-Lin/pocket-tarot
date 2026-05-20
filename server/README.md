@@ -33,3 +33,10 @@ API routes use `/api/v1`.
 - `GET /api/v1/admin/users/:id`
 - `PATCH /api/v1/admin/users/:id/activation`
 - `PATCH /api/v1/admin/users/:id/deletion`
+- `GET /api/v1/daily-readings/today`
+- `POST /api/v1/daily-readings/today`
+- `POST /api/v1/deep-readings/drafts`
+- `POST /api/v1/deep-readings`
+- `GET /api/v1/deep-readings/history`
+- `GET /api/v1/deep-readings/:id`
+- `PATCH /api/v1/deep-readings/:id/history-visibility`

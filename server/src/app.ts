@@ -7,6 +7,8 @@ import { loadOpenApiDocument } from "./config/openApi.js";
 import { errorHandler } from "./http/errorHandler.js";
 import { createAdminRouter } from "./routes/adminRoutes.js";
 import { createAuthRouter } from "./routes/authRoutes.js";
+import { createDailyReadingRouter } from "./routes/dailyReadingRoutes.js";
+import { createDeepReadingRouter } from "./routes/deepReadingRoutes.js";
 import { createUserRouter } from "./routes/userRoutes.js";
 import { buildAppDependencies, type AppOptions } from "./types/appDependencies.js";
 
@@ -34,6 +36,8 @@ export function createApp(options: AppOptions = {}): Express {
 
   app.use("/api/v1/auth", createAuthRouter(dependencies));
   app.use("/api/v1/users", createUserRouter(dependencies));
+  app.use("/api/v1/daily-readings", createDailyReadingRouter(dependencies));
+  app.use("/api/v1/deep-readings", createDeepReadingRouter(dependencies));
   app.use("/api/v1/admin", createAdminRouter(dependencies));
 
   app.use(
