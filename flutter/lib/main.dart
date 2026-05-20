@@ -933,10 +933,19 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: const [
-            PromptChip(text: '工作方向'),
-            PromptChip(text: '感情狀態'),
-            PromptChip(text: '下一步選擇'),
+          children: [
+            PromptChip(
+              text: '工作方向',
+              onPressed: () => _applyQuestionTemplate('工作方向'),
+            ),
+            PromptChip(
+              text: '感情狀態',
+              onPressed: () => _applyQuestionTemplate('感情狀態'),
+            ),
+            PromptChip(
+              text: '下一步選擇',
+              onPressed: () => _applyQuestionTemplate('下一步選擇'),
+            ),
           ],
         ),
         const SizedBox(height: 18),
@@ -991,6 +1000,13 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
         const SizedBox(height: 18),
         DeepHistoryPanel(state: _deepState, onLoadHistory: _loadHistory),
       ],
+    );
+  }
+
+  void _applyQuestionTemplate(String question) {
+    _questionController.text = question;
+    _questionController.selection = TextSelection.collapsed(
+      offset: question.length,
     );
   }
 }
@@ -1490,16 +1506,17 @@ class SummaryStrip extends StatelessWidget {
 }
 
 class PromptChip extends StatelessWidget {
-  const PromptChip({super.key, required this.text});
+  const PromptChip({super.key, required this.text, required this.onPressed});
 
   final String text;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return ActionChip(
       avatar: const Icon(Icons.add, size: 16),
       label: Text(text),
-      onPressed: () {},
+      onPressed: onPressed,
     );
   }
 }
@@ -1589,6 +1606,22 @@ class DeepResultPanel extends StatelessWidget {
           onChanged: onHistoryVisibilityChanged,
           title: const Text('保存到歷史紀錄'),
           secondary: const Icon(Icons.bookmark_add),
+        ),
+        const SizedBox(height: 10),
+        InfoPanel(
+          title: '抽到的三張牌',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final card in reading.selectedCards)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    '${card.positionLabel} · ${card.cardId} · ${_orientationLabel(card.orientation)}',
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );
