@@ -32,6 +32,8 @@ The library tab reads the complete 78-card catalog from `assets/data/tarot_cards
 
 ## Auth Gate
 
+`lib/domain/use_cases/app_startup_controller.dart` maps splash/auth gate outcomes into app startup states and target routes, including blocked network/API and deleted-account routing.
+
 `lib/domain/use_cases/auth_gate_evaluator.dart` contains the tested auth gate decision chain from splash/network check through login, email verification, profile registration, pending activation, deleted account, and app shell routing.
 
 `lib/data/repositories/auth_gate_repository.dart` adapts Firebase session state and profile API errors into that auth gate contract, including `PROFILE_NOT_FOUND` and `ACCOUNT_DELETED`.
