@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -28,16 +27,16 @@ final tarotCardsProvider = FutureProvider<List<TarotCard>>((ref) {
   return ref.watch(tarotCatalogRepositoryProvider).loadCards();
 });
 
-class PocketTarotApp extends StatefulWidget {
+class PocketTarotApp extends ConsumerStatefulWidget {
   const PocketTarotApp({super.key, this.initialLocation = '/splash'});
 
   final String initialLocation;
 
   @override
-  State<PocketTarotApp> createState() => _PocketTarotAppState();
+  ConsumerState<PocketTarotApp> createState() => _PocketTarotAppState();
 }
 
-class _PocketTarotAppState extends State<PocketTarotApp> {
+class _PocketTarotAppState extends ConsumerState<PocketTarotApp> {
   late GoRouter _router;
 
   @override
@@ -63,17 +62,15 @@ class _PocketTarotAppState extends State<PocketTarotApp> {
 
   @override
   Widget build(BuildContext context) {
+    final appLocale = ref.watch(appLocaleProvider).asData?.value;
+
     return MaterialApp.router(
-      title: 'Pocket Tarot',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       debugShowCheckedModeBanner: false,
+      locale: appLocale,
       theme: buildTheme(),
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      supportedLocales: const [Locale('en'), Locale('zh', 'TW')],
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: _router,
     );
   }
@@ -681,6 +678,8 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
@@ -689,11 +688,23 @@ class AppShell extends StatelessWidget {
           index,
           initialLocation: index == navigationShell.currentIndex,
         ),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.auto_awesome), label: '首頁'),
-          NavigationDestination(icon: Icon(Icons.grid_view), label: '占卜館'),
-          NavigationDestination(icon: Icon(Icons.menu_book), label: '圖書館'),
-          NavigationDestination(icon: Icon(Icons.person), label: '個人'),
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.auto_awesome),
+            label: l10n.navHome,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.grid_view),
+            label: l10n.navDivination,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.menu_book),
+            label: l10n.navLibrary,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.person),
+            label: l10n.navProfile,
+          ),
         ],
       ),
     );
@@ -735,9 +746,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(dailyReadingControllerProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return ScreenFrame(
-      title: '今日指引',
+      title: l10n.homeTitle,
       trailing: 'Asia/Taipei',
       child: controllerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -749,6 +761,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Widget _dailyContent(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return switch (_dailyState.status) {
       DailyReadingStatus.initial || DailyReadingStatus.loading => const Center(
         child: CircularProgressIndicator(),
@@ -761,7 +775,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         reading: _dailyState.reading!,
       ),
       DailyReadingStatus.error => _DailyErrorPanel(
-        message: _dailyState.errorMessage ?? '今日抽牌載入失敗',
+        message: _dailyState.errorMessage ?? l10n.dailyLoadFailed,
         onRetry: _loadToday,
       ),
     };
@@ -775,6 +789,8 @@ class DailyResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -785,7 +801,7 @@ class DailyResultCard extends StatelessWidget {
         ),
         const SizedBox(height: 18),
         InfoPanel(
-          title: '牌義解讀',
+          title: l10n.dailyReadingPanelTitle,
           child: SafeMarkdownBody(data: reading.markdownResult),
         ),
         const SizedBox(height: 12),
@@ -802,23 +818,25 @@ class _DailyEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const CardPreview(
+        CardPreview(
           imagePath: 'assets/images/card-back.png',
-          title: '今天的牌還在牌堆裡',
+          title: l10n.dailyEmptyTitle,
         ),
         const SizedBox(height: 18),
         Text(
-          '天氣、時間與當下狀態會一起送進解讀，結果只保留今天這一筆。',
+          l10n.dailyEmptyMessage,
           style: Theme.of(context).textTheme.bodyMedium,
         ),
         const SizedBox(height: 18),
         FilledButton.icon(
           onPressed: onDraw,
           icon: const Icon(Icons.style),
-          label: const Text('抽今日牌'),
+          label: Text(l10n.dailyDrawButton),
         ),
       ],
     );
@@ -833,8 +851,10 @@ class _DailyErrorPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return InfoPanel(
-      title: '今日抽牌載入失敗',
+      title: l10n.dailyLoadFailed,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -843,7 +863,7 @@ class _DailyErrorPanel extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
-            label: const Text('重新載入'),
+            label: Text(l10n.retryLoad),
           ),
         ],
       ),
@@ -1150,6 +1170,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _setLocaleMode(LocaleMode localeMode) async {
     final controller = await ref.read(profileControllerProvider.future);
     await controller.setLocaleMode(localeMode);
+    ref.invalidate(appLocaleProvider);
     if (mounted) {
       setState(() => _profileState = controller.state);
     }

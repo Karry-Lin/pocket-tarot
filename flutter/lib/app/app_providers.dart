@@ -1,4 +1,4 @@
-import 'dart:ui' show PlatformDispatcher;
+import 'dart:ui' show Locale, PlatformDispatcher;
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +11,7 @@ import 'package:pocket_tarot/data/services/api_client.dart';
 import 'package:pocket_tarot/data/services/api_health_service.dart';
 import 'package:pocket_tarot/data/services/device_location_service.dart';
 import 'package:pocket_tarot/data/services/firebase_auth_service.dart';
+import 'package:pocket_tarot/domain/models/local_settings.dart';
 import 'package:pocket_tarot/domain/use_cases/app_startup_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/auth_gate_evaluator.dart';
 import 'package:pocket_tarot/domain/use_cases/daily_reading_controller.dart';
@@ -86,6 +87,18 @@ final localSettingsRepositoryProvider = FutureProvider<LocalSettingsRepository>(
 
 final systemLocaleCodeProvider = Provider<String Function()>((ref) {
   return () => PlatformDispatcher.instance.locale.toLanguageTag();
+});
+
+final appLocaleProvider = FutureProvider<Locale?>((ref) async {
+  final localSettingsRepository = await ref.watch(
+    localSettingsRepositoryProvider.future,
+  );
+  final settings = await localSettingsRepository.load();
+  return switch (settings.localeMode) {
+    LocaleMode.system => null,
+    LocaleMode.zhTw => const Locale('zh', 'TW'),
+    LocaleMode.en => const Locale('en'),
+  };
 });
 
 final deviceLocationServiceProvider = Provider<DeviceLocationService>((ref) {

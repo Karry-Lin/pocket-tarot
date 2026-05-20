@@ -2,5 +2,16 @@
   "appTitle": "Pocket Tarot",
   "@appTitle": {
     "description": "Application title"
-  }
+  },
+  "navHome": "Daily",
+  "navDivination": "Reading",
+  "navLibrary": "Library",
+  "navProfile": "Profile",
+  "homeTitle": "Daily Guidance",
+  "dailyReadingPanelTitle": "Card Meaning",
+  "dailyEmptyTitle": "Today's card is still in the deck",
+  "dailyEmptyMessage": "Weather, time, and your current state can be included in the reading. The result is kept for today only.",
+  "dailyDrawButton": "Draw today's card",
+  "dailyLoadFailed": "Daily reading failed to load",
+  "retryLoad": "Reload"
 }

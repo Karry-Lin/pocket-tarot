@@ -104,6 +104,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pocket Tarot'**
   String get appTitle;
+
+  /// No description provided for @navHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get navHome;
+
+  /// No description provided for @navDivination.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get navDivination;
+
+  /// No description provided for @navLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get navLibrary;
+
+  /// No description provided for @navProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get navProfile;
+
+  /// No description provided for @homeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Guidance'**
+  String get homeTitle;
+
+  /// No description provided for @dailyReadingPanelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Card Meaning'**
+  String get dailyReadingPanelTitle;
+
+  /// No description provided for @dailyEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s card is still in the deck'**
+  String get dailyEmptyTitle;
+
+  /// No description provided for @dailyEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather, time, and your current state can be included in the reading. The result is kept for today only.'**
+  String get dailyEmptyMessage;
+
+  /// No description provided for @dailyDrawButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Draw today\'s card'**
+  String get dailyDrawButton;
+
+  /// No description provided for @dailyLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reading failed to load'**
+  String get dailyLoadFailed;
+
+  /// No description provided for @retryLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get retryLoad;
 }
 
 class _AppLocalizationsDelegate
