@@ -1185,6 +1185,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     onTap: () => showModalBottomSheet<void>(
                       context: context,
                       showDragHandle: true,
+                      isScrollControlled: true,
                       builder: (context) => CardDetailSheet(
                         card: card,
                         imagePath: _imageForCard(card),
@@ -1786,30 +1787,34 @@ class CardDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(child: Image.asset(imagePath, height: 220, fit: BoxFit.cover)),
-          const SizedBox(height: 16),
-          Text(
-            _primaryCardName(card, l10n),
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          Text(
-            _secondaryCardName(card, l10n),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.cardMeaningText(
-              _uprightCardMeaning(card, l10n),
-              _reversedCardMeaning(card, l10n),
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Image.asset(imagePath, height: 180, fit: BoxFit.cover),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Text(
+              _primaryCardName(card, l10n),
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            Text(
+              _secondaryCardName(card, l10n),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.cardMeaningText(
+                _uprightCardMeaning(card, l10n),
+                _reversedCardMeaning(card, l10n),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
