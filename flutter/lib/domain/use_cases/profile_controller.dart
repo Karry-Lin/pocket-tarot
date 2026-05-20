@@ -7,6 +7,15 @@ typedef ProfileSettingsLoader = Future<LocalSettings> Function();
 typedef ProfileSettingsSaver = Future<void> Function(LocalSettings settings);
 typedef ProfileSignOut = Future<void> Function();
 
+class ProfileValidationMessages {
+  const ProfileValidationMessages({required this.displayNameInvalid});
+
+  const ProfileValidationMessages.zhTw()
+    : displayNameInvalid = '暱稱長度必須為 1-16 字';
+
+  final String displayNameInvalid;
+}
+
 enum ProfileStatus {
   initial,
   loading,
@@ -54,11 +63,11 @@ class ProfileController {
     required ProfileSettingsLoader loadSettings,
     required ProfileSettingsSaver saveSettings,
     required ProfileSignOut signOut,
-  })  : _fetchProfile = fetchProfile,
-        _updateDisplayName = updateDisplayName,
-        _loadSettings = loadSettings,
-        _saveSettings = saveSettings,
-        _signOut = signOut;
+  }) : _fetchProfile = fetchProfile,
+       _updateDisplayName = updateDisplayName,
+       _loadSettings = loadSettings,
+       _saveSettings = saveSettings,
+       _signOut = signOut;
 
   final ProfileFetcher _fetchProfile;
   final DisplayNameUpdater _updateDisplayName;
@@ -84,14 +93,23 @@ class ProfileController {
         settings: results[1] as LocalSettings,
       );
     } catch (error) {
-      _state = ProfileState(status: ProfileStatus.error, errorMessage: error.toString());
+      _state = ProfileState(
+        status: ProfileStatus.error,
+        errorMessage: error.toString(),
+      );
     }
   }
 
-  Future<void> updateDisplayName(String value) async {
+  Future<void> updateDisplayName(
+    String value, {
+    ProfileValidationMessages messages = const ProfileValidationMessages.zhTw(),
+  }) async {
     final displayName = value.trim();
     if (displayName.isEmpty || displayName.length > 16) {
-      _state = _state.copyWith(status: ProfileStatus.error, errorMessage: '暱稱長度必須為 1-16 字');
+      _state = _state.copyWith(
+        status: ProfileStatus.error,
+        errorMessage: messages.displayNameInvalid,
+      );
       return;
     }
 
@@ -102,10 +120,15 @@ class ProfileController {
       final currentSnapshot = _state.snapshot;
       _state = _state.copyWith(
         status: ProfileStatus.loaded,
-        snapshot: currentSnapshot == null ? null : ProfileSnapshot(user: user, stats: currentSnapshot.stats),
+        snapshot: currentSnapshot == null
+            ? null
+            : ProfileSnapshot(user: user, stats: currentSnapshot.stats),
       );
     } catch (error) {
-      _state = _state.copyWith(status: ProfileStatus.error, errorMessage: error.toString());
+      _state = _state.copyWith(
+        status: ProfileStatus.error,
+        errorMessage: error.toString(),
+      );
     }
   }
 
@@ -124,15 +147,20 @@ class ProfileController {
       await _signOut();
       _state = _state.copyWith(status: ProfileStatus.signedOut);
     } catch (error) {
-      _state = _state.copyWith(status: ProfileStatus.error, errorMessage: error.toString());
+      _state = _state.copyWith(
+        status: ProfileStatus.error,
+        errorMessage: error.toString(),
+      );
     }
   }
 
-  LocalSettings _settingsWith({
-    LocaleMode? localeMode,
-    bool? weatherEnabled,
-  }) {
-    final settings = _state.settings ?? const LocalSettings(localeMode: LocaleMode.system, weatherEnabled: true);
+  LocalSettings _settingsWith({LocaleMode? localeMode, bool? weatherEnabled}) {
+    final settings =
+        _state.settings ??
+        const LocalSettings(
+          localeMode: LocaleMode.system,
+          weatherEnabled: true,
+        );
     return LocalSettings(
       localeMode: localeMode ?? settings.localeMode,
       weatherEnabled: weatherEnabled ?? settings.weatherEnabled,
@@ -144,9 +172,15 @@ class ProfileController {
 
     try {
       await _saveSettings(settings);
-      _state = _state.copyWith(status: ProfileStatus.loaded, settings: settings);
+      _state = _state.copyWith(
+        status: ProfileStatus.loaded,
+        settings: settings,
+      );
     } catch (error) {
-      _state = _state.copyWith(status: ProfileStatus.error, errorMessage: error.toString());
+      _state = _state.copyWith(
+        status: ProfileStatus.error,
+        errorMessage: error.toString(),
+      );
     }
   }
 }

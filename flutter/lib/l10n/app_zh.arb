@@ -53,6 +53,8 @@
   "startDraft": "展開 9 張牌",
   "createReading": "產生解讀",
   "readingCreateFailed": "占卜產生失敗",
+  "deepSelectExactlyThreeCards": "必須選擇 3 張牌",
+  "deepNoSavableResult": "沒有可保存的占卜結果",
   "libraryTitle": "塔羅圖書館",
   "libraryLoadFailed": "牌庫載入失敗",
   "searchCardsLabel": "搜尋牌名或關鍵字",

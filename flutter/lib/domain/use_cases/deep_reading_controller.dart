@@ -2,14 +2,30 @@ import 'package:pocket_tarot/domain/models/api_reading_models.dart';
 import 'package:pocket_tarot/domain/models/local_settings.dart';
 
 typedef DeepDraftCreator = Future<List<CardDraw>> Function();
-typedef DeepReadingCreator = Future<DeepReading> Function(DeepReadingCreateRequest request);
+typedef DeepReadingCreator =
+    Future<DeepReading> Function(DeepReadingCreateRequest request);
 typedef DeepHistoryFetcher = Future<List<DeepReadingHistoryItem>> Function();
-typedef DeepHistoryVisibilitySetter = Future<HistoryVisibility> Function({
-  required String id,
-  required bool isSavedForHistory,
-});
+typedef DeepHistoryVisibilitySetter =
+    Future<HistoryVisibility> Function({
+      required String id,
+      required bool isSavedForHistory,
+    });
 typedef DeepLocalSettingsLoader = Future<LocalSettings> Function();
 typedef DeepSystemLocaleCodeLoader = String Function();
+
+class DeepReadingMessages {
+  const DeepReadingMessages({
+    required this.selectExactlyThreeCards,
+    required this.noSavableResult,
+  });
+
+  const DeepReadingMessages.zhTw()
+    : selectExactlyThreeCards = '必須選擇 3 張牌',
+      noSavableResult = '沒有可保存的占卜結果';
+
+  final String selectExactlyThreeCards;
+  final String noSavableResult;
+}
 
 enum DeepReadingStatus {
   initial,
@@ -94,12 +110,12 @@ class DeepReadingController {
     required DeepHistoryVisibilitySetter setHistoryVisibility,
     required DeepLocalSettingsLoader loadSettings,
     required DeepSystemLocaleCodeLoader systemLocaleCode,
-  })  : _createDraft = createDraft,
-        _createReading = createReading,
-        _fetchHistory = fetchHistory,
-        _setHistoryVisibility = setHistoryVisibility,
-        _loadSettings = loadSettings,
-        _systemLocaleCode = systemLocaleCode;
+  }) : _createDraft = createDraft,
+       _createReading = createReading,
+       _fetchHistory = fetchHistory,
+       _setHistoryVisibility = setHistoryVisibility,
+       _loadSettings = loadSettings,
+       _systemLocaleCode = systemLocaleCode;
 
   final DeepDraftCreator _createDraft;
   final DeepReadingCreator _createReading;
@@ -114,7 +130,10 @@ class DeepReadingController {
 
   Future<void> startDraft(String question) async {
     final normalizedQuestion = _normalizeQuestion(question);
-    _state = DeepReadingState(status: DeepReadingStatus.drafting, question: normalizedQuestion);
+    _state = DeepReadingState(
+      status: DeepReadingStatus.drafting,
+      question: normalizedQuestion,
+    );
 
     try {
       final draftCards = await _createDraft();
@@ -124,7 +143,10 @@ class DeepReadingController {
         draftCards: draftCards,
       );
     } catch (error) {
-      _state = _state.copyWith(status: DeepReadingStatus.error, errorMessage: error.toString());
+      _state = _state.copyWith(
+        status: DeepReadingStatus.error,
+        errorMessage: error.toString(),
+      );
     }
   }
 
@@ -143,9 +165,14 @@ class DeepReadingController {
     _state = _state.copyWith(selectedIndexes: selectedIndexes);
   }
 
-  Future<void> createResult() async {
+  Future<void> createResult({
+    DeepReadingMessages messages = const DeepReadingMessages.zhTw(),
+  }) async {
     if (_state.selectedIndexes.length != 3) {
-      _state = _state.copyWith(status: DeepReadingStatus.error, errorMessage: '必須選擇 3 張牌');
+      _state = _state.copyWith(
+        status: DeepReadingStatus.error,
+        errorMessage: messages.selectExactlyThreeCards,
+      );
       return;
     }
 
@@ -167,7 +194,10 @@ class DeepReadingController {
         resultHistorySaved: reading.isSavedForHistory,
       );
     } catch (error) {
-      _state = _state.copyWith(status: DeepReadingStatus.error, errorMessage: error.toString());
+      _state = _state.copyWith(
+        status: DeepReadingStatus.error,
+        errorMessage: error.toString(),
+      );
     }
   }
 
@@ -176,16 +206,28 @@ class DeepReadingController {
 
     try {
       final history = await _fetchHistory();
-      _state = _state.copyWith(status: DeepReadingStatus.historyReady, history: history);
+      _state = _state.copyWith(
+        status: DeepReadingStatus.historyReady,
+        history: history,
+      );
     } catch (error) {
-      _state = _state.copyWith(status: DeepReadingStatus.error, errorMessage: error.toString());
+      _state = _state.copyWith(
+        status: DeepReadingStatus.error,
+        errorMessage: error.toString(),
+      );
     }
   }
 
-  Future<void> updateHistoryVisibility(bool isSavedForHistory) async {
+  Future<void> updateHistoryVisibility(
+    bool isSavedForHistory, {
+    DeepReadingMessages messages = const DeepReadingMessages.zhTw(),
+  }) async {
     final reading = _state.reading;
     if (reading == null) {
-      _state = _state.copyWith(status: DeepReadingStatus.error, errorMessage: '沒有可保存的占卜結果');
+      _state = _state.copyWith(
+        status: DeepReadingStatus.error,
+        errorMessage: messages.noSavableResult,
+      );
       return;
     }
 
@@ -199,7 +241,10 @@ class DeepReadingController {
         resultHistorySaved: visibility.isSavedForHistory,
       );
     } catch (error) {
-      _state = _state.copyWith(status: DeepReadingStatus.error, errorMessage: error.toString());
+      _state = _state.copyWith(
+        status: DeepReadingStatus.error,
+        errorMessage: error.toString(),
+      );
     }
   }
 
@@ -212,7 +257,8 @@ class DeepReadingController {
     return switch (localeMode) {
       LocaleMode.zhTw => 'zh-TW',
       LocaleMode.en => 'en',
-      LocaleMode.system => _systemLocaleCode().toLowerCase().startsWith('zh') ? 'zh-TW' : 'en',
+      LocaleMode.system =>
+        _systemLocaleCode().toLowerCase().startsWith('zh') ? 'zh-TW' : 'en',
     };
   }
 }

@@ -56,6 +56,8 @@
   "startDraft": "Reveal 9 cards",
   "createReading": "Generate reading",
   "readingCreateFailed": "Reading failed",
+  "deepSelectExactlyThreeCards": "Select exactly 3 cards",
+  "deepNoSavableResult": "No reading result to save",
   "libraryTitle": "Tarot Library",
   "libraryLoadFailed": "Card library failed to load",
   "searchCardsLabel": "Search card name or keyword",

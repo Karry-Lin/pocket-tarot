@@ -176,6 +176,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readingCreateFailed => 'Reading failed';
 
   @override
+  String get deepSelectExactlyThreeCards => 'Select exactly 3 cards';
+
+  @override
+  String get deepNoSavableResult => 'No reading result to save';
+
+  @override
   String get libraryTitle => 'Tarot Library';
 
   @override

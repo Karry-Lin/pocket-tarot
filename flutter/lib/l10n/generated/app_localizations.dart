@@ -423,6 +423,18 @@ abstract class AppLocalizations {
   /// **'Reading failed'**
   String get readingCreateFailed;
 
+  /// No description provided for @deepSelectExactlyThreeCards.
+  ///
+  /// In en, this message translates to:
+  /// **'Select exactly 3 cards'**
+  String get deepSelectExactlyThreeCards;
+
+  /// No description provided for @deepNoSavableResult.
+  ///
+  /// In en, this message translates to:
+  /// **'No reading result to save'**
+  String get deepNoSavableResult;
+
   /// No description provided for @libraryTitle.
   ///
   /// In en, this message translates to:

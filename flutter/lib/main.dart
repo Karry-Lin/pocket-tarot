@@ -926,8 +926,14 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   }
 
   Future<void> _createResult() async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = await ref.read(deepReadingControllerProvider.future);
-    await controller.createResult();
+    await controller.createResult(
+      messages: DeepReadingMessages(
+        selectExactlyThreeCards: l10n.deepSelectExactlyThreeCards,
+        noSavableResult: l10n.deepNoSavableResult,
+      ),
+    );
     if (mounted) {
       setState(() => _deepState = controller.state);
     }
@@ -942,8 +948,15 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   }
 
   Future<void> _updateHistoryVisibility(bool isSavedForHistory) async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = await ref.read(deepReadingControllerProvider.future);
-    await controller.updateHistoryVisibility(isSavedForHistory);
+    await controller.updateHistoryVisibility(
+      isSavedForHistory,
+      messages: DeepReadingMessages(
+        selectExactlyThreeCards: l10n.deepSelectExactlyThreeCards,
+        noSavableResult: l10n.deepNoSavableResult,
+      ),
+    );
     if (mounted) {
       setState(() => _deepState = controller.state);
     }
@@ -1227,8 +1240,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _updateDisplayName(String displayName) async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = await ref.read(profileControllerProvider.future);
-    await controller.updateDisplayName(displayName);
+    await controller.updateDisplayName(
+      displayName,
+      messages: ProfileValidationMessages(
+        displayNameInvalid: l10n.displayNameInvalid,
+      ),
+    );
     if (mounted) {
       setState(() => _profileState = controller.state);
     }

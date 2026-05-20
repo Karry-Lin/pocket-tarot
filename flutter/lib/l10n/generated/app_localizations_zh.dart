@@ -171,6 +171,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get readingCreateFailed => '占卜產生失敗';
 
   @override
+  String get deepSelectExactlyThreeCards => '必須選擇 3 張牌';
+
+  @override
+  String get deepNoSavableResult => '沒有可保存的占卜結果';
+
+  @override
   String get libraryTitle => '塔羅圖書館';
 
   @override
@@ -444,6 +450,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get readingCreateFailed => '占卜產生失敗';
+
+  @override
+  String get deepSelectExactlyThreeCards => '必須選擇 3 張牌';
+
+  @override
+  String get deepNoSavableResult => '沒有可保存的占卜結果';
 
   @override
   String get libraryTitle => '塔羅圖書館';
