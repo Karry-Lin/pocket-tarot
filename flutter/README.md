@@ -36,11 +36,15 @@ Daily and deep reading repositories expose controller-request adapter methods so
 
 ## Auth Gate
 
+Run `flutterfire configure` before testing signed-in auth flows so platform Firebase options are available.
+
+`lib/app/app_providers.dart` wires the startup composition layer: API health check, lazy Firebase initialization, Firebase Auth service, API client bearer token loading, profile repository, auth gate repository, auth gate evaluator, and app startup controller. Startup checks API health before touching Firebase so local offline/API-down states can still render a retryable splash screen.
+
 `lib/domain/use_cases/app_startup_controller.dart` maps splash/auth gate outcomes into app startup states and target routes, including blocked network/API and deleted-account routing.
 
 `lib/domain/use_cases/auth_gate_evaluator.dart` contains the tested auth gate decision chain from splash/network check through login, email verification, profile registration, pending activation, deleted account, and app shell routing.
 
-The app router starts at `/splash` and includes blocked-state routes for `/account-deleted`, `/verify-email`, and `/pending`.
+The app router starts at `/splash`; `StartupScreen` runs the startup controller, routes ready states, and keeps the user on a retryable blocked screen when network/API checks fail. The router also includes blocked-state routes for `/account-deleted`, `/verify-email`, and `/pending`.
 
 `lib/data/repositories/auth_gate_repository.dart` adapts Firebase session state and profile API errors into that auth gate contract, including `PROFILE_NOT_FOUND` and `ACCOUNT_DELETED`.
 

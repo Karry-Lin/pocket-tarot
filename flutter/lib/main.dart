@@ -3,17 +3,22 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:pocket_tarot/app/app_providers.dart';
 import 'package:pocket_tarot/data/repositories/tarot_catalog_repository.dart';
 import 'package:pocket_tarot/domain/models/tarot_card.dart';
+import 'package:pocket_tarot/domain/use_cases/app_startup_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/auth_form_validator.dart';
 import 'package:pocket_tarot/l10n/generated/app_localizations.dart';
 import 'package:pocket_tarot/ui/core/widgets/safe_markdown_body.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: PocketTarotApp()));
 }
 
-final appStateProvider = NotifierProvider<AppController, AppState>(AppController.new);
+final appStateProvider = NotifierProvider<AppController, AppState>(
+  AppController.new,
+);
 final tarotCatalogRepositoryProvider = Provider<TarotCatalogRepository>((ref) {
   return TarotCatalogRepository(rootBundle);
 });
@@ -87,7 +92,8 @@ class AppController extends Notifier<AppState> {
 
   void createDeepResult() => state = state.copyWith(deepResultReady: true);
 
-  void setWeatherEnabled(bool value) => state = state.copyWith(weatherEnabled: value);
+  void setWeatherEnabled(bool value) =>
+      state = state.copyWith(weatherEnabled: value);
 
   void setLocaleMode(String value) => state = state.copyWith(localeMode: value);
 
@@ -144,10 +150,7 @@ class _PocketTarotAppState extends State<PocketTarotApp> {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('en'),
-        Locale('zh', 'TW'),
-      ],
+      supportedLocales: const [Locale('en'), Locale('zh', 'TW')],
       routerConfig: _router,
     );
   }
@@ -157,23 +160,65 @@ GoRouter createRouter({String initialLocation = '/splash'}) {
   return GoRouter(
     initialLocation: initialLocation,
     routes: [
-      GoRoute(path: '/splash', builder: (context, state) => const SplashNetworkBlockedScreen()),
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const StartupScreen(),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/verify-email', builder: (context, state) => const VerifyEmailScreen()),
-      GoRoute(path: '/pending', builder: (context, state) => const PendingActivationScreen()),
-      GoRoute(path: '/account-deleted', builder: (context, state) => const AccountDeletedScreen()),
+      GoRoute(
+        path: '/verify-email',
+        builder: (context, state) => const VerifyEmailScreen(),
+      ),
+      GoRoute(
+        path: '/pending',
+        builder: (context, state) => const PendingActivationScreen(),
+      ),
+      GoRoute(
+        path: '/account-deleted',
+        builder: (context, state) => const AccountDeletedScreen(),
+      ),
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) => AppShell(navigationShell: navigationShell),
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
         branches: [
-          StatefulShellBranch(routes: [GoRoute(path: '/home', builder: (context, state) => const HomeScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/divination', builder: (context, state) => const DivinationScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/library', builder: (context, state) => const LibraryScreen())]),
-          StatefulShellBranch(routes: [GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen())]),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/divination',
+                builder: (context, state) => const DivinationScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/library',
+                builder: (context, state) => const LibraryScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfileScreen(),
+              ),
+            ],
+          ),
         ],
       ),
     ],
   );
 }
+
 ThemeData buildTheme() {
   const ink = Color(0xFF151416);
   const paper = Color(0xFFFFFAF1);
@@ -193,26 +238,101 @@ ThemeData buildTheme() {
       onSurface: paper,
     ),
     textTheme: const TextTheme(
-      displaySmall: TextStyle(fontSize: 38, fontWeight: FontWeight.w800, letterSpacing: 0),
-      headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: 0),
-      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0),
+      displaySmall: TextStyle(
+        fontSize: 38,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0,
+      ),
+      headlineSmall: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+      ),
+      titleMedium: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+      ),
       bodyMedium: TextStyle(fontSize: 15, height: 1.45, letterSpacing: 0),
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: const Color(0xFF1C1A1F),
       indicatorColor: brass.withValues(alpha: 0.18),
-      labelTextStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+      labelTextStyle: WidgetStateProperty.all(
+        const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+      ),
     ),
     cardTheme: CardThemeData(
       color: const Color(0xFF242127),
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: paper.withValues(alpha: 0.08))),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: paper.withValues(alpha: 0.08)),
+      ),
     ),
   );
 }
 
-class SplashNetworkBlockedScreen extends StatelessWidget {
-  const SplashNetworkBlockedScreen({super.key});
+class StartupScreen extends ConsumerStatefulWidget {
+  const StartupScreen({super.key});
+
+  @override
+  ConsumerState<StartupScreen> createState() => _StartupScreenState();
+}
+
+class _StartupScreenState extends ConsumerState<StartupScreen> {
+  AppStartupState _state = const AppStartupState(
+    status: AppStartupStatus.initial,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkStartup());
+  }
+
+  Future<void> _checkStartup() async {
+    setState(
+      () => _state = const AppStartupState(status: AppStartupStatus.checking),
+    );
+
+    final controller = ref.read(appStartupControllerProvider);
+    await controller.check();
+
+    if (!mounted) {
+      return;
+    }
+
+    final nextState = controller.state;
+    if (nextState.status == AppStartupStatus.ready &&
+        nextState.targetRoute != null) {
+      context.go(nextState.targetRoute!);
+      return;
+    }
+
+    setState(() => _state = nextState);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (_state.status) {
+      AppStartupStatus.initial ||
+      AppStartupStatus.checking => const SplashCheckingScreen(),
+      AppStartupStatus.networkBlocked => SplashNetworkBlockedScreen(
+        onRetry: _checkStartup,
+      ),
+      AppStartupStatus.error => SplashNetworkBlockedScreen(
+        title: '啟動檢查失敗',
+        message: _state.errorMessage ?? '請稍後再試',
+        onRetry: _checkStartup,
+      ),
+      AppStartupStatus.ready => const SplashCheckingScreen(),
+    };
+  }
+}
+
+class SplashCheckingScreen extends StatelessWidget {
+  const SplashCheckingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -224,14 +344,77 @@ class SplashNetworkBlockedScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(child: Image.asset('assets/images/pocket-tarot-logo.png', height: 108)),
+              Center(
+                child: Image.asset(
+                  'assets/images/pocket-tarot-logo.png',
+                  height: 108,
+                ),
+              ),
               const SizedBox(height: 24),
-              Text('目前無法連線', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                '啟動檢查中',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 8),
-              Text('請檢查網路後重試', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                '正在確認連線與帳號狀態',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 24),
+              const Center(child: CircularProgressIndicator()),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SplashNetworkBlockedScreen extends StatelessWidget {
+  const SplashNetworkBlockedScreen({
+    super.key,
+    this.title = '目前無法連線',
+    this.message = '請檢查網路後重試',
+    this.onRetry,
+  });
+
+  final String title;
+  final String message;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBackdrop(
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Image.asset(
+                  'assets/images/pocket-tarot-logo.png',
+                  height: 108,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: 24),
               FilledButton.icon(
-                onPressed: () {},
+                onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
                 label: const Text('重新檢查'),
               ),
@@ -243,11 +426,7 @@ class SplashNetworkBlockedScreen extends StatelessWidget {
   }
 }
 
-enum EmailAuthMode {
-  signIn,
-  register,
-  resetPassword,
-}
+enum EmailAuthMode { signIn, register, resetPassword }
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -260,7 +439,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _displayNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   EmailAuthMode _mode = EmailAuthMode.signIn;
   Map<AuthFormField, String> _errors = const {};
 
@@ -284,21 +464,45 @@ class _LoginScreenState extends State<LoginScreen> {
             children: [
               const SizedBox(height: 42),
               Center(
-                child: Image.asset('assets/images/pocket-tarot-logo.png', height: 112),
+                child: Image.asset(
+                  'assets/images/pocket-tarot-logo.png',
+                  height: 112,
+                ),
               ),
               const SizedBox(height: 24),
-              Text('Pocket Tarot', style: Theme.of(context).textTheme.displaySmall, textAlign: TextAlign.center),
+              Text(
+                'Pocket Tarot',
+                style: Theme.of(context).textTheme.displaySmall,
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 8),
-              Text('每日一張，深度三張，把今天的選擇握在手心。', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                '每日一張，深度三張，把今天的選擇握在手心。',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: 32),
               if (_mode == EmailAuthMode.register) ...[
-                AuthField(label: '暱稱', controller: _displayNameController, errorText: _errors[AuthFormField.displayName]),
+                AuthField(
+                  label: '暱稱',
+                  controller: _displayNameController,
+                  errorText: _errors[AuthFormField.displayName],
+                ),
                 const SizedBox(height: 12),
               ],
-              AuthField(label: 'Email', controller: _emailController, errorText: _errors[AuthFormField.email]),
+              AuthField(
+                label: 'Email',
+                controller: _emailController,
+                errorText: _errors[AuthFormField.email],
+              ),
               const SizedBox(height: 12),
               if (_mode != EmailAuthMode.resetPassword)
-                AuthField(label: '密碼', controller: _passwordController, obscureText: true, errorText: _errors[AuthFormField.password]),
+                AuthField(
+                  label: '密碼',
+                  controller: _passwordController,
+                  obscureText: true,
+                  errorText: _errors[AuthFormField.password],
+                ),
               if (_mode == EmailAuthMode.register) ...[
                 const SizedBox(height: 12),
                 AuthField(
@@ -321,9 +525,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: WrapAlignment.center,
                 spacing: 8,
                 children: [
-                  if (_mode != EmailAuthMode.signIn) TextButton(onPressed: () => _switchMode(EmailAuthMode.signIn), child: const Text('登入')),
-                  if (_mode != EmailAuthMode.register) TextButton(onPressed: () => _switchMode(EmailAuthMode.register), child: const Text('註冊')),
-                  if (_mode != EmailAuthMode.resetPassword) TextButton(onPressed: () => _switchMode(EmailAuthMode.resetPassword), child: const Text('忘記密碼')),
+                  if (_mode != EmailAuthMode.signIn)
+                    TextButton(
+                      onPressed: () => _switchMode(EmailAuthMode.signIn),
+                      child: const Text('登入'),
+                    ),
+                  if (_mode != EmailAuthMode.register)
+                    TextButton(
+                      onPressed: () => _switchMode(EmailAuthMode.register),
+                      child: const Text('註冊'),
+                    ),
+                  if (_mode != EmailAuthMode.resetPassword)
+                    TextButton(
+                      onPressed: () => _switchMode(EmailAuthMode.resetPassword),
+                      child: const Text('忘記密碼'),
+                    ),
                 ],
               ),
               const SizedBox(height: 42),
@@ -344,16 +560,18 @@ class _LoginScreenState extends State<LoginScreen> {
   void _submit() {
     final result = switch (_mode) {
       EmailAuthMode.signIn => AuthFormValidator.validateEmailSignIn(
-          email: _emailController.text,
-          password: _passwordController.text,
-        ),
+        email: _emailController.text,
+        password: _passwordController.text,
+      ),
       EmailAuthMode.register => AuthFormValidator.validateEmailRegistration(
-          displayName: _displayNameController.text,
-          email: _emailController.text,
-          password: _passwordController.text,
-          confirmPassword: _confirmPasswordController.text,
-        ),
-      EmailAuthMode.resetPassword => AuthFormValidator.validatePasswordReset(email: _emailController.text),
+        displayName: _displayNameController.text,
+        email: _emailController.text,
+        password: _passwordController.text,
+        confirmPassword: _confirmPasswordController.text,
+      ),
+      EmailAuthMode.resetPassword => AuthFormValidator.validatePasswordReset(
+        email: _emailController.text,
+      ),
     };
 
     if (!result.isValid) {
@@ -369,7 +587,9 @@ class _LoginScreenState extends State<LoginScreen> {
       case EmailAuthMode.register:
         context.go('/verify-email');
       case EmailAuthMode.resetPassword:
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('重設信已送出')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('重設信已送出')));
     }
   }
 }
@@ -457,7 +677,10 @@ class AppShell extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (index) => navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex),
+        onDestinationSelected: (index) => navigationShell.goBranch(
+          index,
+          initialLocation: index == navigationShell.currentIndex,
+        ),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.auto_awesome), label: '首頁'),
           NavigationDestination(icon: Icon(Icons.grid_view), label: '占卜館'),
@@ -484,12 +707,19 @@ class HomeScreen extends ConsumerWidget {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const CardPreview(imagePath: 'assets/images/card-back.png', title: '今天的牌還在牌堆裡'),
+                const CardPreview(
+                  imagePath: 'assets/images/card-back.png',
+                  title: '今天的牌還在牌堆裡',
+                ),
                 const SizedBox(height: 18),
-                Text('天氣、時間與當下狀態會一起送進解讀，結果只保留今天這一筆。', style: Theme.of(context).textTheme.bodyMedium),
+                Text(
+                  '天氣、時間與當下狀態會一起送進解讀，結果只保留今天這一筆。',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
                 const SizedBox(height: 18),
                 FilledButton.icon(
-                  onPressed: () => ref.read(appStateProvider.notifier).drawDailyCard(),
+                  onPressed: () =>
+                      ref.read(appStateProvider.notifier).drawDailyCard(),
                   icon: const Icon(Icons.style),
                   label: const Text('抽今日牌'),
                 ),
@@ -507,7 +737,10 @@ class DailyResultCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const CardPreview(imagePath: 'assets/images/cards/moon.jpg', title: '月亮 / 正位'),
+        const CardPreview(
+          imagePath: 'assets/images/cards/moon.jpg',
+          title: '月亮 / 正位',
+        ),
         const SizedBox(height: 18),
         InfoPanel(
           title: '牌義解讀',
@@ -556,7 +789,12 @@ class DivinationScreen extends ConsumerWidget {
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, childAspectRatio: 0.68, crossAxisSpacing: 10, mainAxisSpacing: 10),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                childAspectRatio: 0.68,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+              ),
               itemCount: 9,
               itemBuilder: (context, index) => SelectableCardBack(
                 selected: state.selectedIndexes.contains(index),
@@ -566,7 +804,9 @@ class DivinationScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 18),
             FilledButton.icon(
-              onPressed: state.selectedIndexes.length == 3 ? controller.createDeepResult : null,
+              onPressed: state.selectedIndexes.length == 3
+                  ? controller.createDeepResult
+                  : null,
               icon: const Icon(Icons.auto_fix_high),
               label: const Text('產生解讀'),
             ),
@@ -609,7 +849,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       trailing: '78',
       child: cardsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => InfoPanel(title: '牌庫載入失敗', child: Text('$error')),
+        error: (error, stackTrace) =>
+            InfoPanel(title: '牌庫載入失敗', child: Text('$error')),
         data: (cards) {
           final categorized = repository.filterByCategory(cards, _category);
           final filtered = repository.search(categorized, _query);
@@ -634,7 +875,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         ),
                   filled: true,
                   fillColor: Colors.white.withValues(alpha: 0.06),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -651,14 +894,22 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              Text('顯示 ${filtered.length} 張牌', style: Theme.of(context).textTheme.bodyMedium),
+              Text(
+                '顯示 ${filtered.length} 張牌',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
               const SizedBox(height: 8),
               for (final card in filtered)
                 Card(
                   child: ListTile(
                     leading: ClipRRect(
                       borderRadius: BorderRadius.circular(6),
-                      child: Image.asset(_imageForCard(card), width: 42, height: 58, fit: BoxFit.cover),
+                      child: Image.asset(
+                        _imageForCard(card),
+                        width: 42,
+                        height: 58,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                     title: Text(card.zhName),
                     subtitle: Text('${card.enName}\n${card.id}'),
@@ -667,7 +918,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     onTap: () => showModalBottomSheet<void>(
                       context: context,
                       showDragHandle: true,
-                      builder: (context) => CardDetailSheet(card: card, imagePath: _imageForCard(card)),
+                      builder: (context) => CardDetailSheet(
+                        card: card,
+                        imagePath: _imageForCard(card),
+                      ),
                     ),
                   ),
                 ),
@@ -705,7 +959,8 @@ class ProfileScreen extends ConsumerWidget {
               ButtonSegment(value: 'en', label: Text('English')),
             ],
             selected: {state.localeMode},
-            onSelectionChanged: (value) => controller.setLocaleMode(value.first),
+            onSelectionChanged: (value) =>
+                controller.setLocaleMode(value.first),
           ),
           const SizedBox(height: 12),
           SwitchListTile(
@@ -731,7 +986,12 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 class ScreenFrame extends StatelessWidget {
-  const ScreenFrame({super.key, required this.title, required this.child, this.trailing});
+  const ScreenFrame({
+    super.key,
+    required this.title,
+    required this.child,
+    this.trailing,
+  });
 
   final String title;
   final String? trailing;
@@ -748,7 +1008,12 @@ class ScreenFrame extends StatelessWidget {
               sliver: SliverToBoxAdapter(
                 child: Row(
                   children: [
-                    Expanded(child: Text(title, style: Theme.of(context).textTheme.headlineSmall)),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                    ),
                     if (trailing != null) Badge(label: Text(trailing!)),
                   ],
                 ),
@@ -814,14 +1079,25 @@ class GateScaffold extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(icon, size: 54, color: Theme.of(context).colorScheme.primary),
+              Icon(
+                icon,
+                size: 54,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(height: 18),
-              Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
               const SizedBox(height: 8),
               Text(message, textAlign: TextAlign.center),
               const SizedBox(height: 24),
               FilledButton(onPressed: onAction, child: Text(actionLabel)),
-              TextButton(onPressed: () => context.go('/login'), child: const Text('登出')),
+              TextButton(
+                onPressed: () => context.go('/login'),
+                child: const Text('登出'),
+              ),
             ],
           ),
         ),
@@ -940,12 +1216,21 @@ class PromptChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ActionChip(avatar: const Icon(Icons.add, size: 16), label: Text(text), onPressed: () {});
+    return ActionChip(
+      avatar: const Icon(Icons.add, size: 16),
+      label: Text(text),
+      onPressed: () {},
+    );
   }
 }
 
 class SelectableCardBack extends StatelessWidget {
-  const SelectableCardBack({super.key, required this.selected, required this.order, required this.onTap});
+  const SelectableCardBack({
+    super.key,
+    required this.selected,
+    required this.order,
+    required this.onTap,
+  });
 
   final bool selected;
   final int order;
@@ -959,18 +1244,33 @@ class SelectableCardBack extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.asset('assets/images/card-back.png', fit: BoxFit.cover)),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              'assets/images/card-back.png',
+              fit: BoxFit.cover,
+            ),
+          ),
           if (selected)
             DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Theme.of(context).colorScheme.primary, width: 3),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 3,
+                ),
                 color: Colors.black.withValues(alpha: 0.18),
               ),
               child: Center(
                 child: CircleAvatar(
                   backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: Text('$order', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
+                  child: Text(
+                    '$order',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -988,7 +1288,10 @@ class DeepResultPanel extends StatelessWidget {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InfoPanel(title: '深度解讀', child: SafeMarkdownBody(data: _deepDemoMarkdown)),
+        InfoPanel(
+          title: '深度解讀',
+          child: SafeMarkdownBody(data: _deepDemoMarkdown),
+        ),
         SizedBox(height: 10),
         SummaryStrip(text: '先辨識壓力，再拆小行動。'),
       ],
@@ -997,7 +1300,11 @@ class DeepResultPanel extends StatelessWidget {
 }
 
 class CardDetailSheet extends StatelessWidget {
-  const CardDetailSheet({super.key, required this.card, required this.imagePath});
+  const CardDetailSheet({
+    super.key,
+    required this.card,
+    required this.imagePath,
+  });
 
   final TarotCard card;
   final String imagePath;
@@ -1031,15 +1338,25 @@ String _imageForCard(TarotCard card) {
   };
 }
 
-Future<void> _showNameDialog(BuildContext context, AppController controller) async {
+Future<void> _showNameDialog(
+  BuildContext context,
+  AppController controller,
+) async {
   final textController = TextEditingController();
   await showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
       title: const Text('編輯暱稱'),
-      content: TextField(controller: textController, maxLength: 16, decoration: const InputDecoration(labelText: '暱稱')),
+      content: TextField(
+        controller: textController,
+        maxLength: 16,
+        decoration: const InputDecoration(labelText: '暱稱'),
+      ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('取消')),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('取消'),
+        ),
         FilledButton(
           onPressed: () {
             controller.setDisplayName(textController.text);
