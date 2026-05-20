@@ -19,3 +19,7 @@ flutter build web --release
 ## Local Tarot Catalog
 
 The library tab reads the complete 78-card catalog from `assets/data/tarot_cards.json`. The catalog is local-only and is covered by `test/tarot_catalog_test.dart`.
+
+## API Data Layer
+
+`lib/data/services/api_client.dart` wraps Dio with Firebase Bearer token support. Profile, daily reading, and deep reading repositories live under `lib/data/repositories/` and are covered by `test/api_repositories_test.dart`.
