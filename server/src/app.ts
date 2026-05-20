@@ -4,10 +4,16 @@ import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 
 import { loadOpenApiDocument } from "./config/openApi.js";
+import { errorHandler } from "./http/errorHandler.js";
+import { createAdminRouter } from "./routes/adminRoutes.js";
+import { createAuthRouter } from "./routes/authRoutes.js";
+import { createUserRouter } from "./routes/userRoutes.js";
+import { buildAppDependencies, type AppOptions } from "./types/appDependencies.js";
 
-export function createApp(): Express {
+export function createApp(options: AppOptions = {}): Express {
   const app = express();
   const openApiDocument = loadOpenApiDocument();
+  const dependencies = buildAppDependencies(options);
 
   app.disable("x-powered-by");
   app.use(helmet({ contentSecurityPolicy: false }));
@@ -25,6 +31,10 @@ export function createApp(): Express {
   app.get("/docs.json", (_request, response) => {
     response.json(openApiDocument);
   });
+
+  app.use("/api/v1/auth", createAuthRouter(dependencies));
+  app.use("/api/v1/users", createUserRouter(dependencies));
+  app.use("/api/v1/admin", createAdminRouter(dependencies));
 
   app.use(
     "/docs",
@@ -46,6 +56,8 @@ export function createApp(): Express {
       }
     });
   });
+
+  app.use(errorHandler);
 
   return app;
 }

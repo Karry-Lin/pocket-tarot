@@ -10,6 +10,12 @@ npm run build
 npm test
 ```
 
+`src/server.ts` requires `MONGODB_URI`. Local development can copy `.env.example` to `.env`.
+
+## Test Database
+
+Integration tests use the MongoDB URI from `MONGODB_URI`, or `mongodb://127.0.0.1:27017/pocket_tarot_test` when unset. Tests create emails with a `test+...@pocket-tarot.local` marker and clean up only those exact emails.
+
 ## Local URLs
 
 - Health check: `GET /healthz`
@@ -17,3 +23,13 @@ npm test
 - OpenAPI JSON: `GET /docs.json`
 
 API routes use `/api/v1`.
+
+## Implemented API Segments
+
+- `POST /api/v1/auth/register-profile`
+- `GET /api/v1/users/me`
+- `PATCH /api/v1/users/me`
+- `GET /api/v1/admin/users`
+- `GET /api/v1/admin/users/:id`
+- `PATCH /api/v1/admin/users/:id/activation`
+- `PATCH /api/v1/admin/users/:id/deletion`
