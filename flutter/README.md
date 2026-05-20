@@ -24,6 +24,8 @@ The library tab reads the complete 78-card catalog from `assets/data/tarot_cards
 
 `lib/data/services/api_client.dart` wraps Dio with Firebase Bearer token support. Profile, daily reading, and deep reading repositories live under `lib/data/repositories/` and are covered by `test/api_repositories_test.dart`.
 
+`lib/data/services/api_health_service.dart` checks the server `/healthz` endpoint derived from `API_BASE_URL`, so startup can block when the API is unavailable.
+
 `lib/domain/use_cases/daily_reading_controller.dart` owns the homepage daily reading state transition for loading today's result, empty state, and creating a reading with locale/weather request inputs.
 
 `lib/domain/use_cases/deep_reading_controller.dart` owns the divination room state transition for draft creation, three-card selection, result creation, saved-history loading, and history visibility toggles.
