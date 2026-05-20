@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pocket_tarot/data/repositories/tarot_catalog_repository.dart';
 import 'package:pocket_tarot/domain/models/tarot_card.dart';
+import 'package:pocket_tarot/domain/use_cases/auth_form_validator.dart';
 import 'package:pocket_tarot/l10n/generated/app_localizations.dart';
 import 'package:pocket_tarot/ui/core/widgets/safe_markdown_body.dart';
 
@@ -242,8 +243,35 @@ class SplashNetworkBlockedScreen extends StatelessWidget {
   }
 }
 
-class LoginScreen extends StatelessWidget {
+enum EmailAuthMode {
+  signIn,
+  register,
+  resetPassword,
+}
+
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _displayNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  EmailAuthMode _mode = EmailAuthMode.signIn;
+  Map<AuthFormField, String> _errors = const {};
+
+  @override
+  void dispose() {
+    _displayNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -263,27 +291,112 @@ class LoginScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Text('每日一張，深度三張，把今天的選擇握在手心。', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 32),
-              const AuthField(label: 'Email'),
+              if (_mode == EmailAuthMode.register) ...[
+                AuthField(label: '暱稱', controller: _displayNameController, errorText: _errors[AuthFormField.displayName]),
+                const SizedBox(height: 12),
+              ],
+              AuthField(label: 'Email', controller: _emailController, errorText: _errors[AuthFormField.email]),
               const SizedBox(height: 12),
-              const AuthField(label: '密碼', obscureText: true),
+              if (_mode != EmailAuthMode.resetPassword)
+                AuthField(label: '密碼', controller: _passwordController, obscureText: true, errorText: _errors[AuthFormField.password]),
+              if (_mode == EmailAuthMode.register) ...[
+                const SizedBox(height: 12),
+                AuthField(
+                  label: '確認密碼',
+                  controller: _confirmPasswordController,
+                  obscureText: true,
+                  errorText: _errors[AuthFormField.confirmPassword],
+                ),
+              ],
               const SizedBox(height: 16),
-              FilledButton.icon(
-                onPressed: () => context.go('/pending'),
-                icon: const Icon(Icons.login),
-                label: const Text('Email 登入'),
-              ),
+              _PrimaryEmailAuthButton(mode: _mode, onPressed: _submit),
               const SizedBox(height: 10),
               OutlinedButton.icon(
                 onPressed: () => context.go('/pending'),
                 icon: const Icon(Icons.g_mobiledata),
                 label: const Text('Google 登入'),
               ),
-              TextButton(onPressed: () => context.go('/verify-email'), child: const Text('建立帳號 / 忘記密碼')),
+              const SizedBox(height: 4),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                children: [
+                  if (_mode != EmailAuthMode.signIn) TextButton(onPressed: () => _switchMode(EmailAuthMode.signIn), child: const Text('登入')),
+                  if (_mode != EmailAuthMode.register) TextButton(onPressed: () => _switchMode(EmailAuthMode.register), child: const Text('註冊')),
+                  if (_mode != EmailAuthMode.resetPassword) TextButton(onPressed: () => _switchMode(EmailAuthMode.resetPassword), child: const Text('忘記密碼')),
+                ],
+              ),
               const SizedBox(height: 42),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _switchMode(EmailAuthMode mode) {
+    setState(() {
+      _mode = mode;
+      _errors = const {};
+    });
+  }
+
+  void _submit() {
+    final result = switch (_mode) {
+      EmailAuthMode.signIn => AuthFormValidator.validateEmailSignIn(
+          email: _emailController.text,
+          password: _passwordController.text,
+        ),
+      EmailAuthMode.register => AuthFormValidator.validateEmailRegistration(
+          displayName: _displayNameController.text,
+          email: _emailController.text,
+          password: _passwordController.text,
+          confirmPassword: _confirmPasswordController.text,
+        ),
+      EmailAuthMode.resetPassword => AuthFormValidator.validatePasswordReset(email: _emailController.text),
+    };
+
+    if (!result.isValid) {
+      setState(() => _errors = result.errors);
+      return;
+    }
+
+    setState(() => _errors = const {});
+
+    switch (_mode) {
+      case EmailAuthMode.signIn:
+        context.go('/pending');
+      case EmailAuthMode.register:
+        context.go('/verify-email');
+      case EmailAuthMode.resetPassword:
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('重設信已送出')));
+    }
+  }
+}
+
+class _PrimaryEmailAuthButton extends StatelessWidget {
+  const _PrimaryEmailAuthButton({required this.mode, required this.onPressed});
+
+  final EmailAuthMode mode;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = switch (mode) {
+      EmailAuthMode.signIn => 'Email 登入',
+      EmailAuthMode.register => '建立帳號',
+      EmailAuthMode.resetPassword => '送出重設信',
+    };
+    final icon = switch (mode) {
+      EmailAuthMode.signIn => Icons.login,
+      EmailAuthMode.register => Icons.person_add,
+      EmailAuthMode.resetPassword => Icons.mark_email_read,
+    };
+
+    return FilledButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      label: Text(label),
     );
   }
 }
@@ -718,19 +831,30 @@ class GateScaffold extends StatelessWidget {
 }
 
 class AuthField extends StatelessWidget {
-  const AuthField({super.key, required this.label, this.obscureText = false, this.maxLines = 1});
+  const AuthField({
+    super.key,
+    required this.label,
+    this.controller,
+    this.obscureText = false,
+    this.maxLines = 1,
+    this.errorText,
+  });
 
   final String label;
+  final TextEditingController? controller;
   final bool obscureText;
   final int maxLines;
+  final String? errorText;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+      controller: controller,
       obscureText: obscureText,
       maxLines: maxLines,
       decoration: InputDecoration(
         labelText: label,
+        errorText: errorText,
         filled: true,
         fillColor: Colors.white.withValues(alpha: 0.06),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),

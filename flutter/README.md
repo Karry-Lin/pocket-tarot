@@ -48,6 +48,8 @@ The app router starts at `/splash` and includes blocked-state routes for `/accou
 
 `lib/domain/use_cases/auth_form_validator.dart` owns Email login, registration, and password-reset form validation rules.
 
+`LoginScreen` exposes Email sign-in, registration, and password-reset modes with widget-tested validation; the submit actions still use demo navigation until the Firebase flow is fully wired into the UI.
+
 ## Local Settings
 
 `lib/data/repositories/local_settings_repository.dart` stores language mode and weather toggle in SharedPreferences. These settings are local-only and covered by `test/local_settings_test.dart`.
