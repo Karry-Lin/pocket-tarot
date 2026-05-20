@@ -1,0 +1,683 @@
+openapi: 3.1.0
+info:
+  title: Pocket Tarot API
+  version: 0.1.0
+  description: Pocket Tarot Express API for auth, readings, profile, admin maintenance, and API documentation.
+servers:
+  - url: /api/v1
+    description: API base path
+tags:
+  - name: Auth
+  - name: Users
+  - name: Daily Readings
+  - name: Deep Readings
+  - name: Admin
+paths:
+  /healthz:
+    get:
+      tags: [System]
+      summary: Health check
+      responses:
+        "200":
+          description: API process is reachable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /api/v1/auth/register-profile:
+    post:
+      tags: [Auth]
+      summary: Create or return the current Firebase user's MongoDB profile.
+      security:
+        - firebaseBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterProfileRequest"
+      responses:
+        "200":
+          description: Existing profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "201":
+          description: New profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "409":
+          $ref: "#/components/responses/ErrorResponse"
+        "422":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/users/me:
+    get:
+      tags: [Users]
+      summary: Get the current profile and reading statistics.
+      security:
+        - firebaseBearer: []
+      responses:
+        "200":
+          description: Current user profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserMeResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+    patch:
+      tags: [Users]
+      summary: Update the current profile.
+      security:
+        - firebaseBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: Updated profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
+        "422":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/daily-readings/today:
+    get:
+      tags: [Daily Readings]
+      summary: Get today's daily reading without creating one.
+      security:
+        - firebaseBearer: []
+      responses:
+        "200":
+          description: Today's existing daily reading.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyReadingResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+    post:
+      tags: [Daily Readings]
+      summary: Create or return today's daily reading.
+      security:
+        - firebaseBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDailyReadingRequest"
+      responses:
+        "200":
+          description: Existing daily reading for today.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyReadingResponse"
+        "201":
+          description: New daily reading.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyReadingResponse"
+  /api/v1/deep-readings/drafts:
+    post:
+      tags: [Deep Readings]
+      summary: Generate nine draft cards for a deep reading.
+      security:
+        - firebaseBearer: []
+      responses:
+        "200":
+          description: Draft cards.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeepReadingDraftResponse"
+  /api/v1/deep-readings:
+    post:
+      tags: [Deep Readings]
+      summary: Create a deep reading from selected draft cards.
+      security:
+        - firebaseBearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDeepReadingRequest"
+      responses:
+        "201":
+          description: New deep reading.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeepReadingResponse"
+  /api/v1/deep-readings/history:
+    get:
+      tags: [Deep Readings]
+      summary: List the latest ten saved deep readings.
+      security:
+        - firebaseBearer: []
+      responses:
+        "200":
+          description: Saved deep readings.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeepReadingHistoryResponse"
+  /api/v1/deep-readings/{id}:
+    get:
+      tags: [Deep Readings]
+      summary: Get a saved deep reading by id.
+      security:
+        - firebaseBearer: []
+      parameters:
+        - $ref: "#/components/parameters/ObjectId"
+      responses:
+        "200":
+          description: Deep reading.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeepReadingResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/deep-readings/{id}/history-visibility:
+    patch:
+      tags: [Deep Readings]
+      summary: Toggle whether a deep reading appears in history.
+      security:
+        - firebaseBearer: []
+      parameters:
+        - $ref: "#/components/parameters/ObjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateHistoryVisibilityRequest"
+      responses:
+        "200":
+          description: Updated history visibility.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistoryVisibilityResponse"
+  /api/v1/admin/users:
+    get:
+      tags: [Admin]
+      summary: List users for internal maintenance.
+      security:
+        - adminKey: []
+      parameters:
+        - in: query
+          name: deleted
+          schema:
+            type: string
+            enum: [false, true, all]
+        - in: query
+          name: isActive
+          schema:
+            type: boolean
+        - in: query
+          name: email
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User list.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+  /api/v1/admin/users/{id}:
+    get:
+      tags: [Admin]
+      summary: Get one user for internal maintenance.
+      security:
+        - adminKey: []
+      parameters:
+        - $ref: "#/components/parameters/ObjectId"
+      responses:
+        "200":
+          description: User.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+  /api/v1/admin/users/{id}/activation:
+    patch:
+      tags: [Admin]
+      summary: Activate or deactivate a user.
+      security:
+        - adminKey: []
+      parameters:
+        - $ref: "#/components/parameters/ObjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateActivationRequest"
+      responses:
+        "200":
+          description: Updated user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+  /api/v1/admin/users/{id}/deletion:
+    patch:
+      tags: [Admin]
+      summary: Soft delete or restore a user.
+      security:
+        - adminKey: []
+      parameters:
+        - $ref: "#/components/parameters/ObjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDeletionRequest"
+      responses:
+        "200":
+          description: Updated user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+components:
+  securitySchemes:
+    firebaseBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID token
+    adminKey:
+      type: apiKey
+      in: header
+      name: X-Admin-Key
+  parameters:
+    ObjectId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: MongoDB ObjectId.
+  responses:
+    ErrorResponse:
+      description: Error response.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    HealthResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              const: ok
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, details]
+          properties:
+            code:
+              type: string
+              enum:
+                - UNAUTHENTICATED
+                - EMAIL_NOT_VERIFIED
+                - PROFILE_NOT_FOUND
+                - ACCOUNT_NOT_ACTIVE
+                - ACCOUNT_DELETED
+                - VALIDATION_ERROR
+                - DAILY_READING_NOT_FOUND
+                - LLM_UNAVAILABLE
+                - LLM_TIMEOUT
+                - LLM_INVALID_RESPONSE
+                - ADMIN_UNAUTHORIZED
+                - NOT_FOUND
+                - INTERNAL_ERROR
+            message:
+              type: string
+            details:
+              type: object
+    RegisterProfileRequest:
+      type: object
+      required: [displayName, providerIds]
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 16
+        providerIds:
+          type: array
+          items:
+            type: string
+    UpdateUserRequest:
+      type: object
+      required: [displayName]
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 16
+    User:
+      type: object
+      required: [id, email, displayName, providerIds, isActive, createdAt]
+      properties:
+        id:
+          type: string
+        firebaseUid:
+          type: string
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+        providerIds:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        activatedAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+        lastLoginAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+        deletedAt:
+          type:
+            - string
+            - "null"
+          format: date-time
+    UserResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [user]
+          properties:
+            user:
+              $ref: "#/components/schemas/User"
+    UserMeResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [user, stats]
+          properties:
+            user:
+              $ref: "#/components/schemas/User"
+            stats:
+              type: object
+              required: [dailyReadingCount, deepReadingCount]
+              properties:
+                dailyReadingCount:
+                  type: integer
+                  minimum: 0
+                deepReadingCount:
+                  type: integer
+                  minimum: 0
+    UserListResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+    Locale:
+      type: string
+      enum: [zh-TW, en]
+    Orientation:
+      type: string
+      enum: [upright, reversed]
+    CardDraw:
+      type: object
+      required: [cardId, orientation]
+      properties:
+        cardId:
+          type: string
+        orientation:
+          $ref: "#/components/schemas/Orientation"
+    CreateDailyReadingRequest:
+      type: object
+      required: [locale, weather]
+      properties:
+        locale:
+          $ref: "#/components/schemas/Locale"
+        weather:
+          $ref: "#/components/schemas/WeatherInput"
+    WeatherInput:
+      type: object
+      required: [enabled, status]
+      properties:
+        enabled:
+          type: boolean
+        status:
+          type: string
+          enum: [success, disabled, permission_denied]
+        latitude:
+          type:
+            - number
+            - "null"
+        longitude:
+          type:
+            - number
+            - "null"
+    WeatherSnapshot:
+      allOf:
+        - $ref: "#/components/schemas/WeatherInput"
+        - type: object
+          required: [provider, timezone, current, errorCode]
+          properties:
+            provider:
+              type:
+                - string
+                - "null"
+              enum: [open-meteo, null]
+            timezone:
+              type: string
+              const: Asia/Taipei
+            current:
+              type:
+                - object
+                - "null"
+            errorCode:
+              type:
+                - string
+                - "null"
+    DailyReadingResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [id, localDate, card, markdownResult, summary, resultLocale, createdAt]
+          properties:
+            id:
+              type: string
+            localDate:
+              type: string
+            card:
+              $ref: "#/components/schemas/CardDraw"
+            timeContext:
+              type: object
+            weather:
+              $ref: "#/components/schemas/WeatherSnapshot"
+            markdownResult:
+              type: string
+            summary:
+              type: string
+            resultLocale:
+              $ref: "#/components/schemas/Locale"
+            createdAt:
+              type: string
+              format: date-time
+    DeepReadingDraftResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [draftCards]
+          properties:
+            draftCards:
+              type: array
+              minItems: 9
+              maxItems: 9
+              items:
+                $ref: "#/components/schemas/CardDraw"
+    CreateDeepReadingRequest:
+      type: object
+      required: [locale, question, draftCards, selectedIndexes]
+      properties:
+        locale:
+          $ref: "#/components/schemas/Locale"
+        question:
+          type: string
+          maxLength: 1000
+        draftCards:
+          type: array
+          minItems: 9
+          maxItems: 9
+          items:
+            $ref: "#/components/schemas/CardDraw"
+        selectedIndexes:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items:
+            type: integer
+            minimum: 0
+            maximum: 8
+    DeepReadingResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [id, question, selectedCards, markdownResult, summary, resultLocale, isSavedForHistory, createdAt]
+          properties:
+            id:
+              type: string
+            question:
+              type: string
+            selectedCards:
+              type: array
+              minItems: 3
+              maxItems: 3
+              items:
+                type: object
+                required: [position, positionLabel, cardId, orientation]
+                properties:
+                  position:
+                    type: string
+                    enum: [core, hiddenInfluence, advice]
+                  positionLabel:
+                    type: string
+                  cardId:
+                    type: string
+                  orientation:
+                    $ref: "#/components/schemas/Orientation"
+            markdownResult:
+              type: string
+            summary:
+              type: string
+            resultLocale:
+              $ref: "#/components/schemas/Locale"
+            isSavedForHistory:
+              type: boolean
+            createdAt:
+              type: string
+              format: date-time
+    DeepReadingHistoryResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required: [id, question, summary, resultLocale, createdAt]
+            properties:
+              id:
+                type: string
+              question:
+                type: string
+              summary:
+                type: string
+              resultLocale:
+                $ref: "#/components/schemas/Locale"
+              createdAt:
+                type: string
+                format: date-time
+    UpdateHistoryVisibilityRequest:
+      type: object
+      required: [isSavedForHistory]
+      properties:
+        isSavedForHistory:
+          type: boolean
+    HistoryVisibilityResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [id, isSavedForHistory]
+          properties:
+            id:
+              type: string
+            isSavedForHistory:
+              type: boolean
+    UpdateActivationRequest:
+      type: object
+      required: [isActive]
+      properties:
+        isActive:
+          type: boolean
+    UpdateDeletionRequest:
+      type: object
+      required: [deleted]
+      properties:
+        deleted:
+          type: boolean
