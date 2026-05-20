@@ -75,9 +75,7 @@ flutter:
     - assets/data/tarot_cards.json
     - assets/images/card-back.png
     - assets/images/pocket-tarot-logo.png
-    - assets/images/cards/moon.jpg
-    - assets/images/cards/star.jpg
-    - assets/images/cards/temperance.jpg
+    - assets/images/cards/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

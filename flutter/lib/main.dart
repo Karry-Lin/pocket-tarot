@@ -1825,12 +1825,7 @@ String _imageForCard(TarotCard card) {
 }
 
 String _imageForCardId(String cardId) {
-  return switch (cardId) {
-    'major-18-moon' => 'assets/images/cards/moon.jpg',
-    'major-17-star' => 'assets/images/cards/star.jpg',
-    'major-14-temperance' => 'assets/images/cards/temperance.jpg',
-    _ => 'assets/images/card-back.png',
-  };
+  return 'assets/images/cards/$cardId.png';
 }
 
 String _primaryCardName(TarotCard card, AppLocalizations l10n) {
