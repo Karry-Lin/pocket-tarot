@@ -11,6 +11,18 @@ class ProfileRepository {
     return ProfileSnapshot.fromJson((json['data']! as Map).cast<String, Object?>());
   }
 
+  Future<UserProfile> registerProfile({
+    required String displayName,
+    required List<String> providerIds,
+  }) async {
+    final json = await _apiClient.postJson('/auth/register-profile', {
+      'displayName': displayName,
+      'providerIds': providerIds,
+    });
+    final data = (json['data']! as Map).cast<String, Object?>();
+    return UserProfile.fromJson((data['user']! as Map).cast<String, Object?>());
+  }
+
   Future<UserProfile> updateDisplayName(String displayName) async {
     final json = await _apiClient.patchJson('/users/me', {'displayName': displayName});
     final data = (json['data']! as Map).cast<String, Object?>();

@@ -28,6 +28,10 @@ The library tab reads the complete 78-card catalog from `assets/data/tarot_cards
 
 `lib/domain/use_cases/auth_gate_evaluator.dart` contains the tested auth gate decision chain from splash/network check through login, email verification, profile registration, pending activation, deleted account, and app shell routing.
 
+## Firebase Auth Service
+
+`lib/data/services/firebase_auth_service.dart` wraps Firebase Auth and Google Sign-In behind testable gateways. It supports Email login/registration, verification email, password reset, Google web popup, Google mobile id-token login, Firebase ID token loading, and sign-out without calling Google Sign-In on web.
+
 ## Local Settings
 
 `lib/data/repositories/local_settings_repository.dart` stores language mode and weather toggle in SharedPreferences. These settings are local-only and covered by `test/local_settings_test.dart`.

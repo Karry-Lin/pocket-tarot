@@ -101,6 +101,22 @@ class AuthSession {
   bool get requiresEmailVerification {
     return providerIds.contains('password') && !emailVerified;
   }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        other is AuthSession &&
+            other.uid == uid &&
+            other.email == email &&
+            other.emailVerified == emailVerified &&
+            _sameStringList(other.providerIds, providerIds) &&
+            other.displayName == displayName;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(uid, email, emailVerified, Object.hashAll(providerIds), displayName);
+  }
 }
 
 class ProfileLookup {
@@ -109,4 +125,18 @@ class ProfileLookup {
   const ProfileLookup.missing() : profile = null;
 
   final UserProfile? profile;
+}
+
+bool _sameStringList(List<String> left, List<String> right) {
+  if (left.length != right.length) {
+    return false;
+  }
+
+  for (var index = 0; index < left.length; index += 1) {
+    if (left[index] != right[index]) {
+      return false;
+    }
+  }
+
+  return true;
 }
