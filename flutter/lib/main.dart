@@ -1,0 +1,784 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:pocket_tarot/l10n/generated/app_localizations.dart';
+
+void main() {
+  runApp(const ProviderScope(child: PocketTarotApp()));
+}
+
+final appStateProvider = NotifierProvider<AppController, AppState>(AppController.new);
+
+class AppState {
+  const AppState({
+    this.displayName = '星語',
+    this.dailyDrawn = false,
+    this.deepDraftStarted = false,
+    this.selectedIndexes = const [],
+    this.deepResultReady = false,
+    this.weatherEnabled = true,
+    this.localeMode = 'system',
+  });
+
+  final String displayName;
+  final bool dailyDrawn;
+  final bool deepDraftStarted;
+  final List<int> selectedIndexes;
+  final bool deepResultReady;
+  final bool weatherEnabled;
+  final String localeMode;
+
+  AppState copyWith({
+    String? displayName,
+    bool? dailyDrawn,
+    bool? deepDraftStarted,
+    List<int>? selectedIndexes,
+    bool? deepResultReady,
+    bool? weatherEnabled,
+    String? localeMode,
+  }) {
+    return AppState(
+      displayName: displayName ?? this.displayName,
+      dailyDrawn: dailyDrawn ?? this.dailyDrawn,
+      deepDraftStarted: deepDraftStarted ?? this.deepDraftStarted,
+      selectedIndexes: selectedIndexes ?? this.selectedIndexes,
+      deepResultReady: deepResultReady ?? this.deepResultReady,
+      weatherEnabled: weatherEnabled ?? this.weatherEnabled,
+      localeMode: localeMode ?? this.localeMode,
+    );
+  }
+}
+
+class AppController extends Notifier<AppState> {
+  @override
+  AppState build() => const AppState();
+
+  void drawDailyCard() => state = state.copyWith(dailyDrawn: true);
+
+  void startDeepDraft() {
+    state = state.copyWith(
+      deepDraftStarted: true,
+      selectedIndexes: [],
+      deepResultReady: false,
+    );
+  }
+
+  void toggleCard(int index) {
+    final selected = [...state.selectedIndexes];
+    if (selected.contains(index)) {
+      selected.remove(index);
+    } else if (selected.length < 3) {
+      selected.add(index);
+    }
+    state = state.copyWith(selectedIndexes: selected);
+  }
+
+  void createDeepResult() => state = state.copyWith(deepResultReady: true);
+
+  void setWeatherEnabled(bool value) => state = state.copyWith(weatherEnabled: value);
+
+  void setLocaleMode(String value) => state = state.copyWith(localeMode: value);
+
+  void setDisplayName(String value) {
+    final next = value.trim();
+    if (next.isNotEmpty && next.length <= 16) {
+      state = state.copyWith(displayName: next);
+    }
+  }
+}
+
+class PocketTarotApp extends StatefulWidget {
+  const PocketTarotApp({super.key});
+
+  @override
+  State<PocketTarotApp> createState() => _PocketTarotAppState();
+}
+
+class _PocketTarotAppState extends State<PocketTarotApp> {
+  late final GoRouter _router = createRouter();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      title: 'Pocket Tarot',
+      debugShowCheckedModeBanner: false,
+      theme: buildTheme(),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('zh', 'TW'),
+      ],
+      routerConfig: _router,
+    );
+  }
+}
+
+GoRouter createRouter() {
+  return GoRouter(
+    initialLocation: '/login',
+    routes: [
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(path: '/verify-email', builder: (context, state) => const VerifyEmailScreen()),
+      GoRoute(path: '/pending', builder: (context, state) => const PendingActivationScreen()),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) => AppShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(routes: [GoRoute(path: '/home', builder: (context, state) => const HomeScreen())]),
+          StatefulShellBranch(routes: [GoRoute(path: '/divination', builder: (context, state) => const DivinationScreen())]),
+          StatefulShellBranch(routes: [GoRoute(path: '/library', builder: (context, state) => const LibraryScreen())]),
+          StatefulShellBranch(routes: [GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen())]),
+        ],
+      ),
+    ],
+  );
+}
+ThemeData buildTheme() {
+  const ink = Color(0xFF151416);
+  const paper = Color(0xFFFFFAF1);
+  const brass = Color(0xFFE7B75F);
+  const teal = Color(0xFF68B7A1);
+  const coral = Color(0xFFE87461);
+
+  return ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    scaffoldBackgroundColor: ink,
+    colorScheme: const ColorScheme.dark(
+      primary: brass,
+      secondary: teal,
+      tertiary: coral,
+      surface: Color(0xFF232025),
+      onSurface: paper,
+    ),
+    textTheme: const TextTheme(
+      displaySmall: TextStyle(fontSize: 38, fontWeight: FontWeight.w800, letterSpacing: 0),
+      headlineSmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: 0),
+      titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0),
+      bodyMedium: TextStyle(fontSize: 15, height: 1.45, letterSpacing: 0),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: const Color(0xFF1C1A1F),
+      indicatorColor: brass.withValues(alpha: 0.18),
+      labelTextStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+    ),
+    cardTheme: CardThemeData(
+      color: const Color(0xFF242127),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8), side: BorderSide(color: paper.withValues(alpha: 0.08))),
+    ),
+  );
+}
+
+class LoginScreen extends StatelessWidget {
+  const LoginScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBackdrop(
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 42),
+              Center(
+                child: Image.asset('assets/images/pocket-tarot-logo.png', height: 112),
+              ),
+              const SizedBox(height: 24),
+              Text('Pocket Tarot', style: Theme.of(context).textTheme.displaySmall, textAlign: TextAlign.center),
+              const SizedBox(height: 8),
+              Text('每日一張，深度三張，把今天的選擇握在手心。', textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 32),
+              const AuthField(label: 'Email'),
+              const SizedBox(height: 12),
+              const AuthField(label: '密碼', obscureText: true),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: () => context.go('/pending'),
+                icon: const Icon(Icons.login),
+                label: const Text('Email 登入'),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton.icon(
+                onPressed: () => context.go('/pending'),
+                icon: const Icon(Icons.g_mobiledata),
+                label: const Text('Google 登入'),
+              ),
+              TextButton(onPressed: () => context.go('/verify-email'), child: const Text('建立帳號 / 忘記密碼')),
+              const SizedBox(height: 42),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class VerifyEmailScreen extends StatelessWidget {
+  const VerifyEmailScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GateScaffold(
+      icon: Icons.mark_email_unread,
+      title: '確認 Email',
+      message: '驗證信已送出，完成後回到 App 繼續建立 profile。',
+      actionLabel: '我已完成驗證',
+      onAction: () => context.go('/pending'),
+    );
+  }
+}
+
+class PendingActivationScreen extends StatelessWidget {
+  const PendingActivationScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GateScaffold(
+      icon: Icons.hourglass_bottom,
+      title: '等待啟用',
+      message: '帳號已建立，管理員啟用後即可進入完整功能。',
+      actionLabel: 'Demo 啟用',
+      onAction: () => context.go('/home'),
+    );
+  }
+}
+
+class AppShell extends StatelessWidget {
+  const AppShell({super.key, required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: navigationShell,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: (index) => navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex),
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.auto_awesome), label: '首頁'),
+          NavigationDestination(icon: Icon(Icons.grid_view), label: '占卜館'),
+          NavigationDestination(icon: Icon(Icons.menu_book), label: '圖書館'),
+          NavigationDestination(icon: Icon(Icons.person), label: '個人'),
+        ],
+      ),
+    );
+  }
+}
+
+class HomeScreen extends ConsumerWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(appStateProvider);
+
+    return ScreenFrame(
+      title: '今日指引',
+      trailing: 'Asia/Taipei',
+      child: state.dailyDrawn
+          ? const DailyResultCard()
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const CardPreview(imagePath: 'assets/images/card-back.png', title: '今天的牌還在牌堆裡'),
+                const SizedBox(height: 18),
+                Text('天氣、時間與當下狀態會一起送進解讀，結果只保留今天這一筆。', style: Theme.of(context).textTheme.bodyMedium),
+                const SizedBox(height: 18),
+                FilledButton.icon(
+                  onPressed: () => ref.read(appStateProvider.notifier).drawDailyCard(),
+                  icon: const Icon(Icons.style),
+                  label: const Text('抽今日牌'),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+class DailyResultCard extends StatelessWidget {
+  const DailyResultCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const CardPreview(imagePath: 'assets/images/cards/moon.jpg', title: '月亮 / 正位'),
+        const SizedBox(height: 18),
+        InfoPanel(
+          title: '今日牌義',
+          child: Text('月亮提醒你先辨識不安的來源。放慢判斷，今天適合把感覺寫下來，再決定下一步。', style: Theme.of(context).textTheme.bodyMedium),
+        ),
+        const SizedBox(height: 12),
+        const SummaryStrip(text: '今天適合放慢腳步，看清內在不安。'),
+      ],
+    );
+  }
+}
+
+class DivinationScreen extends ConsumerWidget {
+  const DivinationScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(appStateProvider);
+    final controller = ref.read(appStateProvider.notifier);
+
+    return ScreenFrame(
+      title: '占卜館',
+      trailing: '${state.selectedIndexes.length}/3',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const AuthField(label: '想問的問題', maxLines: 3),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: const [
+              PromptChip(text: '工作方向'),
+              PromptChip(text: '感情狀態'),
+              PromptChip(text: '下一步選擇'),
+            ],
+          ),
+          const SizedBox(height: 18),
+          if (!state.deepDraftStarted)
+            FilledButton.icon(
+              onPressed: controller.startDeepDraft,
+              icon: const Icon(Icons.grid_3x3),
+              label: const Text('展開 9 張牌'),
+            )
+          else ...[
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, childAspectRatio: 0.68, crossAxisSpacing: 10, mainAxisSpacing: 10),
+              itemCount: 9,
+              itemBuilder: (context, index) => SelectableCardBack(
+                selected: state.selectedIndexes.contains(index),
+                order: state.selectedIndexes.indexOf(index) + 1,
+                onTap: () => controller.toggleCard(index),
+              ),
+            ),
+            const SizedBox(height: 18),
+            FilledButton.icon(
+              onPressed: state.selectedIndexes.length == 3 ? controller.createDeepResult : null,
+              icon: const Icon(Icons.auto_fix_high),
+              label: const Text('產生解讀'),
+            ),
+            if (state.deepResultReady) ...[
+              const SizedBox(height: 18),
+              const DeepResultPanel(),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class LibraryScreen extends StatelessWidget {
+  const LibraryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cards = [
+      ('月亮', 'major-18-moon', 'assets/images/cards/moon.jpg'),
+      ('星星', 'major-17-star', 'assets/images/cards/star.jpg'),
+      ('節制', 'major-14-temperance', 'assets/images/cards/temperance.jpg'),
+    ];
+
+    return ScreenFrame(
+      title: '塔羅圖書館',
+      trailing: '78',
+      child: Column(
+        children: [
+          const AuthField(label: '搜尋牌名或關鍵字'),
+          const SizedBox(height: 16),
+          for (final card in cards)
+            Card(
+              child: ListTile(
+                leading: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.asset(card.$3, width: 42, height: 58, fit: BoxFit.cover),
+                ),
+                title: Text(card.$1),
+                subtitle: Text(card.$2),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => showModalBottomSheet<void>(
+                  context: context,
+                  showDragHandle: true,
+                  builder: (context) => CardDetailSheet(title: card.$1, imagePath: card.$3),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class ProfileScreen extends ConsumerWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(appStateProvider);
+    final controller = ref.read(appStateProvider.notifier);
+
+    return ScreenFrame(
+      title: '個人檔案',
+      trailing: state.displayName,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InfoPanel(
+            title: state.displayName,
+            child: const Text('user@example.com\n每日抽牌 7 次 · 深度占卜 3 次'),
+          ),
+          const SizedBox(height: 12),
+          SegmentedButton<String>(
+            segments: const [
+              ButtonSegment(value: 'system', label: Text('系統')),
+              ButtonSegment(value: 'zh-TW', label: Text('繁中')),
+              ButtonSegment(value: 'en', label: Text('English')),
+            ],
+            selected: {state.localeMode},
+            onSelectionChanged: (value) => controller.setLocaleMode(value.first),
+          ),
+          const SizedBox(height: 12),
+          SwitchListTile(
+            value: state.weatherEnabled,
+            onChanged: controller.setWeatherEnabled,
+            title: const Text('每日抽牌使用天氣'),
+            secondary: const Icon(Icons.cloud),
+          ),
+          OutlinedButton.icon(
+            onPressed: () => _showNameDialog(context, controller),
+            icon: const Icon(Icons.edit),
+            label: const Text('編輯暱稱'),
+          ),
+          TextButton.icon(
+            onPressed: () => context.go('/login'),
+            icon: const Icon(Icons.logout),
+            label: const Text('登出'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ScreenFrame extends StatelessWidget {
+  const ScreenFrame({super.key, required this.title, required this.child, this.trailing});
+
+  final String title;
+  final String? trailing;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBackdrop(
+      child: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+              sliver: SliverToBoxAdapter(
+                child: Row(
+                  children: [
+                    Expanded(child: Text(title, style: Theme.of(context).textTheme.headlineSmall)),
+                    if (trailing != null) Badge(label: Text(trailing!)),
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+              sliver: SliverToBoxAdapter(child: child),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class AppBackdrop extends StatelessWidget {
+  const AppBackdrop({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF151416), Color(0xFF232025), Color(0xFF102A2A)],
+          ),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+class GateScaffold extends StatelessWidget {
+  const GateScaffold({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.message,
+    required this.actionLabel,
+    required this.onAction,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBackdrop(
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Icon(icon, size: 54, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(height: 18),
+              Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineSmall),
+              const SizedBox(height: 8),
+              Text(message, textAlign: TextAlign.center),
+              const SizedBox(height: 24),
+              FilledButton(onPressed: onAction, child: Text(actionLabel)),
+              TextButton(onPressed: () => context.go('/login'), child: const Text('登出')),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AuthField extends StatelessWidget {
+  const AuthField({super.key, required this.label, this.obscureText = false, this.maxLines = 1});
+
+  final String label;
+  final bool obscureText;
+  final int maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      obscureText: obscureText,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.06),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+}
+
+class CardPreview extends StatelessWidget {
+  const CardPreview({super.key, required this.imagePath, required this.title});
+
+  final String imagePath;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(imagePath, height: 260, fit: BoxFit.cover),
+            ),
+            const SizedBox(height: 14),
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class InfoPanel extends StatelessWidget {
+  const InfoPanel({super.key, required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SummaryStrip extends StatelessWidget {
+  const SummaryStrip({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Text(text, style: const TextStyle(fontWeight: FontWeight.w700)),
+      ),
+    );
+  }
+}
+
+class PromptChip extends StatelessWidget {
+  const PromptChip({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return ActionChip(avatar: const Icon(Icons.add, size: 16), label: Text(text), onPressed: () {});
+  }
+}
+
+class SelectableCardBack extends StatelessWidget {
+  const SelectableCardBack({super.key, required this.selected, required this.order, required this.onTap});
+
+  final bool selected;
+  final int order;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.asset('assets/images/card-back.png', fit: BoxFit.cover)),
+          if (selected)
+            DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Theme.of(context).colorScheme.primary, width: 3),
+                color: Colors.black.withValues(alpha: 0.18),
+              ),
+              child: Center(
+                child: CircleAvatar(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  child: Text('$order', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class DeepResultPanel extends StatelessWidget {
+  const DeepResultPanel({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InfoPanel(title: '問題核心', child: Text('月亮指出你需要先承認模糊感，而不是急著排除它。')),
+        SizedBox(height: 10),
+        InfoPanel(title: '隱藏影響', child: Text('星星讓你重新看見期待，但也提醒你不要只靠願望前進。')),
+        SizedBox(height: 10),
+        InfoPanel(title: '行動建議', child: Text('節制建議把節奏拆小，讓判斷和情緒重新對齊。')),
+        SizedBox(height: 10),
+        SummaryStrip(text: '先辨識壓力，再拆小行動。'),
+      ],
+    );
+  }
+}
+
+class CardDetailSheet extends StatelessWidget {
+  const CardDetailSheet({super.key, required this.title, required this.imagePath});
+
+  final String title;
+  final String imagePath;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(child: Image.asset(imagePath, height: 220, fit: BoxFit.cover)),
+          const SizedBox(height: 16),
+          Text(title, style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 8),
+          const Text('正位：直覺、流動、內在訊息。\n逆位：不安、逃避、尚未說出口的真相。'),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _showNameDialog(BuildContext context, AppController controller) async {
+  final textController = TextEditingController();
+  await showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('編輯暱稱'),
+      content: TextField(controller: textController, maxLength: 16, decoration: const InputDecoration(labelText: '暱稱')),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('取消')),
+        FilledButton(
+          onPressed: () {
+            controller.setDisplayName(textController.text);
+            Navigator.of(context).pop();
+          },
+          child: const Text('儲存'),
+        ),
+      ],
+    ),
+  );
+}
