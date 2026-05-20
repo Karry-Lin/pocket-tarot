@@ -46,6 +46,10 @@ class AuthGateEvaluator {
     }
 
     final lookup = await _profileLoader();
+    if (lookup.isDeleted) {
+      return const AuthGateResult(destination: AuthGateDestination.accountDeleted);
+    }
+
     final profile = lookup.profile ?? await _profileRegistrar();
 
     return _destinationForProfile(profile);
@@ -120,11 +124,18 @@ class AuthSession {
 }
 
 class ProfileLookup {
-  const ProfileLookup.found(this.profile);
+  const ProfileLookup.found(this.profile) : isDeleted = false;
 
-  const ProfileLookup.missing() : profile = null;
+  const ProfileLookup.missing()
+      : profile = null,
+        isDeleted = false;
+
+  const ProfileLookup.deleted()
+      : profile = null,
+        isDeleted = true;
 
   final UserProfile? profile;
+  final bool isDeleted;
 }
 
 bool _sameStringList(List<String> left, List<String> right) {

@@ -28,6 +28,8 @@ The library tab reads the complete 78-card catalog from `assets/data/tarot_cards
 
 `lib/domain/use_cases/auth_gate_evaluator.dart` contains the tested auth gate decision chain from splash/network check through login, email verification, profile registration, pending activation, deleted account, and app shell routing.
 
+`lib/data/repositories/auth_gate_repository.dart` adapts Firebase session state and profile API errors into that auth gate contract, including `PROFILE_NOT_FOUND` and `ACCOUNT_DELETED`.
+
 ## Firebase Auth Service
 
 `lib/data/services/firebase_auth_service.dart` wraps Firebase Auth and Google Sign-In behind testable gateways. It supports Email login/registration, verification email, password reset, Google web popup, Google mobile id-token login, Firebase ID token loading, and sign-out without calling Google Sign-In on web.
