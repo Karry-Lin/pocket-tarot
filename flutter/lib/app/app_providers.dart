@@ -28,36 +28,54 @@ final firebaseInitializationProvider = FutureProvider<void>((ref) async {
   }
 });
 
-final firebaseAuthServiceProvider = Provider<FirebaseAuthService>((ref) {
+final firebaseAuthServiceProvider = FutureProvider<FirebaseAuthService>((
+  ref,
+) async {
+  await ref.watch(firebaseInitializationProvider.future);
   return FirebaseAuthService();
 });
 
 final authActionsProvider = Provider<AuthActions>((ref) {
-  final authService = ref.watch(firebaseAuthServiceProvider);
+  Future<FirebaseAuthService> authService() {
+    return ref.read(firebaseAuthServiceProvider.future);
+  }
 
   return AuthActions(
     signInWithEmail: ({required email, required password}) async {
-      await authService.signInWithEmail(email: email, password: password);
+      final service = await authService();
+      await service.signInWithEmail(email: email, password: password);
     },
     registerWithEmail:
         ({required displayName, required email, required password}) async {
-          await authService.registerWithEmail(
+          final service = await authService();
+          await service.registerWithEmail(
             displayName: displayName,
             email: email,
             password: password,
           );
         },
     signInWithGoogle: () async {
-      await authService.signInWithGoogle();
+      final service = await authService();
+      await service.signInWithGoogle();
     },
-    sendPasswordResetEmail: authService.sendPasswordResetEmail,
-    signOut: authService.signOut,
+    sendPasswordResetEmail: (email) async {
+      final service = await authService();
+      await service.sendPasswordResetEmail(email);
+    },
+    signOut: () async {
+      final service = await authService();
+      await service.signOut();
+    },
   );
 });
 
 final apiClientProvider = Provider<PocketTarotApiClient>((ref) {
-  final authService = ref.watch(firebaseAuthServiceProvider);
-  return PocketTarotApiClient(tokenProvider: authService.getIdToken);
+  return PocketTarotApiClient(
+    tokenProvider: () async {
+      final authService = await ref.read(firebaseAuthServiceProvider.future);
+      return authService.getIdToken();
+    },
+  );
 });
 
 final apiHealthServiceProvider = Provider<ApiHealthService>((ref) {
@@ -168,9 +186,11 @@ final profileControllerProvider = FutureProvider<ProfileController>((
   );
 });
 
-final authGateRepositoryProvider = Provider<AuthGateRepository>((ref) {
+final authGateRepositoryProvider = FutureProvider<AuthGateRepository>((
+  ref,
+) async {
   return AuthGateRepository(
-    authService: ref.watch(firebaseAuthServiceProvider),
+    authService: await ref.watch(firebaseAuthServiceProvider.future),
     profileRepository: ref.watch(profileRepositoryProvider),
   );
 });
@@ -181,12 +201,17 @@ final authGateEvaluatorProvider = Provider<AuthGateEvaluator>((ref) {
   return AuthGateEvaluator(
     networkChecker: apiHealthService.isAvailable,
     authSessionLoader: () async {
-      await ref.read(firebaseInitializationProvider.future);
-      return ref.read(authGateRepositoryProvider).loadSession(reload: true);
+      final repository = await ref.read(authGateRepositoryProvider.future);
+      return repository.loadSession(reload: true);
     },
-    profileLoader: () => ref.read(authGateRepositoryProvider).loadProfile(),
-    profileRegistrar: () =>
-        ref.read(authGateRepositoryProvider).registerProfile(),
+    profileLoader: () async {
+      final repository = await ref.read(authGateRepositoryProvider.future);
+      return repository.loadProfile();
+    },
+    profileRegistrar: () async {
+      final repository = await ref.read(authGateRepositoryProvider.future);
+      return repository.registerProfile();
+    },
   );
 });
 
