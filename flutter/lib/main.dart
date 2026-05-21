@@ -139,56 +139,198 @@ GoRouter createRouter({String initialLocation = '/splash'}) {
   );
 }
 
+const _kAppFrameMaxWidth = 430.0;
+
+class _ArcanaColors {
+  static const ink = Color(0xFF090613);
+  static const ink2 = Color(0xFF10091E);
+  static const plum = Color(0xFF20102F);
+  static const wine = Color(0xFF4B193F);
+  static const peacock = Color(0xFF1F6B72);
+  static const gold = Color(0xFFD7B26D);
+  static const gold2 = Color(0xFFF2D896);
+  static const ivory = Color(0xFFF7EFD7);
+  static const muted = Color(0xFFB8A9C8);
+  static const subtle = Color(0xFF7F7190);
+  static const error = Color(0xFFFFA29A);
+}
+
+TextStyle _displayTextStyle({
+  required double fontSize,
+  FontWeight fontWeight = FontWeight.w600,
+  double height = 1.08,
+}) {
+  return TextStyle(
+    color: _ArcanaColors.ivory,
+    fontFamily: 'Noto Serif TC',
+    fontFamilyFallback: const [
+      'Source Han Serif TC',
+      'Iowan Old Style',
+      'Georgia',
+      'serif',
+    ],
+    fontSize: fontSize,
+    fontWeight: fontWeight,
+    height: height,
+    letterSpacing: 0,
+  );
+}
+
+TextStyle _bodyTextStyle({
+  double fontSize = 14,
+  FontWeight fontWeight = FontWeight.w500,
+  Color color = _ArcanaColors.muted,
+  double height = 1.55,
+}) {
+  return TextStyle(
+    color: color,
+    fontFamily: 'Noto Sans TC',
+    fontFamilyFallback: const ['Microsoft JhengHei', 'Segoe UI', 'sans-serif'],
+    fontSize: fontSize,
+    fontWeight: fontWeight,
+    height: height,
+    letterSpacing: 0,
+  );
+}
+
 ThemeData buildTheme() {
-  const ink = Color(0xFF151416);
-  const paper = Color(0xFFFFFAF1);
-  const brass = Color(0xFFE7B75F);
-  const teal = Color(0xFF68B7A1);
-  const coral = Color(0xFFE87461);
+  final textTheme = TextTheme(
+    displaySmall: _displayTextStyle(fontSize: 38, height: 1),
+    headlineSmall: _displayTextStyle(fontSize: 27),
+    titleLarge: _displayTextStyle(fontSize: 23),
+    titleMedium: _bodyTextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w800,
+      color: _ArcanaColors.ivory,
+      height: 1.24,
+    ),
+    bodyLarge: _bodyTextStyle(fontSize: 15),
+    bodyMedium: _bodyTextStyle(),
+    bodySmall: _bodyTextStyle(fontSize: 12, color: _ArcanaColors.subtle),
+    labelLarge: _bodyTextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w800,
+      color: _ArcanaColors.ink2,
+      height: 1,
+    ),
+  );
 
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
-    scaffoldBackgroundColor: ink,
+    scaffoldBackgroundColor: _ArcanaColors.ink,
     colorScheme: const ColorScheme.dark(
-      primary: brass,
-      secondary: teal,
-      tertiary: coral,
-      surface: Color(0xFF232025),
-      onSurface: paper,
+      primary: _ArcanaColors.gold,
+      secondary: _ArcanaColors.peacock,
+      tertiary: _ArcanaColors.wine,
+      error: _ArcanaColors.error,
+      surface: _ArcanaColors.plum,
+      onSurface: _ArcanaColors.ivory,
     ),
-    textTheme: const TextTheme(
-      displaySmall: TextStyle(
-        fontSize: 38,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0,
-      ),
-      headlineSmall: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0,
-      ),
-      titleMedium: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0,
-      ),
-      bodyMedium: TextStyle(fontSize: 15, height: 1.45, letterSpacing: 0),
-    ),
+    textTheme: textTheme,
     navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: const Color(0xFF1C1A1F),
-      indicatorColor: brass.withValues(alpha: 0.18),
+      backgroundColor: _ArcanaColors.ink.withValues(alpha: 0.86),
+      indicatorColor: _ArcanaColors.gold.withValues(alpha: 0.18),
       labelTextStyle: WidgetStateProperty.all(
         const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
       ),
     ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        minimumSize: const Size.fromHeight(50),
+        foregroundColor: _ArcanaColors.ink2,
+        backgroundColor: _ArcanaColors.gold2,
+        disabledForegroundColor: _ArcanaColors.subtle,
+        disabledBackgroundColor: Colors.white.withValues(alpha: 0.08),
+        textStyle: _bodyTextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
+          color: _ArcanaColors.ink2,
+          height: 1,
+        ),
+        shape: const StadiumBorder(),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size.fromHeight(48),
+        foregroundColor: _ArcanaColors.ivory,
+        side: BorderSide(color: _ArcanaColors.gold2.withValues(alpha: 0.52)),
+        textStyle: _bodyTextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w800,
+          color: _ArcanaColors.ivory,
+          height: 1,
+        ),
+        shape: const StadiumBorder(),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: _ArcanaColors.gold2,
+        textStyle: _bodyTextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+          color: _ArcanaColors.gold2,
+          height: 1,
+        ),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: _ArcanaColors.ink.withValues(alpha: 0.68),
+      labelStyle: _bodyTextStyle(fontSize: 12, color: _ArcanaColors.muted),
+      hintStyle: _bodyTextStyle(fontSize: 13, color: _ArcanaColors.subtle),
+      errorStyle: _bodyTextStyle(fontSize: 12, color: _ArcanaColors.error),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: _ArcanaColors.muted.withValues(alpha: 0.24),
+        ),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+          color: _ArcanaColors.muted.withValues(alpha: 0.24),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: _ArcanaColors.gold),
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      backgroundColor: Colors.white.withValues(alpha: 0.035),
+      selectedColor: _ArcanaColors.gold.withValues(alpha: 0.14),
+      disabledColor: Colors.white.withValues(alpha: 0.04),
+      side: BorderSide(color: _ArcanaColors.muted.withValues(alpha: 0.22)),
+      labelStyle: _bodyTextStyle(fontSize: 12, color: _ArcanaColors.muted),
+      secondaryLabelStyle: _bodyTextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        color: _ArcanaColors.ivory,
+      ),
+      shape: const StadiumBorder(),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+    ),
     cardTheme: CardThemeData(
-      color: const Color(0xFF242127),
+      color: _ArcanaColors.plum.withValues(alpha: 0.92),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: paper.withValues(alpha: 0.08)),
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: _ArcanaColors.gold.withValues(alpha: 0.2)),
       ),
+    ),
+    bottomSheetTheme: const BottomSheetThemeData(
+      backgroundColor: _ArcanaColors.ink2,
+      modalBackgroundColor: _ArcanaColors.ink2,
+      surfaceTintColor: Colors.transparent,
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: _ArcanaColors.plum,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
     ),
   );
 }
@@ -268,12 +410,7 @@ class SplashCheckingScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Image.asset(
-                  'assets/images/pocket-tarot-logo.png',
-                  height: 108,
-                ),
-              ),
+              Center(child: const BrandMark(size: 116, radius: 32)),
               const SizedBox(height: 24),
               Text(
                 l10n.startupCheckingTitle,
@@ -322,12 +459,7 @@ class SplashNetworkBlockedScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Image.asset(
-                  'assets/images/pocket-tarot-logo.png',
-                  height: 108,
-                ),
-              ),
+              Center(child: const BrandMark(size: 116, radius: 32)),
               const SizedBox(height: 24),
               Text(
                 resolvedTitle,
@@ -391,107 +523,118 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return AppBackdrop(
       child: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 42),
-              Center(
-                child: Image.asset(
-                  'assets/images/pocket-tarot-logo.png',
-                  height: 112,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Pocket Tarot',
-                style: Theme.of(context).textTheme.displaySmall,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.loginTagline,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 32),
-              if (_mode == EmailAuthMode.register) ...[
-                AuthField(
-                  label: l10n.displayNameLabel,
-                  controller: _displayNameController,
-                  errorText: _errors[AuthFormField.displayName],
-                ),
-                const SizedBox(height: 12),
-              ],
-              AuthField(
-                label: 'Email',
-                controller: _emailController,
-                errorText: _errors[AuthFormField.email],
-              ),
-              const SizedBox(height: 12),
-              if (_mode != EmailAuthMode.resetPassword)
-                AuthField(
-                  label: l10n.passwordLabel,
-                  controller: _passwordController,
-                  obscureText: true,
-                  errorText: _errors[AuthFormField.password],
-                ),
-              if (_mode == EmailAuthMode.register) ...[
-                const SizedBox(height: 12),
-                AuthField(
-                  label: l10n.confirmPasswordLabel,
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  errorText: _errors[AuthFormField.confirmPassword],
-                ),
-              ],
-              const SizedBox(height: 16),
-              if (_formError != null || _formMessage != null) ...[
-                Text(
-                  _formError ?? _formMessage!,
-                  style: TextStyle(
-                    color: _formError == null
-                        ? Theme.of(context).colorScheme.secondary
-                        : Theme.of(context).colorScheme.error,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 10),
-              ],
-              _PrimaryEmailAuthButton(
-                mode: _mode,
-                onPressed: _submitting ? null : _submit,
-              ),
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: _submitting ? null : _signInWithGoogle,
-                icon: const Icon(Icons.g_mobiledata),
-                label: Text(l10n.googleLogin),
-              ),
-              const SizedBox(height: 4),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 8,
+          padding: const EdgeInsets.fromLTRB(26, 44, 26, 42),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (_mode != EmailAuthMode.signIn)
-                    TextButton(
-                      onPressed: () => _switchMode(EmailAuthMode.signIn),
-                      child: Text(l10n.loginAction),
+                  const SizedBox(height: 72),
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: BrandMark(size: 58, radius: 18),
+                  ),
+                  const SizedBox(height: 18),
+                  const EyebrowText('Pocket Tarot'),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Pocket Tarot',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(l10n.loginTagline),
+                  const SizedBox(height: 24),
+                  GlassPanel(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (_mode == EmailAuthMode.register) ...[
+                          AuthField(
+                            label: l10n.displayNameLabel,
+                            controller: _displayNameController,
+                            errorText: _errors[AuthFormField.displayName],
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        AuthField(
+                          label: 'Email',
+                          controller: _emailController,
+                          errorText: _errors[AuthFormField.email],
+                        ),
+                        const SizedBox(height: 12),
+                        if (_mode != EmailAuthMode.resetPassword)
+                          AuthField(
+                            label: l10n.passwordLabel,
+                            controller: _passwordController,
+                            obscureText: true,
+                            errorText: _errors[AuthFormField.password],
+                          ),
+                        if (_mode == EmailAuthMode.register) ...[
+                          const SizedBox(height: 12),
+                          AuthField(
+                            label: l10n.confirmPasswordLabel,
+                            controller: _confirmPasswordController,
+                            obscureText: true,
+                            errorText: _errors[AuthFormField.confirmPassword],
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        if (_formError != null || _formMessage != null) ...[
+                          Text(
+                            _formError ?? _formMessage!,
+                            style: TextStyle(
+                              color: _formError == null
+                                  ? _ArcanaColors.gold2
+                                  : Theme.of(context).colorScheme.error,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 10),
+                        ],
+                        OutlinedButton.icon(
+                          onPressed: _submitting ? null : _signInWithGoogle,
+                          icon: const Icon(Icons.g_mobiledata),
+                          label: Text(l10n.googleLogin),
+                        ),
+                        const SizedBox(height: 10),
+                        _PrimaryEmailAuthButton(
+                          mode: _mode,
+                          onPressed: _submitting ? null : _submit,
+                        ),
+                        const SizedBox(height: 6),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          children: [
+                            if (_mode != EmailAuthMode.signIn)
+                              TextButton(
+                                onPressed: () =>
+                                    _switchMode(EmailAuthMode.signIn),
+                                child: Text(l10n.loginAction),
+                              ),
+                            if (_mode != EmailAuthMode.register)
+                              TextButton(
+                                onPressed: () =>
+                                    _switchMode(EmailAuthMode.register),
+                                child: Text(l10n.registerAction),
+                              ),
+                            if (_mode != EmailAuthMode.resetPassword)
+                              TextButton(
+                                onPressed: () =>
+                                    _switchMode(EmailAuthMode.resetPassword),
+                                child: Text(l10n.forgotPassword),
+                              ),
+                          ],
+                        ),
+                      ],
                     ),
-                  if (_mode != EmailAuthMode.register)
-                    TextButton(
-                      onPressed: () => _switchMode(EmailAuthMode.register),
-                      child: Text(l10n.registerAction),
-                    ),
-                  if (_mode != EmailAuthMode.resetPassword)
-                    TextButton(
-                      onPressed: () => _switchMode(EmailAuthMode.resetPassword),
-                      child: Text(l10n.forgotPassword),
-                    ),
+                  ),
+                  const SizedBox(height: 42),
                 ],
               ),
-              const SizedBox(height: 42),
-            ],
+            ),
           ),
         ),
       ),
@@ -710,31 +853,141 @@ class AppShell extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
+      backgroundColor: _ArcanaColors.ink,
+      extendBody: false,
       body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(19, 0, 19, 13),
+          child: Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 392),
+              child: DecoratedBox(
+                key: const ValueKey('bottom-nav-glass'),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: _ArcanaColors.gold.withValues(alpha: 0.28),
+                  ),
+                  color: _ArcanaColors.ink.withValues(alpha: 0.86),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.42),
+                      blurRadius: 38,
+                      offset: const Offset(0, 18),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      _BottomNavItem(
+                        icon: Icons.auto_awesome,
+                        label: l10n.navHome,
+                        selected: navigationShell.currentIndex == 0,
+                        onTap: () => _goBranch(0),
+                      ),
+                      _BottomNavItem(
+                        icon: Icons.grid_view,
+                        label: l10n.navDivination,
+                        selected: navigationShell.currentIndex == 1,
+                        onTap: () => _goBranch(1),
+                      ),
+                      _BottomNavItem(
+                        icon: Icons.menu_book,
+                        label: l10n.navLibrary,
+                        selected: navigationShell.currentIndex == 2,
+                        onTap: () => _goBranch(2),
+                      ),
+                      _BottomNavItem(
+                        icon: Icons.person,
+                        label: l10n.navProfile,
+                        selected: navigationShell.currentIndex == 3,
+                        onTap: () => _goBranch(3),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.auto_awesome),
-            label: l10n.navHome,
+      ),
+    );
+  }
+
+  void _goBranch(int index) {
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
+  }
+}
+
+class _BottomNavItem extends StatelessWidget {
+  const _BottomNavItem({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? _ArcanaColors.gold2 : _ArcanaColors.subtle;
+
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: SizedBox(
+          height: 62,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 23,
+                height: 23,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: color),
+                  color: selected
+                      ? _ArcanaColors.gold.withValues(alpha: 0.13)
+                      : Colors.transparent,
+                  boxShadow: selected
+                      ? [
+                          BoxShadow(
+                            color: _ArcanaColors.gold.withValues(alpha: 0.25),
+                            blurRadius: 18,
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Icon(icon, size: 14, color: color),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _bodyTextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                  height: 1,
+                ),
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.grid_view),
-            label: l10n.navDivination,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.menu_book),
-            label: l10n.navLibrary,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.person),
-            label: l10n.navProfile,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -779,6 +1032,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return ScreenFrame(
       title: l10n.homeTitle,
+      eyebrow: 'Daily ritual',
       trailing: 'Asia/Taipei',
       child: controllerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -823,10 +1077,39 @@ class DailyResultCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        CardPreview(
-          imagePath: _imageForCardId(reading.card.cardId),
-          title:
-              '${reading.card.cardId} / ${_orientationLabel(reading.card.orientation, l10n)}',
+        GlassPanel(
+          ornate: true,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              TarotImageCard(
+                imagePath: _imageForCardId(reading.card.cardId),
+                width: 112,
+                height: 166,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const EyebrowText('Card of the day'),
+                    const SizedBox(height: 8),
+                    Text(
+                      _orientationLabel(reading.card.orientation, l10n),
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      reading.summary,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 10),
+                    TagPill(text: reading.card.cardId),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 18),
         InfoPanel(
@@ -852,22 +1135,144 @@ class _DailyEmptyState extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        CardPreview(
-          imagePath: 'assets/images/card-back.png',
-          title: l10n.dailyEmptyTitle,
-        ),
-        const SizedBox(height: 18),
-        Text(
-          l10n.dailyEmptyMessage,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 18),
-        FilledButton.icon(
-          onPressed: onDraw,
-          icon: const Icon(Icons.style),
-          label: Text(l10n.dailyDrawButton),
+        GlassPanel(
+          ornate: true,
+          padding: const EdgeInsets.fromLTRB(18, 22, 18, 20),
+          child: Column(
+            children: [
+              const EyebrowText('One card today'),
+              const SizedBox(height: 8),
+              Text(
+                l10n.dailyEmptyTitle,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.dailyEmptyMessage,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 22),
+              const DailyDeckStage(),
+              const SizedBox(height: 18),
+              FilledButton.icon(
+                onPressed: onDraw,
+                icon: const Icon(Icons.style),
+                label: Text(l10n.dailyDrawButton),
+              ),
+            ],
+          ),
         ),
       ],
+    );
+  }
+}
+
+class DailyDeckStage extends StatelessWidget {
+  const DailyDeckStage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      key: const ValueKey('daily-ritual-deck'),
+      height: 238,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Transform.rotate(
+            angle: -0.18,
+            child: Container(
+              width: 252,
+              height: 170,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: _ArcanaColors.gold.withValues(alpha: 0.24),
+                ),
+              ),
+            ),
+          ),
+          Transform.rotate(
+            angle: 0.24,
+            child: Container(
+              width: 198,
+              height: 132,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: _ArcanaColors.muted.withValues(alpha: 0.24),
+                  style: BorderStyle.solid,
+                ),
+              ),
+            ),
+          ),
+          Transform.translate(
+            offset: const Offset(-20, 13),
+            child: const _DeckCard(rotation: -0.2),
+          ),
+          Transform.translate(
+            offset: const Offset(20, 11),
+            child: const _DeckCard(rotation: 0.18),
+          ),
+          const _DeckCard(showMoon: true),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeckCard extends StatelessWidget {
+  const _DeckCard({this.rotation = 0, this.showMoon = false});
+
+  final double rotation;
+  final bool showMoon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: rotation,
+      child: Container(
+        width: 142,
+        height: 202,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: _ArcanaColors.gold2.withValues(alpha: 0.46),
+          ),
+          image: const DecorationImage(
+            image: AssetImage('assets/images/card-back.png'),
+            fit: BoxFit.cover,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.44),
+              blurRadius: 36,
+              offset: const Offset(0, 22),
+            ),
+          ],
+        ),
+        child: showMoon
+            ? Center(
+                child: Container(
+                  width: 58,
+                  height: 58,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: _ArcanaColors.gold2.withValues(alpha: 0.42),
+                    ),
+                    color: _ArcanaColors.ink.withValues(alpha: 0.28),
+                  ),
+                  child: Text(
+                    '月',
+                    style: _displayTextStyle(fontSize: 22, height: 1),
+                  ),
+                ),
+              )
+            : null,
+      ),
     );
   }
 }
@@ -985,6 +1390,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
 
     return ScreenFrame(
       title: l10n.divinationTitle,
+      eyebrow: 'Reading room',
       trailing: '${_deepState.selectedIndexes.length}/3',
       child: controllerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -999,68 +1405,113 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
 
   Widget _deepContent(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final usesChinese = _usesChineseCardText(l10n);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        AuthField(
-          label: l10n.questionLabel,
-          controller: _questionController,
-          maxLines: 3,
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            PromptChip(
-              text: l10n.promptWork,
-              onPressed: () => _applyQuestionTemplate(l10n.promptWork),
-            ),
-            PromptChip(
-              text: l10n.promptLove,
-              onPressed: () => _applyQuestionTemplate(l10n.promptLove),
-            ),
-            PromptChip(
-              text: l10n.promptNextStep,
-              onPressed: () => _applyQuestionTemplate(l10n.promptNextStep),
-            ),
-          ],
+        GlassPanel(
+          ornate: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const EyebrowText('Reading entry'),
+              const SizedBox(height: 8),
+              Text(
+                usesChinese ? '把問題放進星盤。' : 'Place your question on the table.',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 6),
+              Text(
+                usesChinese
+                    ? '輸入正在面對的情境，或選擇一個常見主題，進入三張牌陣。'
+                    : 'Describe the situation or choose a theme before entering the three-card spread.',
+              ),
+              const SizedBox(height: 16),
+              AuthField(
+                label: l10n.questionLabel,
+                controller: _questionController,
+                maxLines: 3,
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  PromptChip(
+                    text: l10n.promptWork,
+                    onPressed: () => _applyQuestionTemplate(l10n.promptWork),
+                  ),
+                  PromptChip(
+                    text: l10n.promptLove,
+                    onPressed: () => _applyQuestionTemplate(l10n.promptLove),
+                  ),
+                  PromptChip(
+                    text: l10n.promptNextStep,
+                    onPressed: () =>
+                        _applyQuestionTemplate(l10n.promptNextStep),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              if (_deepState.status == DeepReadingStatus.initial)
+                FilledButton.icon(
+                  onPressed: _startDraft,
+                  icon: const Icon(Icons.grid_3x3),
+                  label: Text(l10n.startDraft),
+                ),
+            ],
+          ),
         ),
         const SizedBox(height: 18),
         if (_deepState.status == DeepReadingStatus.initial)
-          FilledButton.icon(
-            onPressed: _startDraft,
-            icon: const Icon(Icons.grid_3x3),
-            label: Text(l10n.startDraft),
-          )
+          const SizedBox.shrink()
         else if (_deepState.status == DeepReadingStatus.drafting ||
             _deepState.status == DeepReadingStatus.creating)
           const Center(child: CircularProgressIndicator())
         else ...[
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              childAspectRatio: 0.68,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
+          GlassPanel(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        l10n.selectedCardsTitle,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    TagPill(text: '${_deepState.selectedIndexes.length} / 3'),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: _deepState.selectedIndexes.length == 3
+                      ? _createResult
+                      : null,
+                  icon: const Icon(Icons.auto_fix_high),
+                  label: Text(l10n.createReading),
+                ),
+                const SizedBox(height: 12),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    childAspectRatio: 0.68,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  itemCount: _deepState.draftCards.length,
+                  itemBuilder: (context, index) => SelectableCardBack(
+                    selected: _deepState.selectedIndexes.contains(index),
+                    order: _deepState.selectedIndexes.indexOf(index) + 1,
+                    onTap: () => _toggleCard(index),
+                  ),
+                ),
+              ],
             ),
-            itemCount: _deepState.draftCards.length,
-            itemBuilder: (context, index) => SelectableCardBack(
-              selected: _deepState.selectedIndexes.contains(index),
-              order: _deepState.selectedIndexes.indexOf(index) + 1,
-              onTap: () => _toggleCard(index),
-            ),
-          ),
-          const SizedBox(height: 18),
-          FilledButton.icon(
-            onPressed: _deepState.selectedIndexes.length == 3
-                ? _createResult
-                : null,
-            icon: const Icon(Icons.auto_fix_high),
-            label: Text(l10n.createReading),
           ),
           if (_deepState.reading != null) ...[
             const SizedBox(height: 18),
@@ -1123,6 +1574,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
     return ScreenFrame(
       title: l10n.libraryTitle,
+      eyebrow: 'Arcana library',
       trailing: '78',
       child: cardsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -1150,11 +1602,6 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                           },
                           icon: const Icon(Icons.close),
                         ),
-                  filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.06),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1176,24 +1623,21 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
               const SizedBox(height: 8),
-              for (final card in filtered)
-                Card(
-                  child: ListTile(
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.asset(
-                        _imageForCard(card),
-                        width: 42,
-                        height: 58,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    title: Text(_primaryCardName(card, l10n)),
-                    subtitle: Text(
-                      '${_secondaryCardName(card, l10n)}\n${card.id}',
-                    ),
-                    isThreeLine: true,
-                    trailing: const Icon(Icons.chevron_right),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.62,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: filtered.length,
+                itemBuilder: (context, index) {
+                  final card = filtered[index];
+                  return KnowledgeCard(
+                    card: card,
+                    imagePath: _imageForCard(card),
                     onTap: () => showModalBottomSheet<void>(
                       context: context,
                       showDragHandle: true,
@@ -1203,8 +1647,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         imagePath: _imageForCard(card),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                },
+              ),
             ],
           );
         },
@@ -1288,6 +1733,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return ScreenFrame(
       title: l10n.profileTitle,
+      eyebrow: 'Profile',
       trailing: _profileState.snapshot?.user.displayName,
       child: controllerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -1309,6 +1755,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           localeMode: LocaleMode.system,
           weatherEnabled: true,
         );
+    final usesChinese = _usesChineseCardText(l10n);
 
     if (_profileState.status == ProfileStatus.initial ||
         _profileState.status == ProfileStatus.loading) {
@@ -1336,41 +1783,158 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InfoPanel(
-          title: snapshot.user.displayName,
-          child: Text(
-            '${snapshot.user.email}\n${l10n.profileStats(snapshot.stats.dailyReadingCount, snapshot.stats.deepReadingCount)}',
+        GlassPanel(
+          child: Row(
+            children: [
+              const BrandMark(size: 68, radius: 22),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      snapshot.user.displayName,
+                      style: Theme.of(context).textTheme.titleLarge,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      snapshot.user.email,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      l10n.profileStats(
+                        snapshot.stats.dailyReadingCount,
+                        snapshot.stats.deepReadingCount,
+                      ),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () => _showNameDialog(context, _updateDisplayName),
+                icon: const Icon(Icons.edit),
+                tooltip: l10n.editDisplayName,
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
-        SegmentedButton<LocaleMode>(
-          segments: [
-            ButtonSegment(
-              value: LocaleMode.system,
-              label: Text(l10n.localeSystem),
+        Row(
+          children: [
+            Expanded(
+              child: GlassPanel(
+                padding: const EdgeInsets.all(14),
+                radius: 18,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const EyebrowText('Daily draw'),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${snapshot.stats.dailyReadingCount}',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    Text(l10n.navHome),
+                  ],
+                ),
+              ),
             ),
-            ButtonSegment(value: LocaleMode.zhTw, label: Text(l10n.localeZh)),
-            ButtonSegment(value: LocaleMode.en, label: Text(l10n.localeEn)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: GlassPanel(
+                padding: const EdgeInsets.all(14),
+                radius: 18,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const EyebrowText('Deep reading'),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${snapshot.stats.deepReadingCount}',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    Text(l10n.navDivination),
+                  ],
+                ),
+              ),
+            ),
           ],
-          selected: {settings.localeMode},
-          onSelectionChanged: (value) => _setLocaleMode(value.first),
         ),
         const SizedBox(height: 12),
-        SwitchListTile(
-          value: settings.weatherEnabled,
-          onChanged: _setWeatherEnabled,
-          title: Text(l10n.weatherToggle),
-          secondary: const Icon(Icons.cloud),
+        GlassPanel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const EyebrowText('Settings'),
+              const SizedBox(height: 8),
+              Text(
+                usesChinese ? '設定選項' : 'Settings',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 14),
+              SegmentedButton<LocaleMode>(
+                segments: [
+                  ButtonSegment(
+                    value: LocaleMode.system,
+                    label: Text(l10n.localeSystem),
+                  ),
+                  ButtonSegment(
+                    value: LocaleMode.zhTw,
+                    label: Text(l10n.localeZh),
+                  ),
+                  ButtonSegment(
+                    value: LocaleMode.en,
+                    label: Text(l10n.localeEn),
+                  ),
+                ],
+                selected: {settings.localeMode},
+                onSelectionChanged: (value) => _setLocaleMode(value.first),
+              ),
+              const SizedBox(height: 10),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: settings.weatherEnabled,
+                onChanged: _setWeatherEnabled,
+                title: Text(l10n.weatherToggle),
+                subtitle: Text(
+                  usesChinese
+                      ? '只用於生成今日心靈天氣'
+                      : 'Only used to generate daily spiritual weather.',
+                ),
+                secondary: const Icon(Icons.cloud),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () => _showNameDialog(context, _updateDisplayName),
+                icon: const Icon(Icons.edit),
+                label: Text(l10n.editDisplayName),
+              ),
+            ],
+          ),
         ),
-        OutlinedButton.icon(
-          onPressed: () => _showNameDialog(context, _updateDisplayName),
-          icon: const Icon(Icons.edit),
-          label: Text(l10n.editDisplayName),
-        ),
-        TextButton.icon(
-          onPressed: _signOut,
-          icon: const Icon(Icons.logout),
-          label: Text(l10n.signOut),
+        const SizedBox(height: 12),
+        GlassPanel(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const EyebrowText('Account'),
+              const SizedBox(height: 8),
+              Text(
+                usesChinese ? '帳戶' : 'Account',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 10),
+              TextButton.icon(
+                onPressed: _signOut,
+                icon: const Icon(Icons.logout),
+                label: Text(l10n.signOut),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -1382,10 +1946,12 @@ class ScreenFrame extends StatelessWidget {
     super.key,
     required this.title,
     required this.child,
+    this.eyebrow,
     this.trailing,
   });
 
   final String title;
+  final String? eyebrow;
   final String? trailing;
   final Widget child;
 
@@ -1396,23 +1962,33 @@ class ScreenFrame extends StatelessWidget {
         child: CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+              padding: const EdgeInsets.fromLTRB(26, 28, 26, 8),
               sliver: SliverToBoxAdapter(
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Text(
-                        title,
-                        style: Theme.of(context).textTheme.headlineSmall,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (eyebrow != null) ...[
+                            EyebrowText(eyebrow!),
+                            const SizedBox(height: 6),
+                          ],
+                          Text(
+                            title,
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                        ],
                       ),
                     ),
-                    if (trailing != null) Badge(label: Text(trailing!)),
+                    if (trailing != null) TagPill(text: trailing!),
                   ],
                 ),
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 10, 20, 112),
+              padding: const EdgeInsets.fromLTRB(26, 12, 26, 116),
               sliver: SliverToBoxAdapter(child: child),
             ),
           ],
@@ -1430,16 +2006,240 @@ class AppBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.transparent,
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF151416), Color(0xFF232025), Color(0xFF102A2A)],
+      color: _ArcanaColors.ink,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _kAppFrameMaxWidth),
+          child: DecoratedBox(
+            key: const ValueKey('app-chrome-frame'),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(34),
+              border: Border.all(
+                color: _ArcanaColors.gold.withValues(alpha: 0.12),
+              ),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF20102F),
+                  Color(0xFF160C25),
+                  Color(0xFF07030D),
+                ],
+                stops: [0, 0.42, 1],
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(34),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  const CustomPaint(painter: _CelestialBackdropPainter()),
+                  Positioned(
+                    top: 14,
+                    right: 14,
+                    bottom: 14,
+                    left: 14,
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(
+                            color: _ArcanaColors.gold.withValues(alpha: 0.09),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  child,
+                ],
+              ),
+            ),
           ),
         ),
-        child: child,
+      ),
+    );
+  }
+}
+
+class _CelestialBackdropPainter extends CustomPainter {
+  const _CelestialBackdropPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final gridPaint = Paint()
+      ..color = _ArcanaColors.gold.withValues(alpha: 0.045)
+      ..strokeWidth = 1;
+    for (double x = 0; x < size.width; x += 38) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+    }
+    for (double y = 0; y < size.height; y += 38) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+
+    final starPaint = Paint()
+      ..color = _ArcanaColors.ivory.withValues(alpha: 0.42);
+    const offsets = [
+      Offset(0.12, 0.15),
+      Offset(0.24, 0.31),
+      Offset(0.42, 0.12),
+      Offset(0.62, 0.22),
+      Offset(0.78, 0.36),
+      Offset(0.88, 0.16),
+      Offset(0.18, 0.58),
+      Offset(0.36, 0.72),
+      Offset(0.58, 0.64),
+      Offset(0.76, 0.82),
+      Offset(0.91, 0.67),
+    ];
+    for (final offset in offsets) {
+      canvas.drawCircle(
+        Offset(size.width * offset.dx, size.height * offset.dy),
+        0.8,
+        starPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class EyebrowText extends StatelessWidget {
+  const EyebrowText(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: _bodyTextStyle(
+        fontSize: 10,
+        fontWeight: FontWeight.w800,
+        color: _ArcanaColors.gold2,
+        height: 1,
+      ).copyWith(fontFamilyFallback: const ['JetBrains Mono', 'monospace']),
+    );
+  }
+}
+
+class BrandMark extends StatelessWidget {
+  const BrandMark({super.key, this.size = 76, this.radius = 24});
+
+  final double size;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: _ArcanaColors.gold2.withValues(alpha: 0.46)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.42),
+            blurRadius: 36,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
+      child: Image.asset(
+        'assets/images/pocket-tarot-logo.png',
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+}
+
+class GlassPanel extends StatelessWidget {
+  const GlassPanel({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(18),
+    this.radius = 24,
+    this.ornate = false,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final double radius;
+  final bool ornate;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: _ArcanaColors.gold.withValues(alpha: 0.25)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.07),
+            _ArcanaColors.plum.withValues(alpha: 0.94),
+            _ArcanaColors.ink.withValues(alpha: 0.94),
+          ],
+          stops: const [0, 0.32, 1],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.42),
+            blurRadius: 46,
+            offset: const Offset(0, 20),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          if (ornate)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(radius - 6),
+                      border: Border.all(
+                        color: _ArcanaColors.gold2.withValues(alpha: 0.16),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          Padding(padding: padding, child: child),
+        ],
+      ),
+    );
+  }
+}
+
+class TagPill extends StatelessWidget {
+  const TagPill({super.key, required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: _ArcanaColors.gold.withValues(alpha: 0.27)),
+        color: _ArcanaColors.ink.withValues(alpha: 0.28),
+      ),
+      child: Text(
+        text,
+        style: _bodyTextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: _ArcanaColors.gold2,
+          height: 1,
+        ),
       ),
     );
   }
@@ -1530,13 +2330,49 @@ class AuthField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        errorText: errorText,
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.06),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      style: Theme.of(
+        context,
+      ).textTheme.bodyMedium?.copyWith(color: _ArcanaColors.ivory),
+      decoration: InputDecoration(labelText: label, errorText: errorText),
+    );
+  }
+}
+
+class TarotImageCard extends StatelessWidget {
+  const TarotImageCard({
+    super.key,
+    required this.imagePath,
+    this.width,
+    this.height,
+    this.radius = 18,
+    this.fit = BoxFit.cover,
+  });
+
+  final String imagePath;
+  final double? width;
+  final double? height;
+  final double radius;
+  final BoxFit fit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: _ArcanaColors.gold2.withValues(alpha: 0.38)),
+        color: _ArcanaColors.ink2,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.34),
+            blurRadius: 24,
+            offset: const Offset(0, 14),
+          ),
+        ],
       ),
+      child: Image.asset(imagePath, fit: fit),
     );
   }
 }
@@ -1549,15 +2385,12 @@ class CardPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    return GlassPanel(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.zero,
         child: Column(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(imagePath, height: 260, fit: BoxFit.cover),
-            ),
+            TarotImageCard(imagePath: imagePath, height: 260),
             const SizedBox(height: 14),
             Text(title, style: Theme.of(context).textTheme.titleMedium),
           ],
@@ -1575,16 +2408,79 @@ class InfoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            child,
-          ],
+    return GlassPanel(
+      padding: const EdgeInsets.all(16),
+      radius: 18,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class KnowledgeCard extends StatelessWidget {
+  const KnowledgeCard({
+    super.key,
+    required this.card,
+    required this.imagePath,
+    required this.onTap,
+  });
+
+  final TarotCard card;
+  final String imagePath;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return GlassPanel(
+      padding: const EdgeInsets.all(10),
+      radius: 18,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TarotImageCard(
+                  imagePath: imagePath,
+                  width: double.infinity,
+                  radius: 16,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _primaryCardName(card, l10n),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  TagPill(text: _categoryShortLabel(card.category, l10n)),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${_secondaryCardName(card, l10n)}\n${card.id}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1600,12 +2496,19 @@ class SummaryStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(8),
+        color: _ArcanaColors.peacock.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _ArcanaColors.gold.withValues(alpha: 0.18)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
-        child: Text(text, style: const TextStyle(fontWeight: FontWeight.w700)),
+        child: Text(
+          text,
+          style: _bodyTextStyle(
+            fontWeight: FontWeight.w800,
+            color: _ArcanaColors.ivory,
+          ),
+        ),
       ),
     );
   }
@@ -1623,6 +2526,9 @@ class PromptChip extends StatelessWidget {
       avatar: const Icon(Icons.add, size: 16),
       label: Text(text),
       onPressed: onPressed,
+      side: BorderSide(color: _ArcanaColors.muted.withValues(alpha: 0.22)),
+      backgroundColor: Colors.white.withValues(alpha: 0.035),
+      labelStyle: _bodyTextStyle(fontSize: 12, color: _ArcanaColors.muted),
     );
   }
 }
@@ -1643,12 +2549,12 @@ class SelectableCardBack extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(16),
       child: Stack(
         fit: StackFit.expand,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(16),
             child: Image.asset(
               'assets/images/card-back.png',
               fit: BoxFit.cover,
@@ -1657,16 +2563,13 @@ class SelectableCardBack extends StatelessWidget {
           if (selected)
             DecoratedBox(
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 3,
-                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _ArcanaColors.gold2, width: 3),
                 color: Colors.black.withValues(alpha: 0.18),
               ),
               child: Center(
                 child: CircleAvatar(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  backgroundColor: _ArcanaColors.gold2,
                   child: Text(
                     '$order',
                     style: const TextStyle(
@@ -1809,23 +2712,27 @@ class CardDetailSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Center(
-              child: Image.asset(imagePath, height: 180, fit: BoxFit.cover),
-            ),
+            Center(child: TarotImageCard(imagePath: imagePath, height: 190)),
             const SizedBox(height: 16),
+            const EyebrowText('Card meaning'),
+            const SizedBox(height: 8),
             Text(
               _primaryCardName(card, l10n),
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             Text(
               _secondaryCardName(card, l10n),
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
-            Text(
-              l10n.cardMeaningText(
-                _uprightCardMeaning(card, l10n),
-                _reversedCardMeaning(card, l10n),
+            GlassPanel(
+              padding: const EdgeInsets.all(14),
+              radius: 18,
+              child: Text(
+                l10n.cardMeaningText(
+                  _uprightCardMeaning(card, l10n),
+                  _reversedCardMeaning(card, l10n),
+                ),
               ),
             ),
           ],
@@ -1875,6 +2782,18 @@ String _categoryLabel(TarotCategory category, AppLocalizations l10n) {
     TarotCategory.cups => l10n.categoryCups,
     TarotCategory.swords => l10n.categorySwords,
     TarotCategory.pentacles => l10n.categoryPentacles,
+  };
+}
+
+String _categoryShortLabel(TarotCategory category, AppLocalizations l10n) {
+  final usesChinese = _usesChineseCardText(l10n);
+  return switch (category) {
+    TarotCategory.all => l10n.categoryAll,
+    TarotCategory.major => usesChinese ? '大牌' : 'Major',
+    TarotCategory.wands => usesChinese ? '權杖' : 'Wands',
+    TarotCategory.cups => usesChinese ? '聖杯' : 'Cups',
+    TarotCategory.swords => usesChinese ? '寶劍' : 'Swords',
+    TarotCategory.pentacles => usesChinese ? '錢幣' : 'Pent.',
   };
 }
 
