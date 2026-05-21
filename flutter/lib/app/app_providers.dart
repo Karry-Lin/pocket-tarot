@@ -17,11 +17,14 @@ import 'package:pocket_tarot/domain/use_cases/auth_gate_evaluator.dart';
 import 'package:pocket_tarot/domain/use_cases/daily_reading_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/deep_reading_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/profile_controller.dart';
+import 'package:pocket_tarot/firebase_options.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final firebaseInitializationProvider = FutureProvider<void>((ref) async {
   if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   }
 });
 

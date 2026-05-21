@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "412089008005",
+    "project_id": "pocket-tarot-1a98a",
+    "storage_bucket": "pocket-tarot-1a98a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:412089008005:android:85b1ee8f5bb07b082eceec",
+        "android_client_info": {
+          "package_name": "com.karry.pocket_tarot"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "412089008005-dh730qcf9vlm5maoh5f5tjl8ru0bnd3s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.karry.pocket_tarot",
+            "certificate_hash": "e9d63ad5ab761ddc7950503a1f4361393265811b"
+          }
+        },
+        {
+          "client_id": "412089008005-bb66da5h7geec8f89geb4e77cjr60gbn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzLQgxOxqZ770YgLFSAte5dxayFLAdlEg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "412089008005-bb66da5h7geec8f89geb4e77cjr60gbn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
