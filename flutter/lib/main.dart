@@ -97,7 +97,12 @@ GoRouter createRouter({String initialLocation = '/splash'}) {
         path: '/account-deleted',
         builder: (context, state) => const AccountDeletedScreen(),
       ),
-      GoRoute(path: '/draw', builder: (context, state) => const DrawScreen()),
+      GoRoute(
+        path: '/draw',
+        builder: (context, state) => DrawScreen(
+          initialQuestion: state.uri.queryParameters['question'] ?? '',
+        ),
+      ),
       GoRoute(
         path: '/result',
         builder: (context, state) => const ReadingResultScreen(),
@@ -527,7 +532,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final l10n = AppLocalizations.of(context)!;
     final usesChinese = _usesChineseCardText(l10n);
 
-    if (visualFixtureMode && usesChinese && _showEmailForm) {
+    if (usesChinese && _showEmailForm) {
       return _VisualEmailLoginScreen(
         mode: _mode,
         displayNameController: _displayNameController,
@@ -584,7 +589,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        if (visualFixtureMode && usesChinese)
+                        if (usesChinese)
                           ArcanaPrimaryButton(
                             onPressed: _submitting
                                 ? null
@@ -1244,7 +1249,7 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final usesChineseVisual = visualFixtureMode && _usesChineseCardText(l10n);
+    final usesChineseVisual = _usesChineseCardText(l10n);
 
     return Scaffold(
       backgroundColor: _ArcanaColors.ink,
@@ -1498,21 +1503,15 @@ class DailyResultCard extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: visualFixtureMode && _usesChineseCardText(l10n)
-                  ? 224
-                  : 0,
+              minHeight: _usesChineseCardText(l10n) ? 224 : 0,
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 TarotImageCard(
                   imagePath: _imageForCardId(reading.card.cardId),
-                  width: visualFixtureMode && _usesChineseCardText(l10n)
-                      ? 106
-                      : 94,
-                  height: visualFixtureMode && _usesChineseCardText(l10n)
-                      ? 184
-                      : 141,
+                  width: _usesChineseCardText(l10n) ? 106 : 94,
+                  height: _usesChineseCardText(l10n) ? 184 : 141,
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -1531,8 +1530,7 @@ class DailyResultCard extends StatelessWidget {
                         reading.summary,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                      if (!(visualFixtureMode &&
-                          _usesChineseCardText(l10n))) ...[
+                      if (!_usesChineseCardText(l10n)) ...[
                         const SizedBox(height: 10),
                         TagPill(text: reading.card.cardId),
                       ],
@@ -1657,7 +1655,7 @@ class _DailyEmptyState extends StatelessWidget {
           child: SizedBox(
             width: 120,
             height: 50,
-            child: visualFixtureMode && _usesChineseCardText(l10n)
+            child: _usesChineseCardText(l10n)
                 ? ArcanaPrimaryButton(
                     onPressed: onDraw,
                     child: Text(l10n.dailyDrawButton),
@@ -1836,8 +1834,9 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     }
   }
 
-  void _openVisualDraw() {
-    context.go('/draw');
+  void _openDrawRoute() {
+    final question = Uri.encodeComponent(_questionController.text);
+    context.go(question.isEmpty ? '/draw' : '/draw?question=$question');
   }
 
   Future<void> _toggleCard(int index) async {
@@ -1887,7 +1886,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     return ScreenFrame(
       title: l10n.divinationTitle,
       eyebrow: 'Reading room',
-      trailing: visualFixtureMode && _usesChineseCardText(l10n)
+      trailing: _usesChineseCardText(l10n)
           ? null
           : '${_deepState.selectedIndexes.length}/3',
       child: controllerAsync.when(
@@ -1915,9 +1914,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  EyebrowText(
-                    visualFixtureMode && usesChinese ? '占卜入口' : 'Reading entry',
-                  ),
+                  EyebrowText(usesChinese ? '占卜入口' : 'Reading entry'),
                   const SizedBox(height: 8),
                   Text(
                     usesChinese
@@ -1932,7 +1929,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
                         : 'Describe the situation or choose a theme before entering the three-card spread.',
                   ),
                   const SizedBox(height: 16),
-                  if (visualFixtureMode && usesChinese) ...[
+                  if (usesChinese) ...[
                     Text('你想問什麼？'),
                     const SizedBox(height: 8),
                     SizedBox(
@@ -1963,45 +1960,33 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
                     runSpacing: 8,
                     children: [
                       PromptChip(
-                        text: visualFixtureMode && usesChinese
-                            ? '感情迷茫'
-                            : l10n.promptWork,
-                        showIcon: !(visualFixtureMode && usesChinese),
+                        text: usesChinese ? '感情迷茫' : l10n.promptWork,
+                        showIcon: !usesChinese,
                         onPressed: () => _applyQuestionTemplate(
-                          visualFixtureMode && usesChinese
-                              ? '感情迷茫'
-                              : l10n.promptWork,
+                          usesChinese ? '感情迷茫' : l10n.promptWork,
                         ),
                       ),
                       PromptChip(
-                        text: visualFixtureMode && usesChinese
-                            ? '職場抉擇'
-                            : l10n.promptLove,
-                        showIcon: !(visualFixtureMode && usesChinese),
+                        text: usesChinese ? '職場抉擇' : l10n.promptLove,
+                        showIcon: !usesChinese,
                         onPressed: () => _applyQuestionTemplate(
-                          visualFixtureMode && usesChinese
-                              ? '職場抉擇'
-                              : l10n.promptLove,
+                          usesChinese ? '職場抉擇' : l10n.promptLove,
                         ),
                       ),
                       PromptChip(
-                        text: visualFixtureMode && usesChinese
-                            ? '自我探索'
-                            : l10n.promptNextStep,
-                        showIcon: !(visualFixtureMode && usesChinese),
+                        text: usesChinese ? '自我探索' : l10n.promptNextStep,
+                        showIcon: !usesChinese,
                         onPressed: () => _applyQuestionTemplate(
-                          visualFixtureMode && usesChinese
-                              ? '自我探索'
-                              : l10n.promptNextStep,
+                          usesChinese ? '自我探索' : l10n.promptNextStep,
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 18),
                   if (_deepState.status == DeepReadingStatus.initial)
-                    if (visualFixtureMode && usesChinese)
+                    if (usesChinese)
                       ArcanaPrimaryButton(
-                        onPressed: _openVisualDraw,
+                        onPressed: _openDrawRoute,
                         child: const Text('進行深度占卜'),
                       )
                     else
@@ -2103,38 +2088,112 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   }
 }
 
-class DrawScreen extends StatefulWidget {
-  const DrawScreen({super.key});
+class DrawScreen extends ConsumerStatefulWidget {
+  const DrawScreen({super.key, this.initialQuestion = ''});
+
+  final String initialQuestion;
 
   @override
-  State<DrawScreen> createState() => _DrawScreenState();
+  ConsumerState<DrawScreen> createState() => _DrawScreenState();
 }
 
-class _DrawScreenState extends State<DrawScreen> {
-  final Set<int> _selectedIndexes = {};
+class _DrawScreenState extends ConsumerState<DrawScreen> {
+  DeepReadingState _deepState = const DeepReadingState.initial();
+  bool _isDraftLoading = true;
   bool _isCreatingResult = false;
+  String? _errorMessage;
 
-  void _toggleCard(int index) {
-    if (_selectedIndexes.contains(index) || _selectedIndexes.length >= 3) {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadDraft());
+  }
+
+  Future<void> _loadDraft() async {
+    setState(() {
+      _isDraftLoading = true;
+      _errorMessage = null;
+    });
+
+    final controller = await ref.read(deepReadingControllerProvider.future);
+    if (controller.state.draftCards.isNotEmpty) {
+      if (mounted) {
+        setState(() {
+          _deepState = controller.state;
+          _isDraftLoading = false;
+        });
+      }
+      return;
+    }
+
+    await controller.startDraft(widget.initialQuestion);
+    if (!mounted) {
       return;
     }
 
     setState(() {
-      _selectedIndexes.add(index);
+      _deepState = controller.state;
+      _isDraftLoading = false;
+      _errorMessage = controller.state.status == DeepReadingStatus.error
+          ? controller.state.errorMessage
+          : null;
     });
   }
 
-  Future<void> _showResult() async {
-    setState(() => _isCreatingResult = true);
-    await Future<void>.delayed(const Duration(milliseconds: 850));
+  Future<void> _toggleCard(int index) async {
+    if (_deepState.selectedIndexes.contains(index) ||
+        _deepState.selectedIndexes.length >= 3) {
+      return;
+    }
+
+    final controller = await ref.read(deepReadingControllerProvider.future);
+    controller.toggleSelection(index);
     if (mounted) {
+      setState(() => _deepState = controller.state);
+    }
+  }
+
+  Future<void> _showResult() async {
+    if (_deepState.selectedIndexes.length != 3) {
+      return;
+    }
+
+    final l10n = AppLocalizations.of(context)!;
+    final controller = await ref.read(deepReadingControllerProvider.future);
+    setState(() {
+      _isCreatingResult = true;
+      _errorMessage = null;
+    });
+
+    await controller.createResult(
+      messages: DeepReadingMessages(
+        selectExactlyThreeCards: l10n.deepSelectExactlyThreeCards,
+        noSavableResult: l10n.deepNoSavableResult,
+      ),
+    );
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _deepState = controller.state;
+      _isCreatingResult = false;
+      _errorMessage = controller.state.status == DeepReadingStatus.error
+          ? controller.state.errorMessage
+          : null;
+    });
+    if (controller.state.status == DeepReadingStatus.resultReady) {
       context.go('/result');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final selectedCount = _selectedIndexes.length;
+    final selectedIndexes = _deepState.selectedIndexes;
+    final selectedCount = selectedIndexes.length;
+    final drawCards = _deepState.draftCards.isEmpty
+        ? _fallbackDrawCardDraws
+        : _deepState.draftCards;
 
     if (_isCreatingResult) {
       return const AppBackdrop(
@@ -2145,6 +2204,22 @@ class _DrawScreenState extends State<DrawScreen> {
               child: ArcanaLoadingView(
                 title: '占卜中',
                 message: '正在解讀你選出的三張牌，整理成可以保存的紀錄。',
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_isDraftLoading) {
+      return const AppBackdrop(
+        child: SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(24, 60, 24, 34),
+            child: Center(
+              child: ArcanaLoadingView(
+                title: '準備牌陣',
+                message: '正在洗牌，讓九張牌依序浮現。',
               ),
             ),
           ),
@@ -2177,6 +2252,10 @@ class _DrawScreenState extends State<DrawScreen> {
               const SizedBox(height: 12),
               Text('$selectedCount / 3 已選。牌會在你點下後翻面，已選後不可更換，第三張完成後即可解讀。'),
               const SizedBox(height: 28),
+              if (_errorMessage != null) ...[
+                InfoPanel(title: '牌陣建立失敗', child: Text(_errorMessage!)),
+                const SizedBox(height: 18),
+              ],
               GridView.builder(
                 key: const ValueKey('visual-draw-grid'),
                 shrinkWrap: true,
@@ -2187,15 +2266,14 @@ class _DrawScreenState extends State<DrawScreen> {
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
                 ),
-                itemCount: _drawCards.length,
+                itemCount: drawCards.length,
                 itemBuilder: (context, index) {
-                  final card = _drawCards[index];
-                  final selectedOrder =
-                      _selectedIndexes.toList().indexOf(index) + 1;
+                  final card = drawCards[index];
+                  final selectedOrder = selectedIndexes.indexOf(index) + 1;
                   return _VisualDrawCard(
-                    label: card.label,
+                    label: _drawCardLabel(index),
                     imagePath: _imageForCardId(card.cardId),
-                    selected: _selectedIndexes.contains(index),
+                    selected: selectedIndexes.contains(index),
                     selectedOrder: selectedOrder,
                     onTap: () => _toggleCard(index),
                   );
@@ -2214,18 +2292,48 @@ class _DrawScreenState extends State<DrawScreen> {
   }
 }
 
-class ReadingResultScreen extends StatefulWidget {
+class ReadingResultScreen extends ConsumerStatefulWidget {
   const ReadingResultScreen({super.key});
 
   @override
-  State<ReadingResultScreen> createState() => _ReadingResultScreenState();
+  ConsumerState<ReadingResultScreen> createState() =>
+      _ReadingResultScreenState();
 }
 
-class _ReadingResultScreenState extends State<ReadingResultScreen> {
+class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
   bool _isSaved = false;
+  bool _saving = false;
+
+  Future<void> _saveReading(
+    DeepReadingController? controller,
+    DeepReading? reading,
+  ) async {
+    if (controller == null || reading == null) {
+      setState(() => _isSaved = true);
+      return;
+    }
+
+    setState(() => _saving = true);
+    await controller.updateHistoryVisibility(true);
+    if (mounted) {
+      setState(() {
+        _isSaved = controller.state.isResultSavedForHistory;
+        _saving = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final controller = ref.watch(deepReadingControllerProvider).asData?.value;
+    final reading = controller?.state.reading;
+    final resultCards = reading?.selectedCards ?? _fallbackResultCards;
+    final isSaved =
+        _isSaved ||
+        (controller?.state.isResultSavedForHistory ??
+            reading?.isSavedForHistory ??
+            false);
+
     return AppBackdrop(
       child: SafeArea(
         child: SingleChildScrollView(
@@ -2255,67 +2363,23 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
               ),
               const SizedBox(height: 12),
               Row(
-                children: const [
-                  Expanded(
-                    child: TarotImageCard(
-                      imagePath: 'assets/images/cards/moon.jpg',
-                      height: 178,
-                      radius: 12,
-                      fit: BoxFit.contain,
+                children: [
+                  for (var index = 0; index < resultCards.length; index++) ...[
+                    Expanded(
+                      child: TarotImageCard(
+                        imagePath: _imageForCardId(resultCards[index].cardId),
+                        height: 178,
+                        radius: 12,
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: TarotImageCard(
-                      imagePath: 'assets/images/cards/temperance.jpg',
-                      height: 178,
-                      radius: 12,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: TarotImageCard(
-                      imagePath: 'assets/images/cards/star.jpg',
-                      height: 178,
-                      radius: 12,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+                    if (index != resultCards.length - 1)
+                      const SizedBox(width: 10),
+                  ],
                 ],
               ),
               const SizedBox(height: 16),
-              GlassPanel(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '關於這個問題',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      '你正在問的不是「該不該前進」，而是「我能否在不確定裡仍然照顧自己」。月亮讓情緒浮上來，節制要求你把步伐放慢，星星則指出仍有一條溫柔但清楚的路。',
-                    ),
-                    const SizedBox(height: 14),
-                    Text(
-                      '三張牌的訊息',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 10),
-                    const _VisualBulletText('月亮：現在的模糊不是錯誤，它是在提醒你有些資訊還未被說出口。'),
-                    const _VisualBulletText('節制：不要用一次談話解決全部。先確認界線，再確認期待。'),
-                    const _VisualBulletText('星星：真正值得靠近的答案，會讓你感到更完整，而不是更緊縮。'),
-                    const SizedBox(height: 14),
-                    Text(
-                      '今晚的建議',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 10),
-                    const Text('把問題拆成一個可行動的小句子：我明天可以多問一個問題，而不是立刻做一個決定。'),
-                  ],
-                ),
-              ),
+              GlassPanel(child: _resultBody(context, reading)),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -2328,10 +2392,10 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ArcanaPrimaryButton(
-                      onPressed: _isSaved
+                      onPressed: isSaved || _saving
                           ? null
-                          : () => setState(() => _isSaved = true),
-                      child: Text(_isSaved ? '已保存' : '保存紀錄'),
+                          : () => _saveReading(controller, reading),
+                      child: Text(_saving ? '保存中' : (isSaved ? '已保存' : '保存紀錄')),
                     ),
                   ),
                 ],
@@ -2340,6 +2404,46 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _resultBody(BuildContext context, DeepReading? reading) {
+    if (reading != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('關於這個問題', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 10),
+          Text(reading.question.isEmpty ? '這次占卜沒有留下問題文字。' : reading.question),
+          const SizedBox(height: 14),
+          Text('三張牌的訊息', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 10),
+          Text(reading.summary),
+          const SizedBox(height: 12),
+          SafeMarkdownBody(data: reading.markdownResult),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('關於這個問題', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 10),
+        const Text(
+          '你正在問的不是「該不該前進」，而是「我能否在不確定裡仍然照顧自己」。月亮讓情緒浮上來，節制要求你把步伐放慢，星星則指出仍有一條溫柔但清楚的路。',
+        ),
+        const SizedBox(height: 14),
+        Text('三張牌的訊息', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 10),
+        const _VisualBulletText('月亮：現在的模糊不是錯誤，它是在提醒你有些資訊還未被說出口。'),
+        const _VisualBulletText('節制：不要用一次談話解決全部。先確認界線，再確認期待。'),
+        const _VisualBulletText('星星：真正值得靠近的答案，會讓你感到更完整，而不是更緊縮。'),
+        const SizedBox(height: 14),
+        Text('今晚的建議', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 10),
+        const Text('把問題拆成一個可行動的小句子：我明天可以多問一個問題，而不是立刻做一個決定。'),
+      ],
     );
   }
 }
@@ -2571,6 +2675,39 @@ const _drawCards = [
   _VisualDrawCardData('下一步', 'major-09-hermit'),
 ];
 
+final _fallbackDrawCardDraws = [
+  for (final card in _drawCards)
+    CardDraw(cardId: card.cardId, orientation: 'upright'),
+];
+
+const _fallbackResultCards = [
+  SelectedReadingCard(
+    position: 'core',
+    positionLabel: '問題核心',
+    cardId: 'major-18-moon',
+    orientation: 'reversed',
+  ),
+  SelectedReadingCard(
+    position: 'hiddenInfluence',
+    positionLabel: '隱藏影響',
+    cardId: 'major-14-temperance',
+    orientation: 'upright',
+  ),
+  SelectedReadingCard(
+    position: 'advice',
+    positionLabel: '行動建議',
+    cardId: 'major-17-star',
+    orientation: 'upright',
+  ),
+];
+
+String _drawCardLabel(int index) {
+  if (index >= 0 && index < _drawCards.length) {
+    return _drawCards[index].label;
+  }
+  return '第 ${index + 1} 張';
+}
+
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
 
@@ -2594,7 +2731,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final cardsAsync = ref.watch(tarotCardsProvider);
     final repository = ref.watch(tarotCatalogRepositoryProvider);
     final l10n = AppLocalizations.of(context)!;
-    final usesChineseVisual = visualFixtureMode && _usesChineseCardText(l10n);
+    final usesChineseVisual = _usesChineseCardText(l10n);
 
     return ScreenFrame(
       title: l10n.libraryTitle,
@@ -2777,7 +2914,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(profileControllerProvider);
     final l10n = AppLocalizations.of(context)!;
-    final usesChineseVisual = visualFixtureMode && _usesChineseCardText(l10n);
+    final usesChineseVisual = _usesChineseCardText(l10n);
 
     return ScreenFrame(
       title: l10n.profileTitle,
@@ -2853,7 +2990,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    if (!(visualFixtureMode && usesChinese)) ...[
+                    if (!usesChinese) ...[
                       const SizedBox(height: 6),
                       Text(
                         l10n.profileStats(
@@ -2872,13 +3009,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   _updateDisplayName,
                   initialName: snapshot.user.displayName,
                 ),
-                icon: Icon(
-                  visualFixtureMode && usesChinese
-                      ? Icons.edit_outlined
-                      : Icons.edit,
-                ),
+                icon: Icon(usesChinese ? Icons.edit_outlined : Icons.edit),
                 tooltip: l10n.editDisplayName,
-                style: visualFixtureMode && usesChinese
+                style: usesChinese
                     ? IconButton.styleFrom(
                         fixedSize: const Size(40, 40),
                         foregroundColor: _ArcanaColors.ivory,
@@ -2894,7 +3027,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ],
           ),
         ),
-        SizedBox(height: visualFixtureMode && usesChinese ? 18 : 12),
+        SizedBox(height: usesChinese ? 18 : 12),
         Row(
           children: [
             Expanded(
@@ -2902,30 +3035,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
                 radius: 18,
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: visualFixtureMode && usesChinese ? 74 : 0,
-                  ),
+                  constraints: BoxConstraints(minHeight: usesChinese ? 74 : 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       EyebrowText(
-                        visualFixtureMode && usesChinese
-                            ? 'All-time daily'
-                            : 'Daily draw',
+                        usesChinese ? 'All-time daily' : 'Daily draw',
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        visualFixtureMode && usesChinese
+                        usesChinese
                             ? '${snapshot.stats.dailyReadingCount} 次'
                             : '${snapshot.stats.dailyReadingCount}',
-                        style: visualFixtureMode && usesChinese
+                        style: usesChinese
                             ? Theme.of(context).textTheme.titleMedium
                             : Theme.of(context).textTheme.titleLarge,
                       ),
                       Text(
-                        visualFixtureMode && usesChinese
-                            ? '每日一抽完成次數。'
-                            : l10n.navHome,
+                        usesChinese ? '每日一抽完成次數。' : l10n.navHome,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -2939,30 +3066,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
                 radius: 18,
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: visualFixtureMode && usesChinese ? 74 : 0,
-                  ),
+                  constraints: BoxConstraints(minHeight: usesChinese ? 74 : 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       EyebrowText(
-                        visualFixtureMode && usesChinese
-                            ? 'All-time reading'
-                            : 'Deep reading',
+                        usesChinese ? 'All-time reading' : 'Deep reading',
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        visualFixtureMode && usesChinese
+                        usesChinese
                             ? '${snapshot.stats.deepReadingCount} 次'
                             : '${snapshot.stats.deepReadingCount}',
-                        style: visualFixtureMode && usesChinese
+                        style: usesChinese
                             ? Theme.of(context).textTheme.titleMedium
                             : Theme.of(context).textTheme.titleLarge,
                       ),
                       Text(
-                        visualFixtureMode && usesChinese
-                            ? '深度占卜完成次數。'
-                            : l10n.navDivination,
+                        usesChinese ? '深度占卜完成次數。' : l10n.navDivination,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -2973,27 +3094,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        if (visualFixtureMode && usesChinese)
+        if (usesChinese)
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: const [
-              EyebrowText('Settings'),
-              SizedBox(height: 8),
-              _SectionTitle('設定選項'),
-              SizedBox(height: 14),
+            children: [
+              const EyebrowText('Settings'),
+              const SizedBox(height: 8),
+              const _SectionTitle('設定選項'),
+              const SizedBox(height: 14),
               _VisualSettingRow(
                 title: '每日提醒',
                 subtitle: '每天早上 8:30 提醒抽一張牌',
                 toggled: true,
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _VisualSettingRow(
                 title: '使用所在地天氣',
                 subtitle: '只用於生成今日心靈天氣',
-                toggled: true,
+                toggled: settings.weatherEnabled,
+                onTap: () => _setWeatherEnabled(!settings.weatherEnabled),
               ),
-              SizedBox(height: 16),
-              _VisualSettingRow(title: '語言設定', subtitle: '繁體中文', action: '變更'),
+              const SizedBox(height: 16),
+              _VisualSettingRow(
+                title: '語言設定',
+                subtitle: _localeModeLabel(settings.localeMode, l10n),
+                action: '變更',
+                onTap: () => _setLocaleMode(LocaleMode.en),
+              ),
             ],
           )
         else
@@ -3052,8 +3179,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
             ),
           ),
-        SizedBox(height: visualFixtureMode && usesChinese ? 14 : 12),
-        if (visualFixtureMode && usesChinese)
+        SizedBox(height: usesChinese ? 14 : 12),
+        if (usesChinese)
           GlassPanel(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -3067,7 +3194,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 OutlinedButton.icon(
                   onPressed: _signOut,
                   icon: const Icon(Icons.logout),
-                  label: const Text('登出 Google 帳號'),
+                  label: Text(
+                    snapshot.user.providerIds.contains('google.com')
+                        ? '登出 Google 帳號'
+                        : '登出',
+                  ),
                 ),
               ],
             ),
@@ -3095,6 +3226,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       ],
     );
   }
+}
+
+String _localeModeLabel(LocaleMode localeMode, AppLocalizations l10n) {
+  return switch (localeMode) {
+    LocaleMode.system => l10n.localeSystem,
+    LocaleMode.zhTw => l10n.localeZh,
+    LocaleMode.en => l10n.localeEn,
+  };
 }
 
 class ScreenFrame extends StatelessWidget {
@@ -3524,41 +3663,58 @@ class _VisualSettingRow extends StatelessWidget {
     required this.subtitle,
     this.toggled,
     this.action,
+    this.onTap,
   });
 
   final String title;
   final String subtitle;
   final bool? toggled;
   final String? action;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _ArcanaColors.gold.withValues(alpha: 0.18)),
-        color: Colors.white.withValues(alpha: 0.04),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 4),
-                  Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: _ArcanaColors.gold.withValues(alpha: 0.18),
             ),
-            const SizedBox(width: 12),
-            if (action != null)
-              TagPill(text: action!)
-            else
-              _VisualSwitch(toggled: toggled ?? false),
-          ],
+            color: Colors.white.withValues(alpha: 0.04),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                if (action != null)
+                  TagPill(text: action!)
+                else
+                  _VisualSwitch(toggled: toggled ?? false),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -3820,7 +3976,7 @@ class KnowledgeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final usesChineseVisual = visualFixtureMode && _usesChineseCardText(l10n);
+    final usesChineseVisual = _usesChineseCardText(l10n);
 
     return GlassPanel(
       padding: const EdgeInsets.all(10),
@@ -4047,8 +4203,9 @@ class DeepHistoryPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final usesChineseVisual = visualFixtureMode && _usesChineseCardText(l10n);
-    final previewHistory = usesChineseVisual && state.history.isEmpty
+    final usesChineseVisual = _usesChineseCardText(l10n);
+    final previewHistory =
+        visualFixtureMode && usesChineseVisual && state.history.isEmpty
         ? _visualPreviewHistory
         : state.history;
 
@@ -4079,12 +4236,11 @@ class DeepHistoryPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (!visualFixtureMode)
-            OutlinedButton.icon(
-              onPressed: onLoadHistory,
-              icon: const Icon(Icons.history),
-              label: Text(l10n.loadHistory),
-            ),
+          OutlinedButton.icon(
+            onPressed: onLoadHistory,
+            icon: const Icon(Icons.history),
+            label: Text(l10n.loadHistory),
+          ),
           if (state.status == DeepReadingStatus.historyLoading) ...[
             const SizedBox(height: 12),
             const Center(child: CircularProgressIndicator()),
@@ -4093,7 +4249,7 @@ class DeepHistoryPanel extends StatelessWidget {
             const SizedBox(height: 12),
             Text(l10n.emptyHistory),
           ] else if (previewHistory.isNotEmpty) ...[
-            if (!visualFixtureMode) const SizedBox(height: 12),
+            const SizedBox(height: 12),
             for (final item in previewHistory)
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -4236,19 +4392,17 @@ String _imageForCard(TarotCard card) {
 }
 
 String _imageForCardId(String cardId) {
-  if (visualFixtureMode) {
-    final referenceImage = switch (cardId) {
-      'major-18-moon' => 'moon.jpg',
-      'major-17-star' => 'star.jpg',
-      'major-14-temperance' => 'temperance.jpg',
-      'cups-02-two' => 'cups-02.jpg',
-      'swords-06-six' => 'swords-06.jpg',
-      'major-16-tower' => 'tower.jpg',
-      _ => null,
-    };
-    if (referenceImage != null) {
-      return 'assets/images/cards/$referenceImage';
-    }
+  final referenceImage = switch (cardId) {
+    'major-18-moon' => 'moon.jpg',
+    'major-17-star' => 'star.jpg',
+    'major-14-temperance' => 'temperance.jpg',
+    'cups-02-two' => 'cups-02.jpg',
+    'swords-06-six' => 'swords-06.jpg',
+    'major-16-tower' => 'tower.jpg',
+    _ => null,
+  };
+  if (referenceImage != null) {
+    return 'assets/images/cards/$referenceImage';
   }
 
   return 'assets/images/cards/$cardId.png';
@@ -4390,121 +4544,189 @@ Future<void> _showNameDialog(
   String initialName = '',
 }) async {
   final l10n = AppLocalizations.of(context)!;
-  final usesChineseVisual = visualFixtureMode && _usesChineseCardText(l10n);
-  final textController = TextEditingController(text: initialName);
-  textController.selection = TextSelection(
-    baseOffset: 0,
-    extentOffset: initialName.length,
-  );
+  final usesChineseVisual = _usesChineseCardText(l10n);
 
-  try {
-    if (usesChineseVisual) {
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        useRootNavigator: true,
-        backgroundColor: Colors.transparent,
-        builder: (sheetContext) => Padding(
-          padding: EdgeInsets.only(
-            left: 18,
-            right: 18,
-            bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 18,
-          ),
-          child: GlassPanel(
-            radius: 26,
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+  if (usesChineseVisual) {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) =>
+          _VisualNameEditSheet(initialName: initialName, onSave: onSave),
+    );
+    return;
+  }
+
+  await showDialog<void>(
+    context: context,
+    builder: (dialogContext) =>
+        _NameEditDialog(initialName: initialName, onSave: onSave, l10n: l10n),
+  );
+}
+
+class _NameEditDialog extends StatefulWidget {
+  const _NameEditDialog({
+    required this.initialName,
+    required this.onSave,
+    required this.l10n,
+  });
+
+  final String initialName;
+  final Future<void> Function(String displayName) onSave;
+  final AppLocalizations l10n;
+
+  @override
+  State<_NameEditDialog> createState() => _NameEditDialogState();
+}
+
+class _NameEditDialogState extends State<_NameEditDialog> {
+  late final TextEditingController _textController;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController(text: widget.initialName);
+    _textController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: widget.initialName.length,
+    );
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.l10n.editNameTitle),
+      content: TextField(
+        controller: _textController,
+        maxLength: 16,
+        decoration: InputDecoration(labelText: widget.l10n.nicknameLabel),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(widget.l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: () async {
+            final navigator = Navigator.of(context);
+            await widget.onSave(_textController.text);
+            if (mounted) {
+              navigator.pop();
+            }
+          },
+          child: Text(widget.l10n.save),
+        ),
+      ],
+    );
+  }
+}
+
+class _VisualNameEditSheet extends StatefulWidget {
+  const _VisualNameEditSheet({required this.initialName, required this.onSave});
+
+  final String initialName;
+  final Future<void> Function(String displayName) onSave;
+
+  @override
+  State<_VisualNameEditSheet> createState() => _VisualNameEditSheetState();
+}
+
+class _VisualNameEditSheetState extends State<_VisualNameEditSheet> {
+  late final TextEditingController _textController;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController(text: widget.initialName);
+    _textController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: widget.initialName.length,
+    );
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 18,
+        right: 18,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 18,
+      ),
+      child: GlassPanel(
+        radius: 26,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const EyebrowText('Display name'),
-                          const SizedBox(height: 8),
-                          Text(
-                            '編輯暱稱',
-                            style: Theme.of(sheetContext).textTheme.titleLarge,
-                          ),
-                        ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const EyebrowText('Display name'),
+                      const SizedBox(height: 8),
+                      Text(
+                        '編輯暱稱',
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                  style: IconButton.styleFrom(
+                    fixedSize: const Size(44, 44),
+                    foregroundColor: _ArcanaColors.ivory,
+                    backgroundColor: _ArcanaColors.ink2.withValues(alpha: 0.72),
+                    side: BorderSide(
+                      color: _ArcanaColors.gold.withValues(alpha: 0.28),
                     ),
-                    IconButton(
-                      onPressed: () => Navigator.of(sheetContext).pop(),
-                      icon: const Icon(Icons.close),
-                      style: IconButton.styleFrom(
-                        fixedSize: const Size(44, 44),
-                        foregroundColor: _ArcanaColors.ivory,
-                        backgroundColor: _ArcanaColors.ink2.withValues(
-                          alpha: 0.72,
-                        ),
-                        side: BorderSide(
-                          color: _ArcanaColors.gold.withValues(alpha: 0.28),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                _VisualEmailField(
-                  label: '暱稱',
-                  hintText: '王大明',
-                  controller: textController,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  '暱稱會顯示在個人檔案與占卜紀錄。',
-                  style: Theme.of(sheetContext).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 18),
-                ArcanaPrimaryButton(
-                  onPressed: () async {
-                    await onSave(textController.text);
-                    if (sheetContext.mounted) {
-                      Navigator.of(sheetContext).pop();
-                    }
-                  },
-                  child: const Text('儲存名稱'),
+                  ),
                 ),
               ],
             ),
-          ),
+            const SizedBox(height: 18),
+            _VisualEmailField(
+              label: '暱稱',
+              hintText: '王大明',
+              controller: _textController,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '暱稱會顯示在個人檔案與占卜紀錄。',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 18),
+            ArcanaPrimaryButton(
+              onPressed: () async {
+                final navigator = Navigator.of(context);
+                await widget.onSave(_textController.text);
+                if (mounted) {
+                  navigator.pop();
+                }
+              },
+              child: const Text('儲存名稱'),
+            ),
+          ],
         ),
-      );
-      return;
-    }
-
-    await showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.editNameTitle),
-        content: TextField(
-          controller: textController,
-          maxLength: 16,
-          decoration: InputDecoration(labelText: l10n.nicknameLabel),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              await onSave(textController.text);
-              if (context.mounted) {
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text(l10n.save),
-          ),
-        ],
       ),
     );
-  } finally {
-    textController.dispose();
   }
 }

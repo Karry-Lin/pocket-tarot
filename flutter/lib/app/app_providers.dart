@@ -191,7 +191,7 @@ final deepReadingControllerProvider = FutureProvider<DeepReadingController>((
       createDraft: () => _delayedVisualFixture(_visualFixtureDraftCards),
       createReading: (_) => _delayedVisualFixture(_visualFixtureDeepReading),
       fetchHistory: () async => _visualFixtureHistory,
-      fetchSavedReading: (_) async => _visualFixtureDeepReading,
+      fetchSavedReading: (_) async => _visualFixtureSavedDeepReading,
       setHistoryVisibility: ({required id, required isSavedForHistory}) async =>
           HistoryVisibility(id: id, isSavedForHistory: isSavedForHistory),
       loadSettings: _visualFixtureSettings,
@@ -383,10 +383,15 @@ final _visualFixtureDeepReading = DeepReading(
     ),
   ],
   markdownResult: '### 問題核心\n先辨識沉默背後的情緒，再決定要不要靠近。',
-  summary: '月亮、節制、星星，已保存完整解讀',
+  summary: '月亮、節制、星星，等待保存完整解讀',
   resultLocale: 'zh-TW',
-  isSavedForHistory: true,
+  isSavedForHistory: false,
   createdAt: DateTime.utc(2026, 5, 22),
+);
+
+final _visualFixtureSavedDeepReading = _visualFixtureDeepReading.copyWith(
+  summary: '月亮、節制、星星，已保存完整解讀',
+  isSavedForHistory: true,
 );
 
 final _visualFixtureHistory = [
