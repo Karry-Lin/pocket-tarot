@@ -1617,7 +1617,6 @@ class DivinationScreen extends ConsumerStatefulWidget {
 class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   final TextEditingController _questionController = TextEditingController();
   DeepReadingState _deepState = const DeepReadingState.initial();
-  bool _visualSubmittingQuestion = false;
 
   @override
   void dispose() {
@@ -1655,12 +1654,8 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     }
   }
 
-  Future<void> _openVisualDraw() async {
-    setState(() => _visualSubmittingQuestion = true);
-    await Future<void>.delayed(const Duration(milliseconds: 850));
-    if (mounted) {
-      context.go('/draw');
-    }
+  void _openVisualDraw() {
+    context.go('/draw');
   }
 
   Future<void> _toggleCard(int index) async {
@@ -1727,13 +1722,6 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   Widget _deepContent(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final usesChinese = _usesChineseCardText(l10n);
-
-    if (_visualSubmittingQuestion) {
-      return const ArcanaLoadingView(
-        title: '占卜中',
-        message: '正在替你的問題洗牌，準備進入三張牌陣。',
-      );
-    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1832,7 +1820,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
                     if (visualFixtureMode && usesChinese)
                       ArcanaPrimaryButton(
                         onPressed: _openVisualDraw,
-                        child: const Text('發送問題並抽牌'),
+                        child: const Text('進行深度占卜'),
                       )
                     else
                       FilledButton.icon(
@@ -1945,12 +1933,12 @@ class _DrawScreenState extends State<DrawScreen> {
   bool _isCreatingResult = false;
 
   void _toggleCard(int index) {
+    if (_selectedIndexes.contains(index) || _selectedIndexes.length >= 3) {
+      return;
+    }
+
     setState(() {
-      if (_selectedIndexes.contains(index)) {
-        _selectedIndexes.remove(index);
-      } else if (_selectedIndexes.length < 3) {
-        _selectedIndexes.add(index);
-      }
+      _selectedIndexes.add(index);
     });
   }
 
@@ -2005,7 +1993,7 @@ class _DrawScreenState extends State<DrawScreen> {
               const SizedBox(height: 12),
               _ProgressLine(progress: selectedCount / 3),
               const SizedBox(height: 12),
-              Text('$selectedCount / 3 已選。牌會在你點下後翻面，第三張完成後即可解讀。'),
+              Text('$selectedCount / 3 已選。牌會在你點下後翻面，已選後不可更換，第三張完成後即可解讀。'),
               const SizedBox(height: 28),
               GridView.builder(
                 key: const ValueKey('visual-draw-grid'),
@@ -2017,12 +2005,19 @@ class _DrawScreenState extends State<DrawScreen> {
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
                 ),
-                itemCount: _drawCardLabels.length,
-                itemBuilder: (context, index) => _VisualDrawCard(
-                  label: _drawCardLabels[index],
-                  selected: _selectedIndexes.contains(index),
-                  onTap: () => _toggleCard(index),
-                ),
+                itemCount: _drawCards.length,
+                itemBuilder: (context, index) {
+                  final card = _drawCards[index];
+                  final selectedOrder =
+                      _selectedIndexes.toList().indexOf(index) + 1;
+                  return _VisualDrawCard(
+                    label: card.label,
+                    imagePath: _imageForCardId(card.cardId),
+                    selected: _selectedIndexes.contains(index),
+                    selectedOrder: selectedOrder,
+                    onTap: () => _toggleCard(index),
+                  );
+                },
               ),
               const SizedBox(height: 18),
               ArcanaPrimaryButton(
@@ -2193,12 +2188,16 @@ class _ProgressLine extends StatelessWidget {
 class _VisualDrawCard extends StatelessWidget {
   const _VisualDrawCard({
     required this.label,
+    required this.imagePath,
     required this.selected,
+    required this.selectedOrder,
     required this.onTap,
   });
 
   final String label;
+  final String imagePath;
   final bool selected;
+  final int selectedOrder;
   final VoidCallback onTap;
 
   @override
@@ -2211,20 +2210,106 @@ class _VisualDrawCard extends StatelessWidget {
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset('assets/images/card-back.png', fit: BoxFit.cover),
-            if (selected)
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  border: Border.all(color: _ArcanaColors.gold2, width: 2),
-                  color: _ArcanaColors.ink.withValues(alpha: 0.28),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 360),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) {
+                final curved = CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                );
+                return FadeTransition(
+                  opacity: curved,
+                  child: ScaleTransition(
+                    scale: Tween<double>(begin: 0.96, end: 1).animate(curved),
+                    child: child,
+                  ),
+                );
+              },
+              child: selected
+                  ? Image.asset(
+                      imagePath,
+                      key: ValueKey('front-$imagePath'),
+                      fit: BoxFit.cover,
+                    )
+                  : Image.asset(
+                      'assets/images/card-back.png',
+                      key: const ValueKey('card-back'),
+                      fit: BoxFit.cover,
+                    ),
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: selected
+                      ? _ArcanaColors.gold2
+                      : _ArcanaColors.gold2.withValues(alpha: 0.42),
+                  width: selected ? 2 : 1,
                 ),
-                child: Center(
-                  child: Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: _ArcanaColors.ivory,
-                      fontWeight: FontWeight.w800,
+                boxShadow: selected
+                    ? [
+                        BoxShadow(
+                          color: _ArcanaColors.gold2.withValues(alpha: 0.18),
+                          blurRadius: 18,
+                        ),
+                      ]
+                    : null,
+              ),
+            ),
+            if (selected)
+              Positioned(
+                top: 7,
+                right: 7,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _ArcanaColors.gold2,
+                    border: Border.all(color: _ArcanaColors.ink2),
+                  ),
+                  child: SizedBox.square(
+                    dimension: 24,
+                    child: Center(
+                      child: Text(
+                        '$selectedOrder',
+                        style: _bodyTextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: _ArcanaColors.ink2,
+                          height: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (selected)
+              Positioned(
+                right: 5,
+                bottom: 5,
+                left: 5,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    color: _ArcanaColors.ink.withValues(alpha: 0.68),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: _bodyTextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        color: _ArcanaColors.ivory,
+                        height: 1,
+                      ),
                     ),
                   ),
                 ),
@@ -2256,16 +2341,23 @@ class _VisualBulletText extends StatelessWidget {
   }
 }
 
-const _drawCardLabels = [
-  '過去的霧',
-  '現在的門',
-  '尚未命名',
-  '內在潮汐',
-  '月下答案',
-  '隱形代價',
-  '需要放下',
-  '可以靠近',
-  '下一步',
+class _VisualDrawCardData {
+  const _VisualDrawCardData(this.label, this.cardId);
+
+  final String label;
+  final String cardId;
+}
+
+const _drawCards = [
+  _VisualDrawCardData('過去的霧', 'major-18-moon'),
+  _VisualDrawCardData('現在的門', 'major-14-temperance'),
+  _VisualDrawCardData('尚未命名', 'major-17-star'),
+  _VisualDrawCardData('內在潮汐', 'cups-02-two'),
+  _VisualDrawCardData('月下答案', 'swords-06-six'),
+  _VisualDrawCardData('隱形代價', 'major-16-tower'),
+  _VisualDrawCardData('需要放下', 'major-00-fool'),
+  _VisualDrawCardData('可以靠近', 'major-11-justice'),
+  _VisualDrawCardData('下一步', 'major-09-hermit'),
 ];
 
 class LibraryScreen extends ConsumerStatefulWidget {
