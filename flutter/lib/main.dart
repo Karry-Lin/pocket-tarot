@@ -529,14 +529,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     if (visualFixtureMode && usesChinese && _showEmailForm) {
       return _VisualEmailLoginScreen(
+        mode: _mode,
+        displayNameController: _displayNameController,
         emailController: _emailController,
         passwordController: _passwordController,
+        confirmPasswordController: _confirmPasswordController,
+        displayNameError: _errors[AuthFormField.displayName],
         emailError: _errors[AuthFormField.email],
         passwordError: _errors[AuthFormField.password],
+        confirmPasswordError: _errors[AuthFormField.confirmPassword],
         formMessage: _formError ?? _formMessage,
         isError: _formError != null,
         submitting: _submitting,
         onBack: _returnToLoginOptions,
+        onModeChanged: _switchMode,
         onSubmit: _submit,
       );
     }
@@ -849,112 +855,251 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
 class _VisualEmailLoginScreen extends StatelessWidget {
   const _VisualEmailLoginScreen({
+    required this.mode,
+    required this.displayNameController,
     required this.emailController,
     required this.passwordController,
+    required this.confirmPasswordController,
+    required this.displayNameError,
     required this.emailError,
     required this.passwordError,
+    required this.confirmPasswordError,
     required this.formMessage,
     required this.isError,
     required this.submitting,
     required this.onBack,
+    required this.onModeChanged,
     required this.onSubmit,
   });
 
+  final EmailAuthMode mode;
+  final TextEditingController displayNameController;
   final TextEditingController emailController;
   final TextEditingController passwordController;
+  final TextEditingController confirmPasswordController;
+  final String? displayNameError;
   final String? emailError;
   final String? passwordError;
+  final String? confirmPasswordError;
   final String? formMessage;
   final bool isError;
   final bool submitting;
   final VoidCallback onBack;
+  final ValueChanged<EmailAuthMode> onModeChanged;
   final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
+    final isRegister = mode == EmailAuthMode.register;
+    final isReset = mode == EmailAuthMode.resetPassword;
+    final primaryLabel = switch (mode) {
+      EmailAuthMode.signIn => '進入口袋塔羅',
+      EmailAuthMode.register => '建立帳號',
+      EmailAuthMode.resetPassword => '寄送重設信',
+    };
+
     return AppBackdrop(
       child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(18, 84, 18, 34),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _RoundBackButton(onPressed: submitting ? null : onBack),
-                  const SizedBox(width: 12),
-                  const BrandMark(size: 58, radius: 18),
-                  const Spacer(),
-                  const TagPill(text: 'Member gate'),
-                ],
-              ),
-              const SizedBox(height: 54),
-              const EyebrowText('Enter the circle'),
-              const SizedBox(height: 14),
-              Text(
-                '今晚，讓牌替你留一盞光。',
-                style: Theme.of(context).textTheme.displaySmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '登入後保存每日抽牌、深度占卜紀錄與你的個人牌義筆記。',
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 20),
-              GlassPanel(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const EyebrowText('Email sign in'),
-                    const SizedBox(height: 8),
-                    Text(
-                      '輸入你的密語',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 18),
-                    _VisualEmailField(
-                      label: 'Email',
-                      hintText: 'you@example.com',
-                      controller: emailController,
-                      errorText: emailError,
-                    ),
-                    const SizedBox(height: 14),
-                    _VisualEmailField(
-                      label: '密碼',
-                      hintText: '至少 6 個字元',
-                      controller: passwordController,
-                      obscureText: true,
-                      errorText: passwordError,
-                    ),
-                    if (formMessage != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        formMessage!,
-                        textAlign: TextAlign.center,
-                        style: _bodyTextStyle(
-                          fontSize: 12,
-                          color: isError
-                              ? _ArcanaColors.error
-                              : _ArcanaColors.gold2,
-                        ),
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(26, 28, 26, 34),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 360),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: isRegister ? 122 : 242),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: BrandMark(size: 58, radius: 18),
                       ),
+                      const SizedBox(height: 19),
+                      const EyebrowText('Pocket Tarot'),
+                      const SizedBox(height: 7),
+                      Text(
+                        '登入口袋塔羅',
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '保存每日抽牌與占卜紀錄。',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 21),
+                      _VisualAuthModeSwitch(
+                        mode: mode,
+                        enabled: !submitting,
+                        onChanged: onModeChanged,
+                      ),
+                      const SizedBox(height: 16),
+                      if (isRegister) ...[
+                        _VisualEmailField(
+                          label: '顯示名稱',
+                          hintText: '想被如何稱呼？',
+                          controller: displayNameController,
+                          errorText: displayNameError,
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                      _VisualEmailField(
+                        label: 'Email',
+                        hintText: 'you@example.com',
+                        controller: emailController,
+                        errorText: emailError,
+                      ),
+                      if (!isReset) ...[
+                        const SizedBox(height: 12),
+                        _VisualEmailField(
+                          label: '密碼',
+                          hintText: '至少 6 個字元',
+                          controller: passwordController,
+                          obscureText: true,
+                          errorText: passwordError,
+                        ),
+                      ],
+                      if (isRegister) ...[
+                        const SizedBox(height: 12),
+                        _VisualEmailField(
+                          label: '確認密碼',
+                          hintText: '再輸入一次密碼',
+                          controller: confirmPasswordController,
+                          obscureText: true,
+                          errorText: confirmPasswordError,
+                        ),
+                      ],
+                      if (formMessage != null) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          formMessage!,
+                          textAlign: TextAlign.center,
+                          style: _bodyTextStyle(
+                            fontSize: 12,
+                            color: isError
+                                ? _ArcanaColors.error
+                                : _ArcanaColors.gold2,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 18),
+                      ArcanaPrimaryButton(
+                        onPressed: submitting ? null : onSubmit,
+                        child: Text(primaryLabel),
+                      ),
+                      const SizedBox(height: 8),
+                      if (mode == EmailAuthMode.signIn)
+                        TextButton(
+                          onPressed: submitting
+                              ? null
+                              : () =>
+                                    onModeChanged(EmailAuthMode.resetPassword),
+                          child: const Text('忘記密碼？'),
+                        )
+                      else if (mode == EmailAuthMode.resetPassword)
+                        TextButton(
+                          onPressed: submitting
+                              ? null
+                              : () => onModeChanged(EmailAuthMode.signIn),
+                          child: const Text('回到 Email 登入'),
+                        )
+                      else
+                        const SizedBox(height: 20),
+                      const SizedBox(height: 18),
                     ],
-                    const SizedBox(height: 28),
-                    ArcanaPrimaryButton(
-                      onPressed: submitting ? null : onSubmit,
-                      child: const Text('進入口袋塔羅'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 18),
-              Text(
-                '註冊即代表你願意讓 Pocket Tarot 保存個人化占卜紀錄。所在地天氣只用於生成每日心靈天氣。',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
+            ),
+            Positioned(
+              top: 28,
+              left: 18,
+              child: _RoundBackButton(onPressed: submitting ? null : onBack),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VisualAuthModeSwitch extends StatelessWidget {
+  const _VisualAuthModeSwitch({
+    required this.mode,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final EmailAuthMode mode;
+  final bool enabled;
+  final ValueChanged<EmailAuthMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 48,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: _ArcanaColors.ink2.withValues(alpha: 0.54),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: _ArcanaColors.gold.withValues(alpha: 0.26)),
+      ),
+      child: Row(
+        children: [
+          _VisualAuthModeOption(
+            label: 'Email 登入',
+            selected: mode != EmailAuthMode.register,
+            enabled: enabled,
+            onTap: () => onChanged(EmailAuthMode.signIn),
+          ),
+          const SizedBox(width: 4),
+          _VisualAuthModeOption(
+            label: '註冊',
+            selected: mode == EmailAuthMode.register,
+            enabled: enabled,
+            onTap: () => onChanged(EmailAuthMode.register),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VisualAuthModeOption extends StatelessWidget {
+  const _VisualAuthModeOption({
+    required this.label,
+    required this.selected,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(999),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            gradient: selected
+                ? const LinearGradient(
+                    colors: [_ArcanaColors.gold2, _ArcanaColors.gold],
+                  )
+                : null,
+          ),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: selected ? Colors.black : _ArcanaColors.ivory,
+            ),
           ),
         ),
       ),
