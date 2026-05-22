@@ -1347,7 +1347,7 @@ class DailyDeckStage extends StatelessWidget {
             offset: const Offset(16, 10),
             child: const _DeckCard(rotation: 0.18),
           ),
-          const _DeckCard(showMoon: true),
+          const _DeckCard(),
         ],
       ),
     );
@@ -1355,10 +1355,9 @@ class DailyDeckStage extends StatelessWidget {
 }
 
 class _DeckCard extends StatelessWidget {
-  const _DeckCard({this.rotation = 0, this.showMoon = false});
+  const _DeckCard({this.rotation = 0});
 
   final double rotation;
-  final bool showMoon;
 
   @override
   Widget build(BuildContext context) {
@@ -1384,26 +1383,6 @@ class _DeckCard extends StatelessWidget {
             ),
           ],
         ),
-        child: showMoon
-            ? Center(
-                child: Container(
-                  width: 58,
-                  height: 58,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: _ArcanaColors.gold2.withValues(alpha: 0.42),
-                    ),
-                    color: _ArcanaColors.ink.withValues(alpha: 0.28),
-                  ),
-                  child: Text(
-                    '月',
-                    style: _displayTextStyle(fontSize: 22, height: 1),
-                  ),
-                ),
-              )
-            : null,
       ),
     );
   }
