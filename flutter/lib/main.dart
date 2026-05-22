@@ -2032,8 +2032,15 @@ class _DrawScreenState extends State<DrawScreen> {
   }
 }
 
-class ReadingResultScreen extends StatelessWidget {
+class ReadingResultScreen extends StatefulWidget {
   const ReadingResultScreen({super.key});
+
+  @override
+  State<ReadingResultScreen> createState() => _ReadingResultScreenState();
+}
+
+class _ReadingResultScreenState extends State<ReadingResultScreen> {
+  bool _isSaved = false;
 
   @override
   Widget build(BuildContext context) {
@@ -2044,33 +2051,53 @@ class ReadingResultScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: _RoundBackButton(
-                  onPressed: () => context.go('/divination'),
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _RoundBackButton(onPressed: () => context.go('/divination')),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const EyebrowText('Reading result'),
+                        const SizedBox(height: 5),
+                        Text(
+                          '深度占卜結果',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
               Row(
                 children: const [
                   Expanded(
                     child: TarotImageCard(
                       imagePath: 'assets/images/cards/moon.jpg',
-                      height: 168,
+                      height: 178,
+                      radius: 12,
+                      fit: BoxFit.contain,
                     ),
                   ),
                   SizedBox(width: 10),
                   Expanded(
                     child: TarotImageCard(
                       imagePath: 'assets/images/cards/temperance.jpg',
-                      height: 168,
+                      height: 178,
+                      radius: 12,
+                      fit: BoxFit.contain,
                     ),
                   ),
                   SizedBox(width: 10),
                   Expanded(
                     child: TarotImageCard(
                       imagePath: 'assets/images/cards/star.jpg',
-                      height: 168,
+                      height: 178,
+                      radius: 12,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ],
@@ -2119,8 +2146,10 @@ class ReadingResultScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ArcanaPrimaryButton(
-                      onPressed: () => context.go('/divination'),
-                      child: const Text('保存紀錄'),
+                      onPressed: _isSaved
+                          ? null
+                          : () => setState(() => _isSaved = true),
+                      child: Text(_isSaved ? '已保存' : '保存紀錄'),
                     ),
                   ),
                 ],
