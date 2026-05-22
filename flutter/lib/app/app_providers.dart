@@ -161,7 +161,7 @@ final dailyReadingControllerProvider = FutureProvider<DailyReadingController>((
   if (visualFixtureMode) {
     return DailyReadingController(
       fetchToday: () async => null,
-      createToday: (_) async => _visualFixtureDailyReading,
+      createToday: (_) => _delayedVisualFixture(_visualFixtureDailyReading),
       loadSettings: _visualFixtureSettings,
       requestLocation: () async =>
           const DailyReadingLocationResult.permissionDenied(),
@@ -188,8 +188,8 @@ final deepReadingControllerProvider = FutureProvider<DeepReadingController>((
 ) async {
   if (visualFixtureMode) {
     return DeepReadingController(
-      createDraft: () async => _visualFixtureDraftCards,
-      createReading: (_) async => _visualFixtureDeepReading,
+      createDraft: () => _delayedVisualFixture(_visualFixtureDraftCards),
+      createReading: (_) => _delayedVisualFixture(_visualFixtureDeepReading),
       fetchHistory: () async => _visualFixtureHistory,
       fetchSavedReading: (_) async => _visualFixtureDeepReading,
       setHistoryVisibility: ({required id, required isSavedForHistory}) async =>
@@ -319,6 +319,11 @@ class AuthActions {
 
 Future<LocalSettings> _visualFixtureSettings() async {
   return const LocalSettings(localeMode: LocaleMode.zhTw, weatherEnabled: true);
+}
+
+Future<T> _delayedVisualFixture<T>(T value) async {
+  await Future<void>.delayed(const Duration(milliseconds: 850));
+  return value;
 }
 
 final _visualFixtureDailyReading = DailyReading(
