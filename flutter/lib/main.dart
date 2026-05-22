@@ -564,14 +564,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        FilledButton(
-                          onPressed: _submitting
-                              ? null
-                              : () => setState(() => _showEmailForm = true),
-                          child: Text(
-                            usesChinese ? '使用 Email 登入' : l10n.emailLogin,
+                        if (visualFixtureMode && usesChinese)
+                          ArcanaPrimaryButton(
+                            onPressed: _submitting
+                                ? null
+                                : () => setState(() => _showEmailForm = true),
+                            child: const Text('使用 Email 登入'),
+                          )
+                        else
+                          FilledButton(
+                            onPressed: _submitting
+                                ? null
+                                : () => setState(() => _showEmailForm = true),
+                            child: Text(l10n.emailLogin),
                           ),
-                        ),
                       ],
                     )
                   else
@@ -1289,11 +1295,16 @@ class _DailyEmptyState extends StatelessWidget {
         Center(
           child: SizedBox(
             width: 120,
-            height: 48,
-            child: FilledButton(
-              onPressed: onDraw,
-              child: Text(l10n.dailyDrawButton),
-            ),
+            height: 50,
+            child: visualFixtureMode && _usesChineseCardText(l10n)
+                ? ArcanaPrimaryButton(
+                    onPressed: onDraw,
+                    child: Text(l10n.dailyDrawButton),
+                  )
+                : FilledButton(
+                    onPressed: onDraw,
+                    child: Text(l10n.dailyDrawButton),
+                  ),
           ),
         ),
       ],
@@ -1308,8 +1319,9 @@ class DailyDeckStage extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       key: const ValueKey('daily-ritual-deck'),
-      height: 286,
+      height: 248,
       child: Stack(
+        clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
           Transform.rotate(
@@ -1629,7 +1641,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
                   const SizedBox(height: 18),
                   if (_deepState.status == DeepReadingStatus.initial)
                     if (visualFixtureMode && usesChinese)
-                      FilledButton(
+                      ArcanaPrimaryButton(
                         onPressed: () => context.go('/draw'),
                         child: const Text('發送問題並抽牌'),
                       )
@@ -2606,13 +2618,8 @@ class AppBackdrop extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: _kAppFrameMaxWidth),
           child: DecoratedBox(
-            key: const ValueKey('app-chrome-frame'),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(34),
-              border: Border.all(
-                color: _ArcanaColors.gold.withValues(alpha: 0.12),
-              ),
-              gradient: const LinearGradient(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
@@ -2623,31 +2630,29 @@ class AppBackdrop extends StatelessWidget {
                 stops: [0, 0.42, 1],
               ),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(34),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  const CustomPaint(painter: _CelestialBackdropPainter()),
-                  Positioned(
-                    top: 14,
-                    right: 14,
-                    bottom: 14,
-                    left: 14,
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(30),
-                          border: Border.all(
-                            color: _ArcanaColors.gold.withValues(alpha: 0.09),
-                          ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                const CustomPaint(painter: _CelestialBackdropPainter()),
+                Positioned(
+                  top: 13,
+                  right: 12,
+                  bottom: 13,
+                  left: 12,
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      key: const ValueKey('app-chrome-frame'),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(34),
+                        border: Border.all(
+                          color: _ArcanaColors.gold.withValues(alpha: 0.13),
                         ),
                       ),
                     ),
                   ),
-                  child,
-                ],
-              ),
+                ),
+                child,
+              ],
             ),
           ),
         ),
@@ -2662,7 +2667,7 @@ class _CelestialBackdropPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = _ArcanaColors.gold.withValues(alpha: 0.045)
+      ..color = _ArcanaColors.gold.withValues(alpha: 0.015)
       ..strokeWidth = 1;
     for (double x = 0; x < size.width; x += 38) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
@@ -2672,7 +2677,7 @@ class _CelestialBackdropPainter extends CustomPainter {
     }
 
     final starPaint = Paint()
-      ..color = _ArcanaColors.ivory.withValues(alpha: 0.42);
+      ..color = _ArcanaColors.ivory.withValues(alpha: 0.22);
     const offsets = [
       Offset(0.12, 0.15),
       Offset(0.24, 0.31),
@@ -2714,6 +2719,63 @@ class EyebrowText extends StatelessWidget {
         color: _ArcanaColors.gold2,
         height: 1,
       ).copyWith(fontFamilyFallback: const ['JetBrains Mono', 'monospace']),
+    );
+  }
+}
+
+class ArcanaPrimaryButton extends StatelessWidget {
+  const ArcanaPrimaryButton({
+    super.key,
+    required this.onPressed,
+    required this.child,
+  });
+
+  final VoidCallback? onPressed;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+
+    return Material(
+      color: Colors.transparent,
+      shape: const StadiumBorder(),
+      child: Ink(
+        height: 50,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          gradient: enabled
+              ? const LinearGradient(
+                  colors: [Color(0xFFF5DA95), Color(0xFFB8832F)],
+                )
+              : null,
+          color: enabled ? null : Colors.white.withValues(alpha: 0.08),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFFB8832F).withValues(alpha: 0.28),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : null,
+        ),
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const StadiumBorder(),
+          child: Center(
+            child: DefaultTextStyle.merge(
+              style: _bodyTextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w900,
+                color: _ArcanaColors.ink2,
+                height: 1,
+              ),
+              child: child,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
