@@ -536,6 +536,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         formMessage: _formError ?? _formMessage,
         isError: _formError != null,
         submitting: _submitting,
+        onBack: _returnToLoginOptions,
         onSubmit: _submit,
       );
     }
@@ -599,11 +600,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const EyebrowText('Email sign in'),
-                          const SizedBox(height: 8),
-                          Text(
-                            usesChinese ? 'Email 登入' : 'Email sign in',
-                            style: Theme.of(context).textTheme.titleLarge,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              _RoundBackButton(
+                                onPressed: _submitting
+                                    ? null
+                                    : _returnToLoginOptions,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const EyebrowText('Email sign in'),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      usesChinese
+                                          ? 'Email 登入'
+                                          : 'Email sign in',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleLarge,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 16),
                           if (_mode == EmailAuthMode.register) ...[
@@ -694,6 +717,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _switchMode(EmailAuthMode mode) {
     setState(() {
       _mode = mode;
+      _errors = const {};
+      _formError = null;
+      _formMessage = null;
+    });
+  }
+
+  void _returnToLoginOptions() {
+    setState(() {
+      _showEmailForm = false;
+      _mode = EmailAuthMode.signIn;
       _errors = const {};
       _formError = null;
       _formMessage = null;
@@ -823,6 +856,7 @@ class _VisualEmailLoginScreen extends StatelessWidget {
     required this.formMessage,
     required this.isError,
     required this.submitting,
+    required this.onBack,
     required this.onSubmit,
   });
 
@@ -833,6 +867,7 @@ class _VisualEmailLoginScreen extends StatelessWidget {
   final String? formMessage;
   final bool isError;
   final bool submitting;
+  final VoidCallback onBack;
   final VoidCallback onSubmit;
 
   @override
@@ -846,10 +881,12 @@ class _VisualEmailLoginScreen extends StatelessWidget {
             children: [
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  BrandMark(size: 58, radius: 18),
-                  Spacer(),
-                  TagPill(text: 'Member gate'),
+                children: [
+                  _RoundBackButton(onPressed: submitting ? null : onBack),
+                  const SizedBox(width: 12),
+                  const BrandMark(size: 58, radius: 18),
+                  const Spacer(),
+                  const TagPill(text: 'Member gate'),
                 ],
               ),
               const SizedBox(height: 54),
@@ -2165,7 +2202,7 @@ class _ReadingResultScreenState extends State<ReadingResultScreen> {
 class _RoundBackButton extends StatelessWidget {
   const _RoundBackButton({required this.onPressed});
 
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -3885,7 +3922,7 @@ class DeepHistoryPanel extends StatelessWidget {
           Text('歷史紀錄', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 14),
           for (var index = 0; index < previewHistory.length; index++) ...[
-            _VisualHistoryCard(item: previewHistory[index], index: index),
+            _VisualHistoryCard(item: previewHistory[index]),
             if (index != previewHistory.length - 1) const SizedBox(height: 10),
           ],
         ],
@@ -3919,7 +3956,17 @@ class DeepHistoryPanel extends StatelessWidget {
                   item.question.isEmpty ? l10n.unnamedQuestion : item.question,
                 ),
                 subtitle: Text(item.summary),
-                trailing: const Icon(Icons.chevron_right),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _readingDateLabel(item.createdAt),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.chevron_right),
+                  ],
+                ),
                 onTap: () => onOpenHistory(item.id),
               ),
           ],
@@ -3930,18 +3977,13 @@ class DeepHistoryPanel extends StatelessWidget {
 }
 
 class _VisualHistoryCard extends StatelessWidget {
-  const _VisualHistoryCard({required this.item, required this.index});
+  const _VisualHistoryCard({required this.item});
 
   final DeepReadingHistoryItem item;
-  final int index;
 
   @override
   Widget build(BuildContext context) {
-    final tag = switch (index) {
-      0 => '詳讀',
-      1 => '復二',
-      _ => '4/28',
-    };
+    final tag = _readingDateLabel(item.createdAt);
 
     return GlassPanel(
       padding: const EdgeInsets.all(14),
@@ -3970,6 +4012,27 @@ class _VisualHistoryCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _readingDateLabel(DateTime createdAt) {
+  final localCreatedAt = createdAt.toLocal();
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final createdDay = DateTime(
+    localCreatedAt.year,
+    localCreatedAt.month,
+    localCreatedAt.day,
+  );
+  final dayDelta = today.difference(createdDay).inDays;
+
+  if (dayDelta == 0) {
+    return '今天';
+  }
+  if (dayDelta == 1) {
+    return '昨天';
+  }
+
+  return '${localCreatedAt.month}/${localCreatedAt.day}';
 }
 
 class CardDetailSheet extends StatelessWidget {
