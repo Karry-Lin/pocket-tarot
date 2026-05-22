@@ -2596,11 +2596,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             Expanded(
               child: GlassPanel(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
                 radius: 18,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: visualFixtureMode && usesChinese ? 90 : 0,
+                    minHeight: visualFixtureMode && usesChinese ? 74 : 0,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2621,7 +2621,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                       Text(
                         visualFixtureMode && usesChinese
-                            ? '總每日一抽完成次數。'
+                            ? '每日一抽完成次數。'
                             : l10n.navHome,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
@@ -2633,11 +2633,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: GlassPanel(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
                 radius: 18,
                 child: ConstrainedBox(
                   constraints: BoxConstraints(
-                    minHeight: visualFixtureMode && usesChinese ? 90 : 0,
+                    minHeight: visualFixtureMode && usesChinese ? 74 : 0,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -2658,7 +2658,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                       Text(
                         visualFixtureMode && usesChinese
-                            ? '總深度占卜完成次數。'
+                            ? '深度占卜完成次數。'
                             : l10n.navDivination,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
