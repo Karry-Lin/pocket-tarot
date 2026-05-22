@@ -2770,14 +2770,12 @@ class GlassPanel extends StatelessWidget {
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(color: _ArcanaColors.gold.withValues(alpha: 0.25)),
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
           colors: [
-            Colors.white.withValues(alpha: 0.07),
-            _ArcanaColors.plum.withValues(alpha: 0.94),
-            _ArcanaColors.ink.withValues(alpha: 0.94),
+            const Color(0xFF241135).withValues(alpha: 0.94),
+            const Color(0xFF0C0615).withValues(alpha: 0.94),
           ],
-          stops: const [0, 0.32, 1],
         ),
         boxShadow: [
           BoxShadow(
@@ -2787,26 +2785,58 @@ class GlassPanel extends StatelessWidget {
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          if (ornate)
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: Stack(
+          children: [
             Positioned.fill(
               child: IgnorePointer(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(radius - 6),
-                      border: Border.all(
-                        color: _ArcanaColors.gold2.withValues(alpha: 0.16),
-                      ),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.06),
+                        Colors.white.withValues(alpha: 0),
+                      ],
+                      stops: const [0, 0.28],
                     ),
                   ),
                 ),
               ),
             ),
-          Padding(padding: padding, child: child),
-        ],
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(radius),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.035),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (ornate)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(radius - 6),
+                        border: Border.all(
+                          color: _ArcanaColors.gold2.withValues(alpha: 0.16),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            Padding(padding: padding, child: child),
+          ],
+        ),
       ),
     );
   }
