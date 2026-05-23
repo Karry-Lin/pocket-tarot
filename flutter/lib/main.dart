@@ -1907,7 +1907,7 @@ class _DailyEmptyState extends StatelessWidget {
         ),
         const SizedBox(height: 28),
         const DailyDeckStage(),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         Center(
           child: SizedBox(
             width: 120,
@@ -1923,63 +1923,190 @@ class _DailyEmptyState extends StatelessWidget {
                   ),
           ),
         ),
+        const SizedBox(height: 10),
+        const _DailyRitualConstellation(),
       ],
     );
   }
 }
 
-class DailyDeckStage extends StatelessWidget {
+class DailyDeckStage extends StatefulWidget {
   const DailyDeckStage({super.key});
+
+  @override
+  State<DailyDeckStage> createState() => _DailyDeckStageState();
+}
+
+class _DailyDeckStageState extends State<DailyDeckStage>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..forward();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final progress = _controller.value;
+        final sway = math.sin(progress * math.pi * 2);
+        final counterSway = math.sin((progress + 0.38) * math.pi * 2);
+
+        return SizedBox(
+          key: const ValueKey('daily-ritual-deck'),
+          height: 222,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Positioned.fill(
+                child: CustomPaint(
+                  key: const ValueKey('daily-ritual-orbit-pulse'),
+                  painter: _DailyDeckOrbitPainter(progress: progress),
+                ),
+              ),
+              Transform.translate(
+                offset: Offset(-20 - 2 * sway, 12 + 3 * counterSway),
+                child: Transform.scale(
+                  scale: 0.93,
+                  child: _DeckCard(rotation: -0.23 + 0.025 * sway),
+                ),
+              ),
+              Transform.translate(
+                offset: Offset(20 + 2 * counterSway, 10 - 3 * sway),
+                child: Transform.scale(
+                  scale: 0.93,
+                  child: _DeckCard(rotation: 0.22 + 0.025 * counterSway),
+                ),
+              ),
+              Transform.translate(
+                offset: Offset(0, -4 + 4 * sway),
+                child: Transform.scale(
+                  scale: 0.96 + 0.015 * counterSway,
+                  child: _DeckCard(rotation: 0.015 * sway),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _DailyDeckOrbitPainter extends CustomPainter {
+  const _DailyDeckOrbitPainter({required this.progress});
+
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final pulse = 0.5 + 0.5 * math.sin(progress * math.pi * 2);
+    final orbitPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = _ArcanaColors.gold.withValues(alpha: 0.18 + pulse * 0.08);
+    final softPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = _ArcanaColors.muted.withValues(alpha: 0.16);
+    final arcPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round
+      ..color = _ArcanaColors.gold2.withValues(alpha: 0.38 + pulse * 0.22);
+
+    final wideOrbit = Rect.fromCenter(
+      center: center,
+      width: size.width * 0.84,
+      height: size.height * 0.74,
+    );
+    final innerOrbit = Rect.fromCenter(
+      center: center,
+      width: size.width * 0.62,
+      height: size.height * 0.58,
+    );
+
+    canvas.drawOval(wideOrbit, orbitPaint);
+    canvas.drawOval(innerOrbit, softPaint);
+    canvas.drawArc(
+      wideOrbit,
+      progress * math.pi * 2,
+      math.pi * 0.28,
+      false,
+      arcPaint,
+    );
+
+    final starPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = _ArcanaColors.gold2.withValues(alpha: 0.44);
+    for (var index = 0; index < 6; index += 1) {
+      final angle = progress * math.pi * 2 + index * math.pi / 3;
+      canvas.drawCircle(
+        Offset(
+          center.dx + math.cos(angle) * size.width * 0.41,
+          center.dy + math.sin(angle) * size.height * 0.37,
+        ),
+        index.isEven ? 1.4 : 0.9,
+        starPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DailyDeckOrbitPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+class _DailyRitualConstellation extends StatelessWidget {
+  const _DailyRitualConstellation();
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      key: const ValueKey('daily-ritual-deck'),
-      height: 248,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          Transform.rotate(
-            angle: -0.18,
-            child: Container(
-              width: 286,
-              height: 286,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: _ArcanaColors.gold.withValues(alpha: 0.24),
-                ),
-              ),
-            ),
-          ),
-          Transform.rotate(
-            angle: 0.24,
-            child: Container(
-              width: 222,
-              height: 222,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: _ArcanaColors.muted.withValues(alpha: 0.24),
-                  style: BorderStyle.solid,
-                ),
-              ),
-            ),
-          ),
-          Transform.translate(
-            offset: const Offset(-18, 12),
-            child: const _DeckCard(rotation: -0.2),
-          ),
-          Transform.translate(
-            offset: const Offset(16, 10),
-            child: const _DeckCard(rotation: 0.18),
-          ),
-          const _DeckCard(),
-        ],
-      ),
+      key: const ValueKey('daily-ritual-constellation'),
+      height: 86,
+      child: CustomPaint(painter: _DailyRitualConstellationPainter()),
     );
   }
+}
+
+class _DailyRitualConstellationPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final points = [
+      Offset(size.width * 0.26, size.height * 0.28),
+      Offset(size.width * 0.42, size.height * 0.54),
+      Offset(size.width * 0.58, size.height * 0.32),
+      Offset(size.width * 0.74, size.height * 0.62),
+    ];
+    final linePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = _ArcanaColors.gold.withValues(alpha: 0.16);
+    final dotPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = _ArcanaColors.gold2.withValues(alpha: 0.48);
+
+    for (var index = 0; index < points.length - 1; index += 1) {
+      canvas.drawLine(points[index], points[index + 1], linePaint);
+    }
+    for (final point in points) {
+      canvas.drawCircle(point, 1.6, dotPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _DeckCard extends StatelessWidget {
@@ -2183,27 +2310,13 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      PromptChip(
-                        text: usesChinese ? '感情迷茫' : l10n.promptWork,
-                        showIcon: !usesChinese,
-                        onPressed: () => _applyQuestionTemplate(
-                          usesChinese ? '感情迷茫' : l10n.promptWork,
+                      for (final prompt in _questionPrompts(l10n, usesChinese))
+                        PromptChip(
+                          text: prompt.label,
+                          showIcon: !usesChinese,
+                          onPressed: () =>
+                              _applyQuestionTemplate(prompt.question),
                         ),
-                      ),
-                      PromptChip(
-                        text: usesChinese ? '職場抉擇' : l10n.promptLove,
-                        showIcon: !usesChinese,
-                        onPressed: () => _applyQuestionTemplate(
-                          usesChinese ? '職場抉擇' : l10n.promptLove,
-                        ),
-                      ),
-                      PromptChip(
-                        text: usesChinese ? '自我探索' : l10n.promptNextStep,
-                        showIcon: !usesChinese,
-                        onPressed: () => _applyQuestionTemplate(
-                          usesChinese ? '自我探索' : l10n.promptNextStep,
-                        ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 18),
@@ -2240,6 +2353,45 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
       offset: question.length,
     );
   }
+}
+
+class _QuestionPrompt {
+  const _QuestionPrompt({required this.label, required this.question});
+
+  final String label;
+  final String question;
+}
+
+List<_QuestionPrompt> _questionPrompts(
+  AppLocalizations l10n,
+  bool usesChinese,
+) {
+  if (usesChinese) {
+    return const [
+      _QuestionPrompt(label: '感情迷茫', question: '這段關係裡，我需要看見什麼，才能更清楚地面對自己的感受？'),
+      _QuestionPrompt(
+        label: '職場抉擇',
+        question: '面對目前的職場選擇，我該如何判斷下一步才不會偏離自己的方向？',
+      ),
+      _QuestionPrompt(label: '自我探索', question: '最近反覆出現的內在課題，正在提醒我看見什麼？'),
+    ];
+  }
+
+  return [
+    _QuestionPrompt(
+      label: l10n.promptWork,
+      question: 'What should I consider before choosing my next step at work?',
+    ),
+    _QuestionPrompt(
+      label: l10n.promptLove,
+      question:
+          'What should I understand about this relationship before I respond?',
+    ),
+    _QuestionPrompt(
+      label: l10n.promptNextStep,
+      question: 'What is the next honest step I can take from here?',
+    ),
+  ];
 }
 
 class DrawScreen extends ConsumerStatefulWidget {
@@ -2373,63 +2525,91 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
 
     return AppBackdrop(
       child: SafeArea(
-        child: SingleChildScrollView(
+        child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: _RoundBackButton(
-                  onPressed: () => context.go('/divination'),
-                ),
-              ),
-              const SizedBox(height: 0),
-              const EyebrowText('Choose three'),
-              const SizedBox(height: 18),
-              Text(
-                '不要急著找答案。讓手指先靠近有重量的那三張。',
-                style: Theme.of(context).textTheme.displaySmall,
-              ),
-              const SizedBox(height: 12),
-              _ProgressLine(progress: selectedCount / 3),
-              const SizedBox(height: 12),
-              Text('$selectedCount / 3 已選。牌會在你點下後翻面，已選後不可更換，第三張完成後即可解讀。'),
-              const SizedBox(height: 28),
-              if (_errorMessage != null) ...[
-                InfoPanel(title: '牌陣建立失敗', child: Text(_errorMessage!)),
-                const SizedBox(height: 18),
-              ],
-              GridView.builder(
-                key: const ValueKey('visual-draw-grid'),
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  childAspectRatio: 0.68,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemCount: drawCards.length,
-                itemBuilder: (context, index) {
-                  final card = drawCards[index];
-                  final selectedOrder = selectedIndexes.indexOf(index) + 1;
-                  return _VisualDrawCard(
-                    key: ValueKey('draw-card-$index'),
-                    label: _drawCardLabel(index),
-                    imagePath: _imageForCardId(card.cardId),
-                    selected: selectedIndexes.contains(index),
-                    selectedOrder: selectedOrder,
-                    onTap: () => _toggleCard(index),
-                  );
-                },
-              ),
-              const SizedBox(height: 18),
-              ArcanaPrimaryButton(
-                onPressed: selectedCount == 3 ? _showResult : null,
-                child: const Text('查看解讀'),
-              ),
-            ],
+          child: LayoutBuilder(
+            builder: (context, _) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      _RoundBackButton(
+                        onPressed: () => context.go('/divination'),
+                      ),
+                      const SizedBox(width: 12),
+                      const EyebrowText('Choose three'),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    '選三張有重量的牌。',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 10),
+                  _ProgressLine(progress: selectedCount / 3),
+                  const SizedBox(height: 8),
+                  Text(
+                    '$selectedCount / 3 已選。點選後會翻面，選定後不可更換。',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  if (_errorMessage != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _errorMessage!,
+                      style: _bodyTextStyle(color: _ArcanaColors.error),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, gridConstraints) {
+                        const spacing = 8.0;
+                        final tileWidth =
+                            (gridConstraints.maxWidth - spacing * 2) / 3;
+                        final tileHeight =
+                            (gridConstraints.maxHeight - spacing * 2) / 3;
+                        final aspectRatio = tileWidth / tileHeight;
+
+                        return GridView.builder(
+                          key: const ValueKey('visual-draw-grid'),
+                          padding: EdgeInsets.zero,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                childAspectRatio: aspectRatio,
+                                crossAxisSpacing: spacing,
+                                mainAxisSpacing: spacing,
+                              ),
+                          itemCount: drawCards.length,
+                          itemBuilder: (context, index) {
+                            final card = drawCards[index];
+                            final selectedOrder =
+                                selectedIndexes.indexOf(index) + 1;
+                            return _VisualDrawCard(
+                              key: ValueKey('draw-card-$index'),
+                              label: _drawCardLabel(index),
+                              imagePath: _imageForCardId(card.cardId),
+                              selected: selectedIndexes.contains(index),
+                              selectedOrder: selectedOrder,
+                              onTap: () => _toggleCard(index),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  ArcanaPrimaryButton(
+                    onPressed: selectedCount == 3 ? _showResult : null,
+                    child: const Text('查看解讀'),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
