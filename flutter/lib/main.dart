@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -3483,44 +3485,344 @@ class ArcanaLoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassPanel(
+      key: const ValueKey('arcana-loading-view'),
       ornate: true,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 28),
+      padding: const EdgeInsets.fromLTRB(18, 20, 18, 22),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 58,
-            height: 58,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                CircularProgressIndicator(
-                  strokeWidth: 2.4,
-                  color: _ArcanaColors.gold2,
-                  backgroundColor: _ArcanaColors.gold.withValues(alpha: 0.12),
-                ),
-                const Icon(
-                  Icons.auto_awesome,
-                  color: _ArcanaColors.gold2,
-                  size: 22,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
+          const _ArcanaLoadingSpread(),
+          const SizedBox(height: 16),
           const EyebrowText('Reading in progress'),
           const SizedBox(height: 8),
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
           Text(
             message,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
+          const SizedBox(height: 16),
+          const _ArcanaLoadingPulse(),
         ],
       ),
     );
+  }
+}
+
+class _ArcanaLoadingSpread extends StatefulWidget {
+  const _ArcanaLoadingSpread();
+
+  @override
+  State<_ArcanaLoadingSpread> createState() => _ArcanaLoadingSpreadState();
+}
+
+class _ArcanaLoadingSpreadState extends State<_ArcanaLoadingSpread>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2200),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final progress = _controller.value;
+        final pulse = 0.5 + 0.5 * math.sin(progress * math.pi * 2);
+
+        return SizedBox(
+          key: const ValueKey('arcana-loading-orbit'),
+          width: 220,
+          height: 164,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _ArcanaLoadingOrbitPainter(
+                    progress: progress,
+                    pulse: pulse,
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 46,
+                bottom: 20,
+                child: _LoadingTarotBack(
+                  key: const ValueKey('arcana-loading-card-0'),
+                  angle: -0.28 + 0.03 * math.sin(progress * math.pi * 2),
+                  lift: 3 * math.sin((progress + 0.08) * math.pi * 2),
+                  opacity: 0.76,
+                ),
+              ),
+              Positioned(
+                right: 46,
+                bottom: 20,
+                child: _LoadingTarotBack(
+                  key: const ValueKey('arcana-loading-card-2'),
+                  angle: 0.28 + 0.03 * math.sin((progress + 0.5) * math.pi * 2),
+                  lift: 3 * math.sin((progress + 0.42) * math.pi * 2),
+                  opacity: 0.76,
+                ),
+              ),
+              Positioned(
+                top: 22 + 6 * math.sin((progress + 0.18) * math.pi * 2),
+                child: _LoadingTarotBack(
+                  key: const ValueKey('arcana-loading-card-1'),
+                  angle: 0.04 * math.sin((progress + 0.25) * math.pi * 2),
+                  lift: 0,
+                  opacity: 1,
+                  emphasized: true,
+                ),
+              ),
+              Positioned(top: 68, child: _LoadingSigil(pulse: pulse)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _LoadingTarotBack extends StatelessWidget {
+  const _LoadingTarotBack({
+    super.key,
+    required this.angle,
+    required this.lift,
+    required this.opacity,
+    this.emphasized = false,
+  });
+
+  final double angle;
+  final double lift;
+  final double opacity;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.translate(
+      offset: Offset(0, lift),
+      child: Transform.rotate(
+        angle: angle,
+        child: Opacity(
+          opacity: opacity,
+          child: Container(
+            width: emphasized ? 64 : 60,
+            height: emphasized ? 96 : 90,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: _ArcanaColors.gold2.withValues(
+                  alpha: emphasized ? 0.92 : 0.58,
+                ),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _ArcanaColors.gold.withValues(
+                    alpha: emphasized ? 0.28 : 0.14,
+                  ),
+                  blurRadius: emphasized ? 24 : 16,
+                  offset: const Offset(0, 8),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.58),
+                  blurRadius: 14,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(7),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    'assets/images/card-back.png',
+                    fit: BoxFit.fill,
+                    filterQuality: FilterQuality.medium,
+                  ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.transparent,
+                          _ArcanaColors.ink.withValues(alpha: 0.38),
+                        ],
+                        stops: const [0.36, 1],
+                      ),
+                    ),
+                  ),
+                  Center(
+                    child: Icon(
+                      Icons.nightlight_round,
+                      size: emphasized ? 30 : 26,
+                      color: _ArcanaColors.gold2.withValues(
+                        alpha: emphasized ? 0.86 : 0.64,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadingSigil extends StatelessWidget {
+  const _LoadingSigil({required this.pulse});
+
+  final double pulse;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 42 + 4 * pulse,
+      height: 42 + 4 * pulse,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _ArcanaColors.ink2.withValues(alpha: 0.9),
+        border: Border.all(color: _ArcanaColors.gold2.withValues(alpha: 0.88)),
+        boxShadow: [
+          BoxShadow(
+            color: _ArcanaColors.gold2.withValues(alpha: 0.22 + 0.18 * pulse),
+            blurRadius: 22 + 10 * pulse,
+          ),
+        ],
+      ),
+      child: const Icon(
+        Icons.auto_awesome,
+        color: _ArcanaColors.gold2,
+        size: 20,
+      ),
+    );
+  }
+}
+
+class _ArcanaLoadingPulse extends StatefulWidget {
+  const _ArcanaLoadingPulse();
+
+  @override
+  State<_ArcanaLoadingPulse> createState() => _ArcanaLoadingPulseState();
+}
+
+class _ArcanaLoadingPulseState extends State<_ArcanaLoadingPulse>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1300),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(3, (index) {
+            final wave =
+                0.5 +
+                0.5 *
+                    math.sin((_controller.value + index * 0.18) * math.pi * 2);
+            return Container(
+              width: 24,
+              height: 3,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                color: _ArcanaColors.gold2.withValues(
+                  alpha: 0.22 + 0.58 * wave,
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+}
+
+class _ArcanaLoadingOrbitPainter extends CustomPainter {
+  const _ArcanaLoadingOrbitPainter({
+    required this.progress,
+    required this.pulse,
+  });
+
+  final double progress;
+  final double pulse;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height * 0.55);
+    final primaryOrbit = Rect.fromCenter(
+      center: center,
+      width: 194,
+      height: 116,
+    );
+    final secondaryOrbit = Rect.fromCenter(
+      center: center,
+      width: 146,
+      height: 86,
+    );
+
+    final orbitPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = _ArcanaColors.gold.withValues(alpha: 0.25 + 0.06 * pulse);
+    final dimOrbitPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = _ArcanaColors.muted.withValues(alpha: 0.18);
+    final pathPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..strokeCap = StrokeCap.round
+      ..color = _ArcanaColors.gold2.withValues(alpha: 0.48 + 0.22 * pulse);
+
+    canvas.drawOval(primaryOrbit, orbitPaint);
+    canvas.drawOval(secondaryOrbit, dimOrbitPaint);
+
+    final arcStart = progress * math.pi * 2;
+    canvas.drawArc(primaryOrbit, arcStart, math.pi * 0.34, false, pathPaint);
+
+    final starPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = _ArcanaColors.gold2.withValues(alpha: 0.72);
+    for (var index = 0; index < 8; index += 1) {
+      final angle = progress * math.pi * 2 + index * math.pi / 4;
+      final x = center.dx + math.cos(angle) * 97;
+      final y = center.dy + math.sin(angle) * 58;
+      final radius = index.isEven ? 1.4 : 0.9;
+      canvas.drawCircle(Offset(x, y), radius, starPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ArcanaLoadingOrbitPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.pulse != pulse;
   }
 }
 
