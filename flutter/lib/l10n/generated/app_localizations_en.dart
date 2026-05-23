@@ -64,6 +64,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get formFailure => 'Something went wrong. Please try again later.';
 
   @override
+  String get emailCredentialFailure => 'Email or password is incorrect';
+
+  @override
   String get googleFailure => 'Google sign-in failed. Please try again later.';
 
   @override

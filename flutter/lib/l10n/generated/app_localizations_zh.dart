@@ -63,6 +63,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get formFailure => '操作失敗，請稍後再試';
 
   @override
+  String get emailCredentialFailure => '帳號或密碼錯誤';
+
+  @override
   String get googleFailure => 'Google 登入失敗，請稍後再試';
 
   @override
@@ -414,6 +417,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get formFailure => '操作失敗，請稍後再試';
+
+  @override
+  String get emailCredentialFailure => '帳號或密碼錯誤';
 
   @override
   String get googleFailure => 'Google 登入失敗，請稍後再試';

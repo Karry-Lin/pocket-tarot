@@ -20,6 +20,7 @@
   "forgotPassword": "Forgot password",
   "passwordResetSent": "Password reset email sent",
   "formFailure": "Something went wrong. Please try again later.",
+  "emailCredentialFailure": "Email or password is incorrect",
   "googleFailure": "Google sign-in failed. Please try again later.",
   "emailLogin": "Email sign-in",
   "createAccount": "Create account",

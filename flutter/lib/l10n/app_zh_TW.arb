@@ -17,6 +17,7 @@
   "forgotPassword": "忘記密碼",
   "passwordResetSent": "重設信已送出",
   "formFailure": "操作失敗，請稍後再試",
+  "emailCredentialFailure": "帳號或密碼錯誤",
   "googleFailure": "Google 登入失敗，請稍後再試",
   "emailLogin": "Email 登入",
   "createAccount": "建立帳號",

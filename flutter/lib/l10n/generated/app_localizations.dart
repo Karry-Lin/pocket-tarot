@@ -207,6 +207,12 @@ abstract class AppLocalizations {
   /// **'Something went wrong. Please try again later.'**
   String get formFailure;
 
+  /// No description provided for @emailCredentialFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Email or password is incorrect'**
+  String get emailCredentialFailure;
+
   /// No description provided for @googleFailure.
   ///
   /// In en, this message translates to:

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -866,10 +867,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             setState(() => _formMessage = l10n.passwordResetSent);
           }
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         setState(() {
-          _formError = l10n.formFailure;
+          _formError = _emailAuthFailureMessage(error, l10n);
           _formMessage = null;
         });
       }
@@ -908,6 +909,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 }
+
+String _emailAuthFailureMessage(Object error, AppLocalizations l10n) {
+  if (error is firebase.FirebaseAuthException &&
+      _emailCredentialFailureCodes.contains(error.code)) {
+    return l10n.emailCredentialFailure;
+  }
+
+  return l10n.formFailure;
+}
+
+const _emailCredentialFailureCodes = {
+  'invalid-credential',
+  'invalid-login-credentials',
+  'user-not-found',
+  'wrong-password',
+};
 
 class _LoginLanguageButton extends StatelessWidget {
   const _LoginLanguageButton({
