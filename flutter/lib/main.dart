@@ -2775,9 +2775,12 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => context.go('/divination'),
-                      child: Text(l10n.resultBackToReading),
+                    child: SizedBox(
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: () => context.go('/divination'),
+                        child: Text(l10n.resultBackToReading),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
