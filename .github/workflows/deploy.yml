@@ -16,6 +16,7 @@ env:
 jobs:
   verify:
     runs-on: 'kkldream-pocket-tarot'
+    environment: main
     defaults:
       run:
         working-directory: server
@@ -35,10 +36,11 @@ jobs:
 
       - name: Run tests
         env:
-          TEST_MONGODB_URI: ${{ secrets.TEST_MONGODB_URI }}
+          MONGODB_URI: ${{ secrets.TEST_MONGODB_URI || secrets.MONGODB_URI }}
         run: |
-          if [ -n "${TEST_MONGODB_URI:-}" ]; then
-            export MONGODB_URI="$TEST_MONGODB_URI"
+          if [ -z "${MONGODB_URI:-}" ]; then
+            echo "MONGODB_URI is required for server tests"
+            exit 1
           fi
 
           npm test
