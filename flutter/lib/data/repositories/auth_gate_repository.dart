@@ -8,8 +8,8 @@ class AuthGateRepository {
   const AuthGateRepository({
     required FirebaseAuthService authService,
     required ProfileRepository profileRepository,
-  })  : _authService = authService,
-        _profileRepository = profileRepository;
+  }) : _authService = authService,
+       _profileRepository = profileRepository;
 
   final FirebaseAuthService _authService;
   final ProfileRepository _profileRepository;
@@ -34,12 +34,20 @@ class AuthGateRepository {
   Future<UserProfile> registerProfile() async {
     final session = await _authService.loadSession(reload: true);
     if (!session.isSignedIn) {
-      throw StateError('Cannot register profile without a signed-in Firebase user.');
+      throw StateError(
+        'Cannot register profile without a signed-in Firebase user.',
+      );
     }
+
+    // Email verification updates the Firebase user before the cached ID token.
+    // Refresh the token so the backend sees the latest email_verified claim.
+    await _authService.getIdToken(forceRefresh: true);
 
     return _profileRepository.registerProfile(
       displayName: _displayNameFromSession(session),
-      providerIds: session.providerIds.isEmpty ? const ['password'] : session.providerIds,
+      providerIds: session.providerIds.isEmpty
+          ? const ['password']
+          : session.providerIds,
     );
   }
 
