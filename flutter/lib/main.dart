@@ -556,175 +556,224 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return AppBackdrop(
       child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(26, 28, 26, 34),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 360),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(height: _showEmailForm ? 88 : 242),
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: BrandMark(size: 58, radius: 18),
-                  ),
-                  const SizedBox(height: 19),
-                  const EyebrowText('Pocket Tarot'),
-                  const SizedBox(height: 7),
-                  Text(
-                    usesChinese ? '登入口袋塔羅' : 'Sign in to Pocket Tarot',
-                    style: Theme.of(context).textTheme.displaySmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(usesChinese ? '保存每日抽牌與占卜紀錄。' : l10n.loginTagline),
-                  const SizedBox(height: 21),
-                  if (!_showEmailForm)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        OutlinedButton.icon(
-                          onPressed: _submitting ? null : _signInWithGoogle,
-                          icon: const Text('G'),
-                          label: Text(
-                            usesChinese ? '使用 Google 繼續' : l10n.googleLogin,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        if (usesChinese)
-                          ArcanaPrimaryButton(
-                            onPressed: _submitting
-                                ? null
-                                : () => setState(() => _showEmailForm = true),
-                            child: const Text('使用 Email 登入'),
-                          )
-                        else
-                          FilledButton(
-                            onPressed: _submitting
-                                ? null
-                                : () => setState(() => _showEmailForm = true),
-                            child: Text(l10n.emailLogin),
-                          ),
-                      ],
-                    )
-                  else
-                    GlassPanel(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              _RoundBackButton(
+        child: Stack(
+          children: [
+            SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(26, 28, 26, 34),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 360),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(height: _showEmailForm ? 88 : 242),
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: BrandMark(size: 58, radius: 18),
+                      ),
+                      const SizedBox(height: 19),
+                      const EyebrowText('Pocket Tarot'),
+                      const SizedBox(height: 7),
+                      Text(
+                        usesChinese ? '登入口袋塔羅' : 'Sign in to Pocket Tarot',
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(usesChinese ? '保存每日抽牌與占卜紀錄。' : l10n.loginTagline),
+                      const SizedBox(height: 21),
+                      if (!_showEmailForm)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: _submitting ? null : _signInWithGoogle,
+                              icon: const Text('G'),
+                              label: Text(
+                                usesChinese ? '使用 Google 繼續' : l10n.googleLogin,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            if (usesChinese)
+                              ArcanaPrimaryButton(
                                 onPressed: _submitting
                                     ? null
-                                    : _returnToLoginOptions,
+                                    : () =>
+                                          setState(() => _showEmailForm = true),
+                                child: const Text('使用 Email 登入'),
+                              )
+                            else
+                              FilledButton(
+                                onPressed: _submitting
+                                    ? null
+                                    : () =>
+                                          setState(() => _showEmailForm = true),
+                                child: Text(l10n.emailLogin),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const EyebrowText('Email sign in'),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      usesChinese
-                                          ? 'Email 登入'
-                                          : 'Email sign in',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleLarge,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          if (_mode == EmailAuthMode.register) ...[
-                            AuthField(
-                              label: l10n.displayNameLabel,
-                              controller: _displayNameController,
-                              errorText: _errors[AuthFormField.displayName],
-                            ),
-                            const SizedBox(height: 12),
                           ],
-                          AuthField(
-                            label: 'Email',
-                            controller: _emailController,
-                            errorText: _errors[AuthFormField.email],
-                          ),
-                          const SizedBox(height: 12),
-                          if (_mode != EmailAuthMode.resetPassword)
-                            AuthField(
-                              label: l10n.passwordLabel,
-                              controller: _passwordController,
-                              obscureText: true,
-                              errorText: _errors[AuthFormField.password],
-                            ),
-                          if (_mode == EmailAuthMode.register) ...[
-                            const SizedBox(height: 12),
-                            AuthField(
-                              label: l10n.confirmPasswordLabel,
-                              controller: _confirmPasswordController,
-                              obscureText: true,
-                              errorText: _errors[AuthFormField.confirmPassword],
-                            ),
-                          ],
-                          const SizedBox(height: 16),
-                          if (_formError != null || _formMessage != null) ...[
-                            Text(
-                              _formError ?? _formMessage!,
-                              style: TextStyle(
-                                color: _formError == null
-                                    ? _ArcanaColors.gold2
-                                    : Theme.of(context).colorScheme.error,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 10),
-                          ],
-                          _PrimaryEmailAuthButton(
-                            mode: _mode,
-                            onPressed: _submitting ? null : _submit,
-                          ),
-                          const SizedBox(height: 6),
-                          Wrap(
-                            alignment: WrapAlignment.center,
-                            spacing: 8,
+                        )
+                      else
+                        GlassPanel(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              if (_mode != EmailAuthMode.signIn)
-                                TextButton(
-                                  onPressed: () =>
-                                      _switchMode(EmailAuthMode.signIn),
-                                  child: Text(l10n.loginAction),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  _RoundBackButton(
+                                    onPressed: _submitting
+                                        ? null
+                                        : _returnToLoginOptions,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const EyebrowText('Email sign in'),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          usesChinese
+                                              ? 'Email 登入'
+                                              : 'Email sign in',
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.titleLarge,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              if (_mode == EmailAuthMode.register) ...[
+                                AuthField(
+                                  label: l10n.displayNameLabel,
+                                  controller: _displayNameController,
+                                  errorText: _errors[AuthFormField.displayName],
                                 ),
-                              if (_mode != EmailAuthMode.register)
-                                TextButton(
-                                  onPressed: () =>
-                                      _switchMode(EmailAuthMode.register),
-                                  child: Text(l10n.registerAction),
-                                ),
+                                const SizedBox(height: 12),
+                              ],
+                              AuthField(
+                                label: 'Email',
+                                controller: _emailController,
+                                errorText: _errors[AuthFormField.email],
+                              ),
+                              const SizedBox(height: 12),
                               if (_mode != EmailAuthMode.resetPassword)
-                                TextButton(
-                                  onPressed: () =>
-                                      _switchMode(EmailAuthMode.resetPassword),
-                                  child: Text(l10n.forgotPassword),
+                                AuthField(
+                                  label: l10n.passwordLabel,
+                                  controller: _passwordController,
+                                  obscureText: true,
+                                  errorText: _errors[AuthFormField.password],
                                 ),
+                              if (_mode == EmailAuthMode.register) ...[
+                                const SizedBox(height: 12),
+                                AuthField(
+                                  label: l10n.confirmPasswordLabel,
+                                  controller: _confirmPasswordController,
+                                  obscureText: true,
+                                  errorText:
+                                      _errors[AuthFormField.confirmPassword],
+                                ),
+                              ],
+                              const SizedBox(height: 16),
+                              if (_formError != null ||
+                                  _formMessage != null) ...[
+                                Text(
+                                  _formError ?? _formMessage!,
+                                  style: TextStyle(
+                                    color: _formError == null
+                                        ? _ArcanaColors.gold2
+                                        : Theme.of(context).colorScheme.error,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 10),
+                              ],
+                              _PrimaryEmailAuthButton(
+                                mode: _mode,
+                                onPressed: _submitting ? null : _submit,
+                              ),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 8,
+                                children: [
+                                  if (_mode != EmailAuthMode.signIn)
+                                    TextButton(
+                                      onPressed: () =>
+                                          _switchMode(EmailAuthMode.signIn),
+                                      child: Text(l10n.loginAction),
+                                    ),
+                                  if (_mode != EmailAuthMode.register)
+                                    TextButton(
+                                      onPressed: () =>
+                                          _switchMode(EmailAuthMode.register),
+                                      child: Text(l10n.registerAction),
+                                    ),
+                                  if (_mode != EmailAuthMode.resetPassword)
+                                    TextButton(
+                                      onPressed: () => _switchMode(
+                                        EmailAuthMode.resetPassword,
+                                      ),
+                                      child: Text(l10n.forgotPassword),
+                                    ),
+                                ],
+                              ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                  const SizedBox(height: 42),
-                ],
+                        ),
+                      const SizedBox(height: 42),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
+            Positioned(
+              top: 42,
+              right: 32,
+              child: _LoginLanguageButton(
+                usesChinese: usesChinese,
+                onPressed: _showLoginLocaleModeSheet,
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Future<void> _showLoginLocaleModeSheet() async {
+    final repository = await ref.read(localSettingsRepositoryProvider.future);
+    final currentSettings = await repository.load();
+    if (!mounted) {
+      return;
+    }
+
+    final selected = await showModalBottomSheet<LocaleMode>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) =>
+          _VisualLocaleModeSheet(currentMode: currentSettings.localeMode),
+    );
+    if (selected == null || selected == currentSettings.localeMode) {
+      return;
+    }
+
+    await repository.save(
+      LocalSettings(
+        localeMode: selected,
+        weatherEnabled: currentSettings.weatherEnabled,
+      ),
+    );
+    ref.invalidate(appLocaleProvider);
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _switchMode(EmailAuthMode mode) {
@@ -857,6 +906,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         setState(() => _submitting = false);
       }
     }
+  }
+}
+
+class _LoginLanguageButton extends StatelessWidget {
+  const _LoginLanguageButton({
+    required this.usesChinese,
+    required this.onPressed,
+  });
+
+  final bool usesChinese;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      key: const ValueKey('login-language-button'),
+      onPressed: onPressed,
+      icon: const Icon(Icons.language, size: 16),
+      label: Text(usesChinese ? '繁中' : 'EN'),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 36),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        foregroundColor: _ArcanaColors.gold2,
+        backgroundColor: _ArcanaColors.ink2.withValues(alpha: 0.56),
+        side: BorderSide(color: _ArcanaColors.gold.withValues(alpha: 0.42)),
+        textStyle: Theme.of(context).textTheme.labelMedium,
+      ),
+    );
   }
 }
 
