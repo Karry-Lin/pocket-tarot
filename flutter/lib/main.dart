@@ -1958,59 +1958,31 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   @override
   void initState() {
     super.initState();
+    _questionController.addListener(_onQuestionChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadHistory());
   }
 
   @override
   void dispose() {
+    _questionController.removeListener(_onQuestionChanged);
     _questionController.dispose();
     super.dispose();
   }
 
-  Future<void> _createResult() async {
-    final l10n = AppLocalizations.of(context)!;
-    final controller = await ref.read(deepReadingControllerProvider.future);
-    final resultFuture = controller.createResult(
-      messages: DeepReadingMessages(
-        selectExactlyThreeCards: l10n.deepSelectExactlyThreeCards,
-        noSavableResult: l10n.deepNoSavableResult,
-      ),
-    );
+  void _onQuestionChanged() {
     if (mounted) {
-      setState(() => _deepState = controller.state);
-    }
-    await resultFuture;
-    if (mounted) {
-      setState(() => _deepState = controller.state);
+      setState(() {});
     }
   }
 
   void _openDrawRoute() {
-    final question = Uri.encodeComponent(_questionController.text);
-    context.go(question.isEmpty ? '/draw' : '/draw?question=$question');
-  }
-
-  Future<void> _toggleCard(int index) async {
-    final controller = await ref.read(deepReadingControllerProvider.future);
-    controller.toggleSelection(index);
-    if (mounted) {
-      setState(() => _deepState = controller.state);
+    final questionText = _questionController.text.trim();
+    if (questionText.isEmpty) {
+      return;
     }
-  }
-
-  Future<void> _updateHistoryVisibility(bool isSavedForHistory) async {
-    final l10n = AppLocalizations.of(context)!;
-    final controller = await ref.read(deepReadingControllerProvider.future);
-    await controller.updateHistoryVisibility(
-      isSavedForHistory,
-      messages: DeepReadingMessages(
-        selectExactlyThreeCards: l10n.deepSelectExactlyThreeCards,
-        noSavableResult: l10n.deepNoSavableResult,
-      ),
-    );
-    if (mounted) {
-      setState(() => _deepState = controller.state);
-    }
+    final question = Uri.encodeComponent(questionText);
+    _questionController.clear();
+    context.go('/draw?question=$question');
   }
 
   Future<void> _loadHistory() async {
@@ -2059,14 +2031,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   Widget _deepContent(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final usesChinese = _usesChineseCardText(l10n);
-    final isEntryOnly =
-        _deepState.draftCards.isEmpty && _deepState.reading == null;
-    final canStartDraft =
-        isEntryOnly &&
-        _deepState.status != DeepReadingStatus.drafting &&
-        _deepState.status != DeepReadingStatus.creating;
-    final hasReadingWorkspace =
-        _deepState.draftCards.isNotEmpty || _deepState.reading != null;
+    final canStartDraft = _questionController.text.trim().isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2142,96 +2107,24 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
                     ],
                   ),
                   const SizedBox(height: 18),
-                  if (canStartDraft)
-                    ArcanaPrimaryButton(
-                      onPressed: _openDrawRoute,
-                      child: Text(
-                        usesChinese ? '進行深度占卜' : 'Begin deep reading',
-                      ),
-                    ),
+                  ArcanaPrimaryButton(
+                    onPressed: canStartDraft ? _openDrawRoute : null,
+                    child: Text(usesChinese ? '進行深度占卜' : 'Begin deep reading'),
+                  ),
                 ],
               ),
             ],
           ),
         ),
         const SizedBox(height: 18),
-        if (isEntryOnly &&
-            _deepState.status != DeepReadingStatus.error &&
-            _deepState.status != DeepReadingStatus.historyLoading)
-          const SizedBox.shrink()
-        else if (_deepState.status == DeepReadingStatus.drafting ||
-            _deepState.status == DeepReadingStatus.creating)
-          const ArcanaLoadingView(
-            title: '占卜中',
-            message: '正在整理牌陣與你的問題，解讀完成前請稍等。',
-          )
-        else if (hasReadingWorkspace) ...[
-          GlassPanel(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.selectedCardsTitle,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                    TagPill(text: '${_deepState.selectedIndexes.length} / 3'),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed: _deepState.selectedIndexes.length == 3
-                      ? _createResult
-                      : null,
-                  icon: const Icon(Icons.auto_fix_high),
-                  label: Text(l10n.createReading),
-                ),
-                const SizedBox(height: 12),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    childAspectRatio: 0.68,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                  ),
-                  itemCount: _deepState.draftCards.length,
-                  itemBuilder: (context, index) => SelectableCardBack(
-                    selected: _deepState.selectedIndexes.contains(index),
-                    order: _deepState.selectedIndexes.indexOf(index) + 1,
-                    onTap: () => _toggleCard(index),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (_deepState.reading != null) ...[
-            const SizedBox(height: 18),
-            DeepResultPanel(
-              reading: _deepState.reading!,
-              isSavedForHistory: _deepState.isResultSavedForHistory,
-              onHistoryVisibilityChanged: _updateHistoryVisibility,
-            ),
-          ],
-          if (_deepState.status == DeepReadingStatus.error &&
-              _deepState.errorMessage != null) ...[
-            const SizedBox(height: 12),
-            InfoPanel(
-              title: l10n.readingCreateFailed,
-              child: Text(_deepState.errorMessage!),
-            ),
-          ],
-        ] else if (_deepState.status == DeepReadingStatus.error &&
-            _deepState.errorMessage != null)
+        if (_deepState.status == DeepReadingStatus.error &&
+            _deepState.errorMessage != null) ...[
           InfoPanel(
             title: l10n.historyTitle,
             child: Text(_deepState.errorMessage!),
           ),
-        const SizedBox(height: 18),
+          const SizedBox(height: 18),
+        ],
         DeepHistoryPanel(
           state: _deepState,
           onLoadHistory: _loadHistory,
