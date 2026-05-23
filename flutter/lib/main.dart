@@ -1494,6 +1494,8 @@ class DailyResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final weatherDisplay = _dailyWeatherDisplay(reading, l10n);
+    final streakDisplay = _dailyStreakDisplay(reading, l10n);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1554,17 +1556,11 @@ class DailyResultCard extends StatelessWidget {
                     const EyebrowText('Weather'),
                     const SizedBox(height: 7),
                     Text(
-                      _usesChineseCardText(l10n)
-                          ? '台北 23° 小雨'
-                          : 'Taipei 23° Light rain',
+                      weatherDisplay.title,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      _usesChineseCardText(l10n)
-                          ? '情緒容易放大細節，適合慢慢整理，不適合立刻對抗。'
-                          : 'Slow reflection works better than immediate reaction.',
-                    ),
+                    Text(weatherDisplay.body),
                   ],
                 ),
               ),
@@ -1580,15 +1576,11 @@ class DailyResultCard extends StatelessWidget {
                     const EyebrowText('Streak'),
                     const SizedBox(height: 7),
                     Text(
-                      _usesChineseCardText(l10n) ? '連續 8 天' : '8-day streak',
+                      streakDisplay.title,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      _usesChineseCardText(l10n)
-                          ? '你正在建立一種溫柔的觀察習慣。'
-                          : 'You are building a gentle observation habit.',
-                    ),
+                    Text(streakDisplay.body),
                   ],
                 ),
               ),
@@ -1616,6 +1608,169 @@ class DailyResultCard extends StatelessWidget {
       ],
     );
   }
+}
+
+class _DailyInfoDisplay {
+  const _DailyInfoDisplay({required this.title, required this.body});
+
+  final String title;
+  final String body;
+}
+
+_DailyInfoDisplay _dailyWeatherDisplay(
+  DailyReading reading,
+  AppLocalizations l10n,
+) {
+  final usesChinese = _usesChineseCardText(l10n);
+  final weather = reading.weather;
+
+  if (weather == null) {
+    return _DailyInfoDisplay(
+      title: usesChinese ? '未提供天氣' : 'No weather data',
+      body: usesChinese
+          ? '這次每日抽牌沒有附帶天氣資訊。'
+          : 'This reading has no weather snapshot.',
+    );
+  }
+
+  return switch (weather.status) {
+    'success' => _successfulWeatherDisplay(weather, usesChinese),
+    'disabled' => _DailyInfoDisplay(
+      title: usesChinese ? '未使用天氣' : 'Weather off',
+      body: usesChinese
+          ? '這次解讀未加入所在地天氣。'
+          : 'This reading did not include local weather.',
+    ),
+    'permission_denied' => _DailyInfoDisplay(
+      title: usesChinese ? '未取得位置' : 'Location not shared',
+      body: usesChinese
+          ? '未取得位置權限，因此未加入即時天氣。'
+          : 'Location permission was not available for this draw.',
+    ),
+    _ => _DailyInfoDisplay(
+      title: usesChinese ? '天氣暫不可用' : 'Weather unavailable',
+      body: usesChinese
+          ? 'API 沒有回傳可用的即時天氣。'
+          : 'The API did not return usable current weather.',
+    ),
+  };
+}
+
+_DailyInfoDisplay _successfulWeatherDisplay(
+  WeatherSnapshot weather,
+  bool usesChinese,
+) {
+  final current = weather.current;
+  if (current == null) {
+    return _DailyInfoDisplay(
+      title: usesChinese ? '天氣已啟用' : 'Weather included',
+      body: usesChinese
+          ? '本次解讀已加入所在地天氣。'
+          : 'Local weather was included in this reading.',
+    );
+  }
+
+  final weatherName = _weatherCodeLabel(current.weatherCode, usesChinese);
+  final temperature = current.temperature2m;
+  final title = temperature == null
+      ? (usesChinese ? '所在地 $weatherName' : 'Local $weatherName')
+      : usesChinese
+      ? '所在地 ${temperature.round()}° $weatherName'
+      : 'Local ${temperature.round()}° $weatherName';
+  final humidity = current.relativeHumidity2m;
+  final precipitation = current.precipitation;
+  final bodyParts = <String>[];
+
+  if (humidity != null) {
+    bodyParts.add(
+      usesChinese ? '濕度 ${humidity.round()}%' : 'Humidity ${humidity.round()}%',
+    );
+  }
+  if (precipitation != null && precipitation > 0) {
+    bodyParts.add(
+      usesChinese
+          ? '降雨 ${precipitation.toStringAsFixed(1)} mm'
+          : 'Rain ${precipitation.toStringAsFixed(1)} mm',
+    );
+  }
+
+  return _DailyInfoDisplay(
+    title: title,
+    body: bodyParts.isEmpty
+        ? (usesChinese
+              ? '即時天氣已納入今日解讀。'
+              : 'Current weather was included in this reading.')
+        : bodyParts.join(usesChinese ? '，' : ', '),
+  );
+}
+
+String _weatherCodeLabel(double? weatherCode, bool usesChinese) {
+  final code = weatherCode?.round();
+  if (code == null) {
+    return usesChinese ? '天氣' : 'weather';
+  }
+  if (code == 0) {
+    return usesChinese ? '晴' : 'Clear';
+  }
+  if (code >= 1 && code <= 3) {
+    return usesChinese ? '多雲' : 'Cloudy';
+  }
+  if (code == 45 || code == 48) {
+    return usesChinese ? '霧' : 'Fog';
+  }
+  if ((code >= 51 && code <= 57) || (code >= 80 && code <= 82)) {
+    return usesChinese ? '小雨' : 'Showers';
+  }
+  if (code >= 61 && code <= 67) {
+    return usesChinese ? '雨' : 'Rain';
+  }
+  if (code >= 71 && code <= 77) {
+    return usesChinese ? '雪' : 'Snow';
+  }
+  if (code >= 95) {
+    return usesChinese ? '雷雨' : 'Thunderstorm';
+  }
+
+  return usesChinese ? '天氣' : 'weather';
+}
+
+_DailyInfoDisplay _dailyStreakDisplay(
+  DailyReading reading,
+  AppLocalizations l10n,
+) {
+  final usesChinese = _usesChineseCardText(l10n);
+  final streak = reading.dailyStreak;
+
+  if (streak != null && streak > 0) {
+    return _DailyInfoDisplay(
+      title: usesChinese ? '連續 $streak 天' : '$streak-day streak',
+      body: usesChinese
+          ? '你正在建立一種穩定的觀察習慣。'
+          : 'You are building a steady observation habit.',
+    );
+  }
+
+  return _DailyInfoDisplay(
+    title: usesChinese ? '今日已完成' : 'Drawn today',
+    body: usesChinese
+        ? '這筆紀錄建立於 ${_dailyReadingDateLabel(reading.localDate)}。'
+        : 'Recorded on ${_dailyReadingDateLabel(reading.localDate)}.',
+  );
+}
+
+String _dailyReadingDateLabel(String localDate) {
+  final parts = localDate.split('-');
+  if (parts.length != 3) {
+    return localDate;
+  }
+
+  final month = int.tryParse(parts[1]) ?? 0;
+  final day = int.tryParse(parts[2]) ?? 0;
+  if (month <= 0 || day <= 0) {
+    return localDate;
+  }
+
+  return '$month/$day';
 }
 
 class _DailyEmptyState extends StatelessWidget {
@@ -1799,6 +1954,12 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   DeepReadingState _deepState = const DeepReadingState.initial();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadHistory());
+  }
+
+  @override
   void dispose() {
     _questionController.dispose();
     super.dispose();
@@ -1864,7 +2025,11 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
 
   Future<void> _loadHistory() async {
     final controller = await ref.read(deepReadingControllerProvider.future);
-    await controller.loadHistory();
+    final historyFuture = controller.loadHistory();
+    if (mounted) {
+      setState(() => _deepState = controller.state);
+    }
+    await historyFuture;
     if (mounted) {
       setState(() => _deepState = controller.state);
     }
@@ -1903,6 +2068,14 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   Widget _deepContent(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final usesChinese = _usesChineseCardText(l10n);
+    final isEntryOnly =
+        _deepState.draftCards.isEmpty && _deepState.reading == null;
+    final canStartDraft =
+        isEntryOnly &&
+        _deepState.status != DeepReadingStatus.drafting &&
+        _deepState.status != DeepReadingStatus.creating;
+    final hasReadingWorkspace =
+        _deepState.draftCards.isNotEmpty || _deepState.reading != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1983,7 +2156,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
                     ],
                   ),
                   const SizedBox(height: 18),
-                  if (_deepState.status == DeepReadingStatus.initial)
+                  if (canStartDraft)
                     if (usesChinese)
                       ArcanaPrimaryButton(
                         onPressed: _openDrawRoute,
@@ -2001,7 +2174,9 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
           ),
         ),
         const SizedBox(height: 18),
-        if (_deepState.status == DeepReadingStatus.initial)
+        if (isEntryOnly &&
+            _deepState.status != DeepReadingStatus.error &&
+            _deepState.status != DeepReadingStatus.historyLoading)
           const SizedBox.shrink()
         else if (_deepState.status == DeepReadingStatus.drafting ||
             _deepState.status == DeepReadingStatus.creating)
@@ -2009,7 +2184,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
             title: '占卜中',
             message: '正在整理牌陣與你的問題，解讀完成前請稍等。',
           )
-        else ...[
+        else if (hasReadingWorkspace) ...[
           GlassPanel(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -2069,7 +2244,12 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
               child: Text(_deepState.errorMessage!),
             ),
           ],
-        ],
+        ] else if (_deepState.status == DeepReadingStatus.error &&
+            _deepState.errorMessage != null)
+          InfoPanel(
+            title: l10n.historyTitle,
+            child: Text(_deepState.errorMessage!),
+          ),
         const SizedBox(height: 18),
         DeepHistoryPanel(
           state: _deepState,
@@ -2116,16 +2296,6 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
     });
 
     final controller = await ref.read(deepReadingControllerProvider.future);
-    if (controller.state.draftCards.isNotEmpty) {
-      if (mounted) {
-        setState(() {
-          _deepState = controller.state;
-          _isDraftLoading = false;
-        });
-      }
-      return;
-    }
-
     await controller.startDraft(widget.initialQuestion);
     if (!mounted) {
       return;
@@ -2875,6 +3045,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
+  Future<void> _showLocaleModeSheet(LocaleMode currentMode) async {
+    final selected = await showModalBottomSheet<LocaleMode>(
+      context: context,
+      isScrollControlled: true,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) =>
+          _VisualLocaleModeSheet(currentMode: currentMode),
+    );
+    if (selected != null && selected != currentMode) {
+      await _setLocaleMode(selected);
+    }
+  }
+
   Future<void> _setWeatherEnabled(bool weatherEnabled) async {
     final controller = await ref.read(profileControllerProvider.future);
     await controller.setWeatherEnabled(weatherEnabled);
@@ -3119,7 +3303,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: '語言設定',
                 subtitle: _localeModeLabel(settings.localeMode, l10n),
                 action: '變更',
-                onTap: () => _setLocaleMode(LocaleMode.en),
+                onTap: () => _showLocaleModeSheet(settings.localeMode),
               ),
             ],
           )
@@ -4223,10 +4407,32 @@ class DeepHistoryPanel extends StatelessWidget {
           const SizedBox(height: 8),
           Text('歷史紀錄', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 14),
-          for (var index = 0; index < previewHistory.length; index++) ...[
-            _VisualHistoryCard(item: previewHistory[index]),
-            if (index != previewHistory.length - 1) const SizedBox(height: 10),
-          ],
+          if (state.status == DeepReadingStatus.historyLoading)
+            const GlassPanel(
+              padding: EdgeInsets.all(18),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (state.historyErrorMessage != null)
+            const GlassPanel(
+              padding: EdgeInsets.all(18),
+              radius: 18,
+              child: Text('歷史紀錄暫時無法載入。'),
+            )
+          else if (previewHistory.isEmpty)
+            GlassPanel(
+              padding: const EdgeInsets.all(18),
+              radius: 18,
+              child: Text(l10n.emptyHistory),
+            )
+          else
+            for (var index = 0; index < previewHistory.length; index++) ...[
+              _VisualHistoryCard(
+                item: previewHistory[index],
+                onTap: () => onOpenHistory(previewHistory[index].id),
+              ),
+              if (index != previewHistory.length - 1)
+                const SizedBox(height: 10),
+            ],
         ],
       );
     }
@@ -4244,6 +4450,13 @@ class DeepHistoryPanel extends StatelessWidget {
           if (state.status == DeepReadingStatus.historyLoading) ...[
             const SizedBox(height: 12),
             const Center(child: CircularProgressIndicator()),
+          ] else if (state.historyErrorMessage != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              _usesChineseCardText(l10n)
+                  ? '歷史紀錄暫時無法載入。'
+                  : 'History could not be loaded right now.',
+            ),
           ] else if (state.status == DeepReadingStatus.historyReady &&
               previewHistory.isEmpty) ...[
             const SizedBox(height: 12),
@@ -4278,38 +4491,162 @@ class DeepHistoryPanel extends StatelessWidget {
 }
 
 class _VisualHistoryCard extends StatelessWidget {
-  const _VisualHistoryCard({required this.item});
+  const _VisualHistoryCard({required this.item, required this.onTap});
 
   final DeepReadingHistoryItem item;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final tag = _readingDateLabel(item.createdAt);
 
-    return GlassPanel(
-      padding: const EdgeInsets.all(14),
-      radius: 18,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassPanel(
+        padding: const EdgeInsets.all(14),
+        radius: 18,
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.question,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.summary,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            TagPill(text: tag),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VisualLocaleModeSheet extends StatelessWidget {
+  const _VisualLocaleModeSheet({required this.currentMode});
+
+  final LocaleMode currentMode;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final modes = [LocaleMode.system, LocaleMode.zhTw, LocaleMode.en];
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 18,
+        right: 18,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 18,
+      ),
+      child: GlassPanel(
+        radius: 26,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.question,
-                  style: Theme.of(context).textTheme.titleMedium,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const EyebrowText('Language'),
+                      const SizedBox(height: 8),
+                      Text(
+                        '語言設定',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  item.summary,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                  style: IconButton.styleFrom(
+                    fixedSize: const Size(44, 44),
+                    foregroundColor: _ArcanaColors.ivory,
+                    backgroundColor: _ArcanaColors.ink2.withValues(alpha: 0.72),
+                    side: BorderSide(
+                      color: _ArcanaColors.gold.withValues(alpha: 0.28),
+                    ),
+                  ),
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            for (final mode in modes) ...[
+              _VisualLocaleOption(
+                label: _localeModeLabel(mode, l10n),
+                selected: mode == currentMode,
+                onTap: () => Navigator.of(context).pop(mode),
+              ),
+              if (mode != modes.last) const SizedBox(height: 10),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VisualLocaleOption extends StatelessWidget {
+  const _VisualLocaleOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected
+                  ? _ArcanaColors.gold2.withValues(alpha: 0.72)
+                  : _ArcanaColors.gold.withValues(alpha: 0.18),
+            ),
+            color: selected
+                ? _ArcanaColors.gold.withValues(alpha: 0.14)
+                : Colors.white.withValues(alpha: 0.04),
           ),
-          const SizedBox(width: 10),
-          TagPill(text: tag),
-        ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                if (selected)
+                  const Icon(Icons.check_circle, color: _ArcanaColors.gold2),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

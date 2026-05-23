@@ -495,7 +495,7 @@ components:
           type: boolean
         status:
           type: string
-          enum: [success, disabled, permission_denied]
+          enum: [success, disabled, permission_denied, unavailable]
         latitude:
           type:
             - number
@@ -532,7 +532,7 @@ components:
       properties:
         data:
           type: object
-          required: [id, localDate, card, markdownResult, summary, resultLocale, createdAt]
+          required: [id, localDate, card, markdownResult, summary, resultLocale, createdAt, dailyStreak]
           properties:
             id:
               type: string
@@ -544,6 +544,9 @@ components:
               type: object
             weather:
               $ref: "#/components/schemas/WeatherSnapshot"
+            dailyStreak:
+              type: integer
+              minimum: 0
             markdownResult:
               type: string
             summary:

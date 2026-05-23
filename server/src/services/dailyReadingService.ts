@@ -26,6 +26,27 @@ export async function getTodayDailyReading(user: UserDocument) {
   return reading;
 }
 
+export async function getDailyReadingStreak(user: UserDocument) {
+  const today = getTaipeiTimeContext().localDate;
+  const readings = await DailyReadingModel.find({
+    userId: user._id,
+    localDate: { $lte: today }
+  })
+    .select("localDate")
+    .sort({ localDate: -1 })
+    .lean();
+  const dates = new Set(readings.map((reading) => reading.localDate));
+  let expectedDate = parseLocalDate(today);
+  let streak = 0;
+
+  while (dates.has(formatLocalDate(expectedDate))) {
+    streak += 1;
+    expectedDate = addDays(expectedDate, -1);
+  }
+
+  return streak;
+}
+
 export async function createTodayDailyReading(
   user: UserDocument,
   input: CreateDailyReadingInput,
@@ -117,4 +138,22 @@ export async function generateSummaryWithFallback(
 
 function isDuplicateKey(error: unknown) {
   return typeof error === "object" && error !== null && "code" in error && error.code === 11000;
+}
+
+function parseLocalDate(value: string) {
+  const [year, month, day] = value.split("-").map((part) => Number(part));
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function addDays(value: Date, days: number) {
+  const next = new Date(value);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
+}
+
+function formatLocalDate(value: Date) {
+  const year = value.getUTCFullYear();
+  const month = String(value.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(value.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }

@@ -345,6 +345,25 @@ final _visualFixtureDailyReading = DailyReading(
   summary: '把想像與事實分開。今天不急著替沉默補上答案，先確認你真正知道的事。',
   resultLocale: 'zh-TW',
   createdAt: DateTime.utc(2026, 5, 22),
+  weather: const WeatherSnapshot(
+    enabled: true,
+    status: 'success',
+    provider: 'open-meteo',
+    latitude: 25.033,
+    longitude: 121.5654,
+    timezone: 'Asia/Taipei',
+    current: CurrentWeather(
+      time: '2026-05-22T08:30',
+      temperature2m: 23,
+      relativeHumidity2m: 82,
+      apparentTemperature: 23,
+      precipitation: 0.8,
+      weatherCode: 61,
+      windSpeed10m: 8,
+    ),
+    errorCode: null,
+  ),
+  dailyStreak: 8,
 );
 
 const _visualFixtureDraftCards = [

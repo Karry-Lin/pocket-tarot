@@ -48,6 +48,7 @@ class DeepReadingState {
     this.reading,
     this.history = const [],
     this.errorMessage,
+    this.historyErrorMessage,
     this.resultHistorySaved,
   });
 
@@ -60,6 +61,7 @@ class DeepReadingState {
   final DeepReading? reading;
   final List<DeepReadingHistoryItem> history;
   final String? errorMessage;
+  final String? historyErrorMessage;
   final bool? resultHistorySaved;
 
   bool get isResultSavedForHistory {
@@ -74,7 +76,9 @@ class DeepReadingState {
     DeepReading? reading,
     List<DeepReadingHistoryItem>? history,
     String? errorMessage,
+    String? historyErrorMessage,
     bool? resultHistorySaved,
+    bool clearHistoryError = false,
   }) {
     return DeepReadingState(
       status: status ?? this.status,
@@ -84,6 +88,9 @@ class DeepReadingState {
       reading: reading ?? this.reading,
       history: history ?? this.history,
       errorMessage: errorMessage,
+      historyErrorMessage: clearHistoryError
+          ? null
+          : historyErrorMessage ?? this.historyErrorMessage,
       resultHistorySaved: resultHistorySaved ?? this.resultHistorySaved,
     );
   }
@@ -206,18 +213,23 @@ class DeepReadingController {
   }
 
   Future<void> loadHistory() async {
-    _state = _state.copyWith(status: DeepReadingStatus.historyLoading);
+    _state = _state.copyWith(
+      status: DeepReadingStatus.historyLoading,
+      clearHistoryError: true,
+    );
 
     try {
       final history = await _fetchHistory();
       _state = _state.copyWith(
         status: DeepReadingStatus.historyReady,
         history: history,
+        clearHistoryError: true,
       );
     } catch (error) {
       _state = _state.copyWith(
-        status: DeepReadingStatus.error,
-        errorMessage: error.toString(),
+        status: DeepReadingStatus.historyReady,
+        history: const [],
+        historyErrorMessage: error.toString(),
       );
     }
   }

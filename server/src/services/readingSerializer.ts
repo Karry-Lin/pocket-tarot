@@ -6,13 +6,17 @@ type WithTimestamps<T> = T & {
   updatedAt?: Date;
 };
 
-export function serializeDailyReading(reading: WithTimestamps<DailyReadingDocument>) {
+export function serializeDailyReading(
+  reading: WithTimestamps<DailyReadingDocument>,
+  options: { dailyStreak?: number } = {}
+) {
   return {
     id: reading._id.toString(),
     localDate: reading.localDate,
     card: reading.card,
     timeContext: reading.timeContext,
     weather: reading.weather,
+    dailyStreak: options.dailyStreak ?? 0,
     markdownResult: reading.markdownResult,
     summary: reading.summary,
     resultLocale: reading.resultLocale,
