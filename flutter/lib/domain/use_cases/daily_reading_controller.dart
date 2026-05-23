@@ -129,7 +129,7 @@ class DailyReadingController {
 
     try {
       await _deleteToday();
-      await _createAndLoadToday();
+      _state = const DailyReadingState(status: DailyReadingStatus.empty);
     } catch (error) {
       _state = DailyReadingState(
         status: DailyReadingStatus.error,
