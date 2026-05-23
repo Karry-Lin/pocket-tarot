@@ -2377,7 +2377,6 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
                       for (final prompt in _questionPrompts(l10n, usesChinese))
                         PromptChip(
                           text: prompt.label,
-                          showIcon: !usesChinese,
                           onPressed: () =>
                               _applyQuestionTemplate(prompt.question),
                         ),
@@ -4729,21 +4728,14 @@ class SummaryStrip extends StatelessWidget {
 }
 
 class PromptChip extends StatelessWidget {
-  const PromptChip({
-    super.key,
-    required this.text,
-    required this.onPressed,
-    this.showIcon = true,
-  });
+  const PromptChip({super.key, required this.text, required this.onPressed});
 
   final String text;
   final VoidCallback onPressed;
-  final bool showIcon;
 
   @override
   Widget build(BuildContext context) {
     return ActionChip(
-      avatar: showIcon ? const Icon(Icons.add, size: 16) : null,
       label: Text(text),
       onPressed: onPressed,
       side: BorderSide(color: _ArcanaColors.muted.withValues(alpha: 0.22)),
