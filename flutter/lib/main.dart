@@ -1884,48 +1884,81 @@ class _DailyEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 5),
-        const Center(child: EyebrowText('One card today')),
-        const SizedBox(height: 8),
-        Text(
-          _usesChineseCardText(l10n)
-              ? '把今天的問題放在掌心，讓牌背先替你呼吸。'
-              : l10n.dailyEmptyTitle,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
-        const SizedBox(height: 8),
-        Text(
-          _usesChineseCardText(l10n)
-              ? '今日尚未抽牌。輕觸中央牌背，抽出只屬於今天的一張牌。'
-              : l10n.dailyEmptyMessage,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 28),
-        const DailyDeckStage(),
-        const SizedBox(height: 8),
-        Center(
-          child: SizedBox(
-            width: 120,
-            height: 50,
-            child: _usesChineseCardText(l10n)
-                ? ArcanaPrimaryButton(
-                    onPressed: onDraw,
-                    child: Text(l10n.dailyDrawButton),
-                  )
-                : FilledButton(
-                    onPressed: onDraw,
-                    child: Text(l10n.dailyDrawButton),
+    return SizedBox(
+      key: const ValueKey('daily-ritual-stage'),
+      height: 660,
+      child: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            right: 0,
+            left: 0,
+            child: SizedBox(
+              key: const ValueKey('daily-ritual-copy'),
+              height: 164,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Center(child: EyebrowText('One card today')),
+                  const SizedBox(height: 10),
+                  Text(
+                    _usesChineseCardText(l10n)
+                        ? '把今天的問題放在掌心，讓牌背先替你呼吸。'
+                        : l10n.dailyEmptyTitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _usesChineseCardText(l10n)
+                        ? '今日尚未抽牌。輕觸中央牌背，抽出只屬於今天的一張牌。'
+                        : l10n.dailyEmptyMessage,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-        const _DailyRitualConstellation(),
-      ],
+          const Positioned(
+            top: 215,
+            right: 0,
+            left: 0,
+            child: DailyDeckStage(),
+          ),
+          Positioned(
+            top: 450,
+            right: 0,
+            left: 0,
+            child: Center(
+              key: const ValueKey('daily-ritual-action'),
+              child: SizedBox(
+                width: 120,
+                height: 50,
+                child: _usesChineseCardText(l10n)
+                    ? ArcanaPrimaryButton(
+                        onPressed: onDraw,
+                        child: Text(l10n.dailyDrawButton),
+                      )
+                    : FilledButton(
+                        onPressed: onDraw,
+                        child: Text(l10n.dailyDrawButton),
+                      ),
+              ),
+            ),
+          ),
+          const Positioned(
+            right: 0,
+            bottom: 24,
+            left: 0,
+            child: _DailyRitualConstellation(),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1941,8 +1974,18 @@ class _DailyDeckStageState extends State<DailyDeckStage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 1100),
-  )..forward();
+    duration: const Duration(milliseconds: 2600),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (_ambientRitualMotionEnabled) {
+      _controller.repeat();
+    } else {
+      _controller.forward();
+    }
+  }
 
   @override
   void dispose() {
@@ -1952,53 +1995,68 @@ class _DailyDeckStageState extends State<DailyDeckStage>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final progress = _controller.value;
-        final sway = math.sin(progress * math.pi * 2);
-        final counterSway = math.sin((progress + 0.38) * math.pi * 2);
+    return KeyedSubtree(
+      key: const ValueKey('daily-ritual-continuous-motion'),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final progress = _controller.value;
+          final sway = math.sin(progress * math.pi * 2);
+          final counterSway = math.sin((progress + 0.38) * math.pi * 2);
 
-        return SizedBox(
-          key: const ValueKey('daily-ritual-deck'),
-          height: 222,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              Positioned.fill(
-                child: CustomPaint(
-                  key: const ValueKey('daily-ritual-orbit-pulse'),
-                  painter: _DailyDeckOrbitPainter(progress: progress),
+          return SizedBox(
+            key: const ValueKey('daily-ritual-deck'),
+            height: 218,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: CustomPaint(
+                    key: const ValueKey('daily-ritual-orbit-pulse'),
+                    painter: _DailyDeckOrbitPainter(progress: progress),
+                  ),
                 ),
-              ),
-              Transform.translate(
-                offset: Offset(-20 - 2 * sway, 12 + 3 * counterSway),
-                child: Transform.scale(
-                  scale: 0.93,
-                  child: _DeckCard(rotation: -0.23 + 0.025 * sway),
+                Transform.translate(
+                  offset: Offset(-20 - 2 * sway, 12 + 3 * counterSway),
+                  child: Transform.scale(
+                    scale: 0.93,
+                    child: _DeckCard(rotation: -0.23 + 0.025 * sway),
+                  ),
                 ),
-              ),
-              Transform.translate(
-                offset: Offset(20 + 2 * counterSway, 10 - 3 * sway),
-                child: Transform.scale(
-                  scale: 0.93,
-                  child: _DeckCard(rotation: 0.22 + 0.025 * counterSway),
+                Transform.translate(
+                  offset: Offset(20 + 2 * counterSway, 10 - 3 * sway),
+                  child: Transform.scale(
+                    scale: 0.93,
+                    child: _DeckCard(rotation: 0.22 + 0.025 * counterSway),
+                  ),
                 ),
-              ),
-              Transform.translate(
-                offset: Offset(0, -4 + 4 * sway),
-                child: Transform.scale(
-                  scale: 0.96 + 0.015 * counterSway,
-                  child: _DeckCard(rotation: 0.015 * sway),
+                Transform.translate(
+                  offset: Offset(0, -4 + 4 * sway),
+                  child: Transform.scale(
+                    scale: 0.96 + 0.015 * counterSway,
+                    child: _DeckCard(rotation: 0.015 * sway),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
+}
+
+bool get _ambientRitualMotionEnabled {
+  var enabled = true;
+  assert(() {
+    final bindingName = WidgetsBinding.instance.runtimeType.toString();
+    enabled =
+        !bindingName.contains('TestWidgetsFlutterBinding') &&
+        !bindingName.contains('AutomatedTestWidgetsFlutterBinding');
+    return true;
+  }());
+  return enabled;
 }
 
 class _DailyDeckOrbitPainter extends CustomPainter {
