@@ -42,6 +42,8 @@
   "dailyEmptyTitle": "今天的牌還在牌堆裡",
   "dailyEmptyMessage": "天氣、時間與當下狀態會一起送進解讀，結果只保留今天這一筆。",
   "dailyDrawButton": "抽今日牌",
+  "dailyLoadingTitle": "占卜中",
+  "dailyLoadingMessage": "正在抽取今日牌面，並整理今天的心靈天氣。",
   "dailyLoadFailed": "今日抽牌載入失敗",
   "retryLoad": "重新載入",
   "divinationTitle": "占卜館",
@@ -53,6 +55,34 @@
   "startDraft": "展開 9 張牌",
   "createReading": "產生解讀",
   "readingCreateFailed": "占卜產生失敗",
+  "drawPreparingTitle": "準備牌陣",
+  "drawPreparingMessage": "正在洗牌，讓九張牌依序浮現。",
+  "drawTitle": "選三張有重量的牌。",
+  "drawSelectedStatus": "{selectedCount} / 3 已選。點選後會翻面，選定後不可更換。",
+  "@drawSelectedStatus": {
+    "placeholders": {
+      "selectedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "drawReadButton": "查看解讀",
+  "deepLoadingTitle": "占卜中",
+  "deepLoadingMessage": "正在解讀你選出的三張牌，整理成可以保存的紀錄。",
+  "resultTitle": "深度占卜結果",
+  "resultQuestionTitle": "關於這個問題",
+  "resultCardsTitle": "三張牌的訊息",
+  "resultNoQuestion": "這次占卜沒有留下問題文字。",
+  "resultBackToReading": "回到占卜館",
+  "resultSave": "保存紀錄",
+  "resultSaving": "保存中",
+  "resultSaved": "已保存",
+  "fallbackResultQuestion": "你正在問的不是「該不該前進」，而是「我能否在不確定裡仍然照顧自己」。月亮讓情緒浮上來，節制要求你把步伐放慢，星星則指出仍有一條溫柔但清楚的路。",
+  "fallbackResultBulletMoon": "月亮：現在的模糊不是錯誤，它是在提醒你有些資訊還未被說出口。",
+  "fallbackResultBulletTemperance": "節制：不要用一次談話解決全部。先確認界線，再確認期待。",
+  "fallbackResultBulletStar": "星星：真正值得靠近的答案，會讓你感到更完整，而不是更緊縮。",
+  "fallbackResultAdviceTitle": "今晚的建議",
+  "fallbackResultAdvice": "把問題拆成一個可行動的小句子：我明天可以多問一個問題，而不是立刻做一個決定。",
   "deepSelectExactlyThreeCards": "必須選擇 3 張牌",
   "deepNoSavableResult": "沒有可保存的占卜結果",
   "libraryTitle": "塔羅圖書館",

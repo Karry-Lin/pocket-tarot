@@ -45,6 +45,8 @@
   "dailyEmptyTitle": "Today's card is still in the deck",
   "dailyEmptyMessage": "Weather, time, and your current state can be included in the reading. The result is kept for today only.",
   "dailyDrawButton": "Draw today's card",
+  "dailyLoadingTitle": "Reading in progress",
+  "dailyLoadingMessage": "Drawing today's card and preparing your spiritual weather.",
   "dailyLoadFailed": "Daily reading failed to load",
   "retryLoad": "Reload",
   "divinationTitle": "Reading Room",
@@ -56,6 +58,34 @@
   "startDraft": "Reveal 9 cards",
   "createReading": "Generate reading",
   "readingCreateFailed": "Reading failed",
+  "drawPreparingTitle": "Preparing the spread",
+  "drawPreparingMessage": "Shuffling the deck and arranging nine cards.",
+  "drawTitle": "Choose three meaningful cards.",
+  "drawSelectedStatus": "{selectedCount} / 3 selected. Cards flip when picked, and the selection cannot be changed.",
+  "@drawSelectedStatus": {
+    "placeholders": {
+      "selectedCount": {
+        "type": "int"
+      }
+    }
+  },
+  "drawReadButton": "View reading",
+  "deepLoadingTitle": "Reading in progress",
+  "deepLoadingMessage": "Reading your three selected cards and preparing a record you can save.",
+  "resultTitle": "Deep Reading Result",
+  "resultQuestionTitle": "About this question",
+  "resultCardsTitle": "Three-card message",
+  "resultNoQuestion": "This reading was saved without a written question.",
+  "resultBackToReading": "Back to Reading",
+  "resultSave": "Save record",
+  "resultSaving": "Saving",
+  "resultSaved": "Saved",
+  "fallbackResultQuestion": "You are not only asking whether to move forward, but whether you can care for yourself inside uncertainty. The Moon brings emotion to the surface, Temperance asks you to slow the pace, and The Star points toward a gentler but clearer path.",
+  "fallbackResultBulletMoon": "The Moon: The current uncertainty is not a mistake. It is showing you that some information has not been spoken yet.",
+  "fallbackResultBulletTemperance": "Temperance: Do not try to solve everything in one conversation. Confirm boundaries first, then expectations.",
+  "fallbackResultBulletStar": "The Star: An answer worth approaching will make you feel more whole, not more constrained.",
+  "fallbackResultAdviceTitle": "Tonight's advice",
+  "fallbackResultAdvice": "Turn the question into one practical sentence: tomorrow I can ask one more question instead of making one immediate decision.",
   "deepSelectExactlyThreeCards": "Select exactly 3 cards",
   "deepNoSavableResult": "No reading result to save",
   "libraryTitle": "Tarot Library",

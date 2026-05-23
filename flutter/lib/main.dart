@@ -1540,9 +1540,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         child: CircularProgressIndicator(),
       ),
       DailyReadingStatus.empty => _DailyEmptyState(onDraw: _drawToday),
-      DailyReadingStatus.creating => const ArcanaLoadingView(
-        title: '占卜中',
-        message: '正在抽取今日牌面，並整理今天的心靈天氣。',
+      DailyReadingStatus.creating => ArcanaLoadingView(
+        title: l10n.dailyLoadingTitle,
+        message: l10n.dailyLoadingMessage,
       ),
       DailyReadingStatus.loaded => DailyResultCard(
         reading: _dailyState.reading!,
@@ -2551,19 +2551,20 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
   Widget build(BuildContext context) {
     final selectedIndexes = _deepState.selectedIndexes;
     final selectedCount = selectedIndexes.length;
+    final l10n = AppLocalizations.of(context)!;
     final drawCards = _deepState.draftCards.isEmpty
         ? _fallbackDrawCardDraws
         : _deepState.draftCards;
 
     if (_isCreatingResult) {
-      return const AppBackdrop(
+      return AppBackdrop(
         child: SafeArea(
           child: Padding(
-            padding: EdgeInsets.fromLTRB(24, 60, 24, 34),
+            padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
             child: Center(
               child: ArcanaLoadingView(
-                title: '占卜中',
-                message: '正在解讀你選出的三張牌，整理成可以保存的紀錄。',
+                title: l10n.deepLoadingTitle,
+                message: l10n.deepLoadingMessage,
               ),
             ),
           ),
@@ -2572,14 +2573,14 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
     }
 
     if (_isDraftLoading) {
-      return const AppBackdrop(
+      return AppBackdrop(
         child: SafeArea(
           child: Padding(
-            padding: EdgeInsets.fromLTRB(24, 60, 24, 34),
+            padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
             child: Center(
               child: ArcanaLoadingView(
-                title: '準備牌陣',
-                message: '正在洗牌，讓九張牌依序浮現。',
+                title: l10n.drawPreparingTitle,
+                message: l10n.drawPreparingMessage,
               ),
             ),
           ),
@@ -2607,7 +2608,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '選三張有重量的牌。',
+                    l10n.drawTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.headlineSmall,
@@ -2616,7 +2617,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
                   _ProgressLine(progress: selectedCount / 3),
                   const SizedBox(height: 8),
                   Text(
-                    '$selectedCount / 3 已選。點選後會翻面，選定後不可更換。',
+                    l10n.drawSelectedStatus(selectedCount),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   if (_errorMessage != null) ...[
@@ -2655,7 +2656,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
                                 selectedIndexes.indexOf(index) + 1;
                             return _VisualDrawCard(
                               key: ValueKey('draw-card-$index'),
-                              label: _drawCardLabel(index),
+                              label: _drawCardLabel(index, l10n),
                               imagePath: _imageForCardId(card.cardId),
                               selected: selectedIndexes.contains(index),
                               selectedOrder: selectedOrder,
@@ -2669,7 +2670,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
                   const SizedBox(height: 12),
                   ArcanaPrimaryButton(
                     onPressed: selectedCount == 3 ? _showResult : null,
-                    child: const Text('查看解讀'),
+                    child: Text(l10n.drawReadButton),
                   ),
                 ],
               );
@@ -2714,6 +2715,7 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final controller = ref.watch(deepReadingControllerProvider).asData?.value;
     final reading = controller?.state.reading;
     final resultCards = reading?.selectedCards ?? _fallbackResultCards;
@@ -2742,7 +2744,7 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
                         const EyebrowText('Reading result'),
                         const SizedBox(height: 5),
                         Text(
-                          '深度占卜結果',
+                          l10n.resultTitle,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                       ],
@@ -2775,7 +2777,7 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () => context.go('/divination'),
-                      child: const Text('回到占卜館'),
+                      child: Text(l10n.resultBackToReading),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -2784,7 +2786,11 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
                       onPressed: isSaved || _saving
                           ? null
                           : () => _saveReading(controller, reading),
-                      child: Text(_saving ? '保存中' : (isSaved ? '已保存' : '保存紀錄')),
+                      child: Text(
+                        _saving
+                            ? l10n.resultSaving
+                            : (isSaved ? l10n.resultSaved : l10n.resultSave),
+                      ),
                     ),
                   ),
                 ],
@@ -2797,15 +2803,24 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
   }
 
   Widget _resultBody(BuildContext context, DeepReading? reading) {
+    final l10n = AppLocalizations.of(context)!;
     if (reading != null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('關於這個問題', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            l10n.resultQuestionTitle,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 10),
-          Text(reading.question.isEmpty ? '這次占卜沒有留下問題文字。' : reading.question),
+          Text(
+            reading.question.isEmpty ? l10n.resultNoQuestion : reading.question,
+          ),
           const SizedBox(height: 14),
-          Text('三張牌的訊息', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            l10n.resultCardsTitle,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 10),
           Text(reading.summary),
           const SizedBox(height: 12),
@@ -2817,21 +2832,28 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('關於這個問題', style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 10),
-        const Text(
-          '你正在問的不是「該不該前進」，而是「我能否在不確定裡仍然照顧自己」。月亮讓情緒浮上來，節制要求你把步伐放慢，星星則指出仍有一條溫柔但清楚的路。',
+        Text(
+          l10n.resultQuestionTitle,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
-        const SizedBox(height: 14),
-        Text('三張牌的訊息', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 10),
-        const _VisualBulletText('月亮：現在的模糊不是錯誤，它是在提醒你有些資訊還未被說出口。'),
-        const _VisualBulletText('節制：不要用一次談話解決全部。先確認界線，再確認期待。'),
-        const _VisualBulletText('星星：真正值得靠近的答案，會讓你感到更完整，而不是更緊縮。'),
+        Text(l10n.fallbackResultQuestion),
         const SizedBox(height: 14),
-        Text('今晚的建議', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          l10n.resultCardsTitle,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: 10),
-        const Text('把問題拆成一個可行動的小句子：我明天可以多問一個問題，而不是立刻做一個決定。'),
+        _VisualBulletText(l10n.fallbackResultBulletMoon),
+        _VisualBulletText(l10n.fallbackResultBulletTemperance),
+        _VisualBulletText(l10n.fallbackResultBulletStar),
+        const SizedBox(height: 14),
+        Text(
+          l10n.fallbackResultAdviceTitle,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 10),
+        Text(l10n.fallbackResultAdvice),
       ],
     );
   }
@@ -3047,22 +3069,23 @@ class _VisualBulletText extends StatelessWidget {
 }
 
 class _VisualDrawCardData {
-  const _VisualDrawCardData(this.label, this.cardId);
+  const _VisualDrawCardData(this.zhLabel, this.enLabel, this.cardId);
 
-  final String label;
+  final String zhLabel;
+  final String enLabel;
   final String cardId;
 }
 
 const _drawCards = [
-  _VisualDrawCardData('過去的霧', 'major-18-moon'),
-  _VisualDrawCardData('現在的門', 'major-14-temperance'),
-  _VisualDrawCardData('尚未命名', 'major-17-star'),
-  _VisualDrawCardData('內在潮汐', 'cups-02-two'),
-  _VisualDrawCardData('月下答案', 'swords-06-six'),
-  _VisualDrawCardData('隱形代價', 'major-16-tower'),
-  _VisualDrawCardData('需要放下', 'major-00-fool'),
-  _VisualDrawCardData('可以靠近', 'major-11-justice'),
-  _VisualDrawCardData('下一步', 'major-09-hermit'),
+  _VisualDrawCardData('過去的霧', 'Past mist', 'major-18-moon'),
+  _VisualDrawCardData('現在的門', 'Present door', 'major-14-temperance'),
+  _VisualDrawCardData('尚未命名', 'Unnamed', 'major-17-star'),
+  _VisualDrawCardData('內在潮汐', 'Inner tide', 'cups-02-two'),
+  _VisualDrawCardData('月下答案', 'Moonlit answer', 'swords-06-six'),
+  _VisualDrawCardData('隱形代價', 'Hidden cost', 'major-16-tower'),
+  _VisualDrawCardData('需要放下', 'Release', 'major-00-fool'),
+  _VisualDrawCardData('可以靠近', 'Approach', 'major-11-justice'),
+  _VisualDrawCardData('下一步', 'Next step', 'major-09-hermit'),
 ];
 
 final _fallbackDrawCardDraws = [
@@ -3091,11 +3114,13 @@ const _fallbackResultCards = [
   ),
 ];
 
-String _drawCardLabel(int index) {
+String _drawCardLabel(int index, AppLocalizations l10n) {
   if (index >= 0 && index < _drawCards.length) {
-    return _drawCards[index].label;
+    return _usesChineseCardText(l10n)
+        ? _drawCards[index].zhLabel
+        : _drawCards[index].enLabel;
   }
-  return '第 ${index + 1} 張';
+  return _usesChineseCardText(l10n) ? '第 ${index + 1} 張' : 'Card ${index + 1}';
 }
 
 class LibraryScreen extends ConsumerStatefulWidget {
@@ -4910,7 +4935,7 @@ class _VisualHistoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final tag = _readingDateLabel(item.createdAt);
+    final tag = _readingDateLabel(item.createdAt, l10n);
 
     return GestureDetector(
       onTap: onTap,
@@ -5067,7 +5092,7 @@ class _VisualLocaleOption extends StatelessWidget {
   }
 }
 
-String _readingDateLabel(DateTime createdAt) {
+String _readingDateLabel(DateTime createdAt, AppLocalizations l10n) {
   final localCreatedAt = createdAt.toLocal();
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
@@ -5079,10 +5104,10 @@ String _readingDateLabel(DateTime createdAt) {
   final dayDelta = today.difference(createdDay).inDays;
 
   if (dayDelta == 0) {
-    return '今天';
+    return _usesChineseCardText(l10n) ? '今天' : 'Today';
   }
   if (dayDelta == 1) {
-    return '昨天';
+    return _usesChineseCardText(l10n) ? '昨天' : 'Yesterday';
   }
 
   return '${localCreatedAt.month}/${localCreatedAt.day}';
@@ -5117,10 +5142,11 @@ class CardDetailSheet extends StatelessWidget {
               _primaryCardName(card, l10n),
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            Text(
-              _secondaryCardName(card, l10n),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            if (_usesChineseCardText(l10n))
+              Text(
+                _secondaryCardName(card, l10n),
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
             const SizedBox(height: 8),
             GlassPanel(
               padding: const EdgeInsets.all(14),
@@ -5181,7 +5207,24 @@ String _selectedCardLine(
   final cardName = card == null
       ? _cardNameFallback(selectedCard.cardId, l10n)
       : _primaryCardName(card, l10n);
-  return '${selectedCard.positionLabel} · $cardName · ${_orientationLabel(selectedCard.orientation, l10n)}';
+  final positionLabel = _selectedPositionLabel(selectedCard, l10n);
+  return '$positionLabel · $cardName · ${_orientationLabel(selectedCard.orientation, l10n)}';
+}
+
+String _selectedPositionLabel(
+  SelectedReadingCard selectedCard,
+  AppLocalizations l10n,
+) {
+  if (_usesChineseCardText(l10n)) {
+    return selectedCard.positionLabel;
+  }
+
+  return switch (selectedCard.position) {
+    'core' => 'Core question',
+    'hiddenInfluence' => 'Hidden influence',
+    'advice' => 'Action advice',
+    _ => selectedCard.positionLabel,
+  };
 }
 
 String _cardNameFallback(String cardId, AppLocalizations l10n) {
@@ -5488,6 +5531,9 @@ class _VisualNameEditSheetState extends State<_VisualNameEditSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final usesChinese = _usesChineseCardText(l10n);
+
     return Padding(
       padding: EdgeInsets.only(
         left: 18,
@@ -5511,7 +5557,7 @@ class _VisualNameEditSheetState extends State<_VisualNameEditSheet> {
                       const EyebrowText('Display name'),
                       const SizedBox(height: 8),
                       Text(
-                        '編輯暱稱',
+                        l10n.editNameTitle,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ],
@@ -5533,13 +5579,15 @@ class _VisualNameEditSheetState extends State<_VisualNameEditSheet> {
             ),
             const SizedBox(height: 18),
             _VisualEmailField(
-              label: '暱稱',
-              hintText: '王大明',
+              label: l10n.nicknameLabel,
+              hintText: usesChinese ? '王大明' : 'Kerry',
               controller: _textController,
             ),
             const SizedBox(height: 10),
             Text(
-              '暱稱會顯示在個人檔案與占卜紀錄。',
+              usesChinese
+                  ? '暱稱會顯示在個人檔案與占卜紀錄。'
+                  : 'This name appears on your profile and reading records.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 18),
@@ -5551,7 +5599,7 @@ class _VisualNameEditSheetState extends State<_VisualNameEditSheet> {
                   navigator.pop();
                 }
               },
-              child: const Text('儲存名稱'),
+              child: Text(usesChinese ? '儲存名稱' : l10n.save),
             ),
           ],
         ),

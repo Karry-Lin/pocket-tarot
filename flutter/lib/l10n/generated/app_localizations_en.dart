@@ -143,6 +143,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyDrawButton => 'Draw today\'s card';
 
   @override
+  String get dailyLoadingTitle => 'Reading in progress';
+
+  @override
+  String get dailyLoadingMessage =>
+      'Drawing today\'s card and preparing your spiritual weather.';
+
+  @override
   String get dailyLoadFailed => 'Daily reading failed to load';
 
   @override
@@ -174,6 +181,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readingCreateFailed => 'Reading failed';
+
+  @override
+  String get drawPreparingTitle => 'Preparing the spread';
+
+  @override
+  String get drawPreparingMessage =>
+      'Shuffling the deck and arranging nine cards.';
+
+  @override
+  String get drawTitle => 'Choose three meaningful cards.';
+
+  @override
+  String drawSelectedStatus(int selectedCount) {
+    return '$selectedCount / 3 selected. Cards flip when picked, and the selection cannot be changed.';
+  }
+
+  @override
+  String get drawReadButton => 'View reading';
+
+  @override
+  String get deepLoadingTitle => 'Reading in progress';
+
+  @override
+  String get deepLoadingMessage =>
+      'Reading your three selected cards and preparing a record you can save.';
+
+  @override
+  String get resultTitle => 'Deep Reading Result';
+
+  @override
+  String get resultQuestionTitle => 'About this question';
+
+  @override
+  String get resultCardsTitle => 'Three-card message';
+
+  @override
+  String get resultNoQuestion =>
+      'This reading was saved without a written question.';
+
+  @override
+  String get resultBackToReading => 'Back to Reading';
+
+  @override
+  String get resultSave => 'Save record';
+
+  @override
+  String get resultSaving => 'Saving';
+
+  @override
+  String get resultSaved => 'Saved';
+
+  @override
+  String get fallbackResultQuestion =>
+      'You are not only asking whether to move forward, but whether you can care for yourself inside uncertainty. The Moon brings emotion to the surface, Temperance asks you to slow the pace, and The Star points toward a gentler but clearer path.';
+
+  @override
+  String get fallbackResultBulletMoon =>
+      'The Moon: The current uncertainty is not a mistake. It is showing you that some information has not been spoken yet.';
+
+  @override
+  String get fallbackResultBulletTemperance =>
+      'Temperance: Do not try to solve everything in one conversation. Confirm boundaries first, then expectations.';
+
+  @override
+  String get fallbackResultBulletStar =>
+      'The Star: An answer worth approaching will make you feel more whole, not more constrained.';
+
+  @override
+  String get fallbackResultAdviceTitle => 'Tonight\'s advice';
+
+  @override
+  String get fallbackResultAdvice =>
+      'Turn the question into one practical sentence: tomorrow I can ask one more question instead of making one immediate decision.';
 
   @override
   String get deepSelectExactlyThreeCards => 'Select exactly 3 cards';

@@ -138,6 +138,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dailyDrawButton => '抽今日牌';
 
   @override
+  String get dailyLoadingTitle => '占卜中';
+
+  @override
+  String get dailyLoadingMessage => '正在抽取今日牌面，並整理今天的心靈天氣。';
+
+  @override
   String get dailyLoadFailed => '今日抽牌載入失敗';
 
   @override
@@ -169,6 +175,72 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get readingCreateFailed => '占卜產生失敗';
+
+  @override
+  String get drawPreparingTitle => '準備牌陣';
+
+  @override
+  String get drawPreparingMessage => '正在洗牌，讓九張牌依序浮現。';
+
+  @override
+  String get drawTitle => '選三張有重量的牌。';
+
+  @override
+  String drawSelectedStatus(int selectedCount) {
+    return '$selectedCount / 3 已選。點選後會翻面，選定後不可更換。';
+  }
+
+  @override
+  String get drawReadButton => '查看解讀';
+
+  @override
+  String get deepLoadingTitle => '占卜中';
+
+  @override
+  String get deepLoadingMessage => '正在解讀你選出的三張牌，整理成可以保存的紀錄。';
+
+  @override
+  String get resultTitle => '深度占卜結果';
+
+  @override
+  String get resultQuestionTitle => '關於這個問題';
+
+  @override
+  String get resultCardsTitle => '三張牌的訊息';
+
+  @override
+  String get resultNoQuestion => '這次占卜沒有留下問題文字。';
+
+  @override
+  String get resultBackToReading => '回到占卜館';
+
+  @override
+  String get resultSave => '保存紀錄';
+
+  @override
+  String get resultSaving => '保存中';
+
+  @override
+  String get resultSaved => '已保存';
+
+  @override
+  String get fallbackResultQuestion =>
+      '你正在問的不是「該不該前進」，而是「我能否在不確定裡仍然照顧自己」。月亮讓情緒浮上來，節制要求你把步伐放慢，星星則指出仍有一條溫柔但清楚的路。';
+
+  @override
+  String get fallbackResultBulletMoon => '月亮：現在的模糊不是錯誤，它是在提醒你有些資訊還未被說出口。';
+
+  @override
+  String get fallbackResultBulletTemperance => '節制：不要用一次談話解決全部。先確認界線，再確認期待。';
+
+  @override
+  String get fallbackResultBulletStar => '星星：真正值得靠近的答案，會讓你感到更完整，而不是更緊縮。';
+
+  @override
+  String get fallbackResultAdviceTitle => '今晚的建議';
+
+  @override
+  String get fallbackResultAdvice => '把問題拆成一個可行動的小句子：我明天可以多問一個問題，而不是立刻做一個決定。';
 
   @override
   String get deepSelectExactlyThreeCards => '必須選擇 3 張牌';
@@ -419,6 +491,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get dailyDrawButton => '抽今日牌';
 
   @override
+  String get dailyLoadingTitle => '占卜中';
+
+  @override
+  String get dailyLoadingMessage => '正在抽取今日牌面，並整理今天的心靈天氣。';
+
+  @override
   String get dailyLoadFailed => '今日抽牌載入失敗';
 
   @override
@@ -450,6 +528,72 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get readingCreateFailed => '占卜產生失敗';
+
+  @override
+  String get drawPreparingTitle => '準備牌陣';
+
+  @override
+  String get drawPreparingMessage => '正在洗牌，讓九張牌依序浮現。';
+
+  @override
+  String get drawTitle => '選三張有重量的牌。';
+
+  @override
+  String drawSelectedStatus(int selectedCount) {
+    return '$selectedCount / 3 已選。點選後會翻面，選定後不可更換。';
+  }
+
+  @override
+  String get drawReadButton => '查看解讀';
+
+  @override
+  String get deepLoadingTitle => '占卜中';
+
+  @override
+  String get deepLoadingMessage => '正在解讀你選出的三張牌，整理成可以保存的紀錄。';
+
+  @override
+  String get resultTitle => '深度占卜結果';
+
+  @override
+  String get resultQuestionTitle => '關於這個問題';
+
+  @override
+  String get resultCardsTitle => '三張牌的訊息';
+
+  @override
+  String get resultNoQuestion => '這次占卜沒有留下問題文字。';
+
+  @override
+  String get resultBackToReading => '回到占卜館';
+
+  @override
+  String get resultSave => '保存紀錄';
+
+  @override
+  String get resultSaving => '保存中';
+
+  @override
+  String get resultSaved => '已保存';
+
+  @override
+  String get fallbackResultQuestion =>
+      '你正在問的不是「該不該前進」，而是「我能否在不確定裡仍然照顧自己」。月亮讓情緒浮上來，節制要求你把步伐放慢，星星則指出仍有一條溫柔但清楚的路。';
+
+  @override
+  String get fallbackResultBulletMoon => '月亮：現在的模糊不是錯誤，它是在提醒你有些資訊還未被說出口。';
+
+  @override
+  String get fallbackResultBulletTemperance => '節制：不要用一次談話解決全部。先確認界線，再確認期待。';
+
+  @override
+  String get fallbackResultBulletStar => '星星：真正值得靠近的答案，會讓你感到更完整，而不是更緊縮。';
+
+  @override
+  String get fallbackResultAdviceTitle => '今晚的建議';
+
+  @override
+  String get fallbackResultAdvice => '把問題拆成一個可行動的小句子：我明天可以多問一個問題，而不是立刻做一個決定。';
 
   @override
   String get deepSelectExactlyThreeCards => '必須選擇 3 張牌';

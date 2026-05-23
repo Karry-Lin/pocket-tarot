@@ -357,6 +357,18 @@ abstract class AppLocalizations {
   /// **'Draw today\'s card'**
   String get dailyDrawButton;
 
+  /// No description provided for @dailyLoadingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading in progress'**
+  String get dailyLoadingTitle;
+
+  /// No description provided for @dailyLoadingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Drawing today\'s card and preparing your spiritual weather.'**
+  String get dailyLoadingMessage;
+
   /// No description provided for @dailyLoadFailed.
   ///
   /// In en, this message translates to:
@@ -422,6 +434,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reading failed'**
   String get readingCreateFailed;
+
+  /// No description provided for @drawPreparingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing the spread'**
+  String get drawPreparingTitle;
+
+  /// No description provided for @drawPreparingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Shuffling the deck and arranging nine cards.'**
+  String get drawPreparingMessage;
+
+  /// No description provided for @drawTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose three meaningful cards.'**
+  String get drawTitle;
+
+  /// No description provided for @drawSelectedStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'{selectedCount} / 3 selected. Cards flip when picked, and the selection cannot be changed.'**
+  String drawSelectedStatus(int selectedCount);
+
+  /// No description provided for @drawReadButton.
+  ///
+  /// In en, this message translates to:
+  /// **'View reading'**
+  String get drawReadButton;
+
+  /// No description provided for @deepLoadingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading in progress'**
+  String get deepLoadingTitle;
+
+  /// No description provided for @deepLoadingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading your three selected cards and preparing a record you can save.'**
+  String get deepLoadingMessage;
+
+  /// No description provided for @resultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Reading Result'**
+  String get resultTitle;
+
+  /// No description provided for @resultQuestionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About this question'**
+  String get resultQuestionTitle;
+
+  /// No description provided for @resultCardsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Three-card message'**
+  String get resultCardsTitle;
+
+  /// No description provided for @resultNoQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'This reading was saved without a written question.'**
+  String get resultNoQuestion;
+
+  /// No description provided for @resultBackToReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Reading'**
+  String get resultBackToReading;
+
+  /// No description provided for @resultSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save record'**
+  String get resultSave;
+
+  /// No description provided for @resultSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving'**
+  String get resultSaving;
+
+  /// No description provided for @resultSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get resultSaved;
+
+  /// No description provided for @fallbackResultQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'You are not only asking whether to move forward, but whether you can care for yourself inside uncertainty. The Moon brings emotion to the surface, Temperance asks you to slow the pace, and The Star points toward a gentler but clearer path.'**
+  String get fallbackResultQuestion;
+
+  /// No description provided for @fallbackResultBulletMoon.
+  ///
+  /// In en, this message translates to:
+  /// **'The Moon: The current uncertainty is not a mistake. It is showing you that some information has not been spoken yet.'**
+  String get fallbackResultBulletMoon;
+
+  /// No description provided for @fallbackResultBulletTemperance.
+  ///
+  /// In en, this message translates to:
+  /// **'Temperance: Do not try to solve everything in one conversation. Confirm boundaries first, then expectations.'**
+  String get fallbackResultBulletTemperance;
+
+  /// No description provided for @fallbackResultBulletStar.
+  ///
+  /// In en, this message translates to:
+  /// **'The Star: An answer worth approaching will make you feel more whole, not more constrained.'**
+  String get fallbackResultBulletStar;
+
+  /// No description provided for @fallbackResultAdviceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tonight\'s advice'**
+  String get fallbackResultAdviceTitle;
+
+  /// No description provided for @fallbackResultAdvice.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn the question into one practical sentence: tomorrow I can ask one more question instead of making one immediate decision.'**
+  String get fallbackResultAdvice;
 
   /// No description provided for @deepSelectExactlyThreeCards.
   ///
