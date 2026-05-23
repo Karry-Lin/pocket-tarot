@@ -162,6 +162,7 @@ final dailyReadingControllerProvider = FutureProvider<DailyReadingController>((
     return DailyReadingController(
       fetchToday: () async => null,
       createToday: (_) => _delayedVisualFixture(_visualFixtureDailyReading),
+      deleteToday: () async {},
       loadSettings: _visualFixtureSettings,
       requestLocation: () async =>
           const DailyReadingLocationResult.permissionDenied(),
@@ -177,6 +178,7 @@ final dailyReadingControllerProvider = FutureProvider<DailyReadingController>((
   return DailyReadingController(
     fetchToday: dailyReadingRepository.fetchToday,
     createToday: dailyReadingRepository.createTodayFromRequest,
+    deleteToday: dailyReadingRepository.deleteToday,
     loadSettings: localSettingsRepository.load,
     requestLocation: ref.watch(dailyReadingLocationLoaderProvider),
     systemLocaleCode: ref.watch(systemLocaleCodeProvider),

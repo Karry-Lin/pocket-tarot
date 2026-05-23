@@ -47,6 +47,14 @@ export async function getDailyReadingStreak(user: UserDocument) {
   return streak;
 }
 
+export async function deleteTodayDailyReading(user: UserDocument) {
+  const timeContext = getTaipeiTimeContext();
+  await DailyReadingModel.deleteOne({
+    userId: user._id,
+    localDate: timeContext.localDate
+  });
+}
+
 export async function createTodayDailyReading(
   user: UserDocument,
   input: CreateDailyReadingInput,

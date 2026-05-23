@@ -135,6 +135,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DailyReadingResponse"
+    delete:
+      tags: [Daily Readings]
+      summary: Delete today's daily reading so a new one can be drawn.
+      security:
+        - firebaseBearer: []
+      responses:
+        "204":
+          description: Today's reading was deleted, or no reading existed.
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/ErrorResponse"
   /api/v1/deep-readings/drafts:
     post:
       tags: [Deep Readings]

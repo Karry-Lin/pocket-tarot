@@ -10,9 +10,11 @@ class PocketTarotApiClient {
       'API_BASE_URL',
       defaultValue: 'http://127.0.0.1:4000/api/v1',
     ),
-  })  : _dio = dio ?? Dio(BaseOptions(baseUrl: baseUrl)),
-        _tokenProvider = tokenProvider ?? (() async => null) {
-    _dio.options.baseUrl = _dio.options.baseUrl.isEmpty ? baseUrl : _dio.options.baseUrl;
+  }) : _dio = dio ?? Dio(BaseOptions(baseUrl: baseUrl)),
+       _tokenProvider = tokenProvider ?? (() async => null) {
+    _dio.options.baseUrl = _dio.options.baseUrl.isEmpty
+        ? baseUrl
+        : _dio.options.baseUrl;
     _dio.options.validateStatus = (_) => true;
   }
 
@@ -20,17 +22,42 @@ class PocketTarotApiClient {
   final FirebaseTokenProvider _tokenProvider;
 
   Future<Map<String, Object?>> getJson(String path) async {
-    final response = await _dio.get<Object?>(path, options: await _authOptions());
+    final response = await _dio.get<Object?>(
+      path,
+      options: await _authOptions(),
+    );
     return _readJsonResponse(response);
   }
 
-  Future<Map<String, Object?>> postJson(String path, Map<String, Object?> body) async {
-    final response = await _dio.post<Object?>(path, data: body, options: await _authOptions());
+  Future<Map<String, Object?>> postJson(
+    String path,
+    Map<String, Object?> body,
+  ) async {
+    final response = await _dio.post<Object?>(
+      path,
+      data: body,
+      options: await _authOptions(),
+    );
     return _readJsonResponse(response);
   }
 
-  Future<Map<String, Object?>> patchJson(String path, Map<String, Object?> body) async {
-    final response = await _dio.patch<Object?>(path, data: body, options: await _authOptions());
+  Future<Map<String, Object?>> patchJson(
+    String path,
+    Map<String, Object?> body,
+  ) async {
+    final response = await _dio.patch<Object?>(
+      path,
+      data: body,
+      options: await _authOptions(),
+    );
+    return _readJsonResponse(response);
+  }
+
+  Future<Map<String, Object?>> deleteJson(String path) async {
+    final response = await _dio.delete<Object?>(
+      path,
+      options: await _authOptions(),
+    );
     return _readJsonResponse(response);
   }
 
@@ -45,7 +72,9 @@ class PocketTarotApiClient {
 
   Map<String, Object?> _readJsonResponse(Response<Object?> response) {
     final data = response.data;
-    final json = data is Map ? data.cast<String, Object?>() : <String, Object?>{};
+    final json = data is Map
+        ? data.cast<String, Object?>()
+        : <String, Object?>{};
 
     if ((response.statusCode ?? 500) >= 400) {
       final error = json['error'];
@@ -55,7 +84,9 @@ class PocketTarotApiClient {
           statusCode: response.statusCode ?? 500,
           code: errorJson['code'] as String? ?? 'INTERNAL_ERROR',
           message: errorJson['message'] as String? ?? 'Request failed',
-          details: errorJson['details'] is Map ? (errorJson['details'] as Map).cast<String, Object?>() : const {},
+          details: errorJson['details'] is Map
+              ? (errorJson['details'] as Map).cast<String, Object?>()
+              : const {},
         );
       }
 

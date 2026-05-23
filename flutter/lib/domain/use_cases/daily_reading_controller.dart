@@ -2,19 +2,15 @@ import 'package:pocket_tarot/domain/models/api_reading_models.dart';
 import 'package:pocket_tarot/domain/models/local_settings.dart';
 
 typedef DailyReadingFetcher = Future<DailyReading?> Function();
-typedef DailyReadingCreator = Future<DailyReading> Function(DailyReadingCreateRequest request);
+typedef DailyReadingCreator =
+    Future<DailyReading> Function(DailyReadingCreateRequest request);
+typedef DailyReadingDeleter = Future<void> Function();
 typedef LocalSettingsLoader = Future<LocalSettings> Function();
-typedef DailyReadingLocationLoader = Future<DailyReadingLocationResult> Function();
+typedef DailyReadingLocationLoader =
+    Future<DailyReadingLocationResult> Function();
 typedef SystemLocaleCodeLoader = String Function();
 
-enum DailyReadingStatus {
-  initial,
-  loading,
-  empty,
-  creating,
-  loaded,
-  error,
-}
+enum DailyReadingStatus { initial, loading, empty, creating, loaded, error }
 
 class DailyReadingState {
   const DailyReadingState({
@@ -46,10 +42,7 @@ class DailyReadingCreateRequest {
   final bool permissionDenied;
 }
 
-enum DailyReadingLocationStatus {
-  success,
-  permissionDenied,
-}
+enum DailyReadingLocationStatus { success, permissionDenied }
 
 class DailyReadingLocationResult {
   const DailyReadingLocationResult.success({
@@ -58,9 +51,9 @@ class DailyReadingLocationResult {
   }) : status = DailyReadingLocationStatus.success;
 
   const DailyReadingLocationResult.permissionDenied()
-      : status = DailyReadingLocationStatus.permissionDenied,
-        latitude = null,
-        longitude = null;
+    : status = DailyReadingLocationStatus.permissionDenied,
+      latitude = null,
+      longitude = null;
 
   final DailyReadingLocationStatus status;
   final double? latitude;
@@ -71,17 +64,20 @@ class DailyReadingController {
   DailyReadingController({
     required DailyReadingFetcher fetchToday,
     required DailyReadingCreator createToday,
+    required DailyReadingDeleter deleteToday,
     required LocalSettingsLoader loadSettings,
     required DailyReadingLocationLoader requestLocation,
     required SystemLocaleCodeLoader systemLocaleCode,
-  })  : _fetchToday = fetchToday,
-        _createToday = createToday,
-        _loadSettings = loadSettings,
-        _requestLocation = requestLocation,
-        _systemLocaleCode = systemLocaleCode;
+  }) : _fetchToday = fetchToday,
+       _createToday = createToday,
+       _deleteToday = deleteToday,
+       _loadSettings = loadSettings,
+       _requestLocation = requestLocation,
+       _systemLocaleCode = systemLocaleCode;
 
   final DailyReadingFetcher _fetchToday;
   final DailyReadingCreator _createToday;
+  final DailyReadingDeleter _deleteToday;
   final LocalSettingsLoader _loadSettings;
   final DailyReadingLocationLoader _requestLocation;
   final SystemLocaleCodeLoader _systemLocaleCode;
@@ -97,26 +93,64 @@ class DailyReadingController {
       final reading = await _fetchToday();
       _state = reading == null
           ? const DailyReadingState(status: DailyReadingStatus.empty)
-          : DailyReadingState(status: DailyReadingStatus.loaded, reading: reading);
+          : DailyReadingState(
+              status: DailyReadingStatus.loaded,
+              reading: reading,
+            );
     } catch (error) {
-      _state = DailyReadingState(status: DailyReadingStatus.error, errorMessage: error.toString());
+      _state = DailyReadingState(
+        status: DailyReadingStatus.error,
+        errorMessage: error.toString(),
+      );
     }
   }
 
   Future<void> drawToday() async {
-    _state = DailyReadingState(status: DailyReadingStatus.creating, reading: _state.reading);
+    _state = DailyReadingState(
+      status: DailyReadingStatus.creating,
+      reading: _state.reading,
+    );
 
     try {
-      final settings = await _loadSettings();
-      final request = await _createRequest(settings);
-      final reading = await _createToday(request);
-      _state = DailyReadingState(status: DailyReadingStatus.loaded, reading: reading);
+      await _createAndLoadToday();
     } catch (error) {
-      _state = DailyReadingState(status: DailyReadingStatus.error, errorMessage: error.toString());
+      _state = DailyReadingState(
+        status: DailyReadingStatus.error,
+        errorMessage: error.toString(),
+      );
     }
   }
 
-  Future<DailyReadingCreateRequest> _createRequest(LocalSettings settings) async {
+  Future<void> redrawToday() async {
+    _state = DailyReadingState(
+      status: DailyReadingStatus.creating,
+      reading: _state.reading,
+    );
+
+    try {
+      await _deleteToday();
+      await _createAndLoadToday();
+    } catch (error) {
+      _state = DailyReadingState(
+        status: DailyReadingStatus.error,
+        errorMessage: error.toString(),
+      );
+    }
+  }
+
+  Future<void> _createAndLoadToday() async {
+    final settings = await _loadSettings();
+    final request = await _createRequest(settings);
+    final reading = await _createToday(request);
+    _state = DailyReadingState(
+      status: DailyReadingStatus.loaded,
+      reading: reading,
+    );
+  }
+
+  Future<DailyReadingCreateRequest> _createRequest(
+    LocalSettings settings,
+  ) async {
     final locale = _resolveLocale(settings.localeMode);
     if (!settings.weatherEnabled) {
       return DailyReadingCreateRequest(locale: locale, weatherEnabled: false);
@@ -128,7 +162,8 @@ class DailyReadingController {
       weatherEnabled: true,
       latitude: location.latitude,
       longitude: location.longitude,
-      permissionDenied: location.status == DailyReadingLocationStatus.permissionDenied,
+      permissionDenied:
+          location.status == DailyReadingLocationStatus.permissionDenied,
     );
   }
 
@@ -136,7 +171,8 @@ class DailyReadingController {
     return switch (localeMode) {
       LocaleMode.zhTw => 'zh-TW',
       LocaleMode.en => 'en',
-      LocaleMode.system => _systemLocaleCode().toLowerCase().startsWith('zh') ? 'zh-TW' : 'en',
+      LocaleMode.system =>
+        _systemLocaleCode().toLowerCase().startsWith('zh') ? 'zh-TW' : 'en',
     };
   }
 }

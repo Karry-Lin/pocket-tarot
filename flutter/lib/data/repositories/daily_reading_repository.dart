@@ -10,7 +10,9 @@ class DailyReadingRepository {
   Future<DailyReading?> fetchToday() async {
     try {
       final json = await _apiClient.getJson('/daily-readings/today');
-      return DailyReading.fromJson((json['data']! as Map).cast<String, Object?>());
+      return DailyReading.fromJson(
+        (json['data']! as Map).cast<String, Object?>(),
+      );
     } on ApiException catch (error) {
       if (error.code == 'DAILY_READING_NOT_FOUND') {
         return null;
@@ -31,16 +33,23 @@ class DailyReadingRepository {
       'locale': locale,
       'weather': {
         'enabled': weatherEnabled,
-        'status': _weatherStatus(weatherEnabled: weatherEnabled, permissionDenied: permissionDenied),
+        'status': _weatherStatus(
+          weatherEnabled: weatherEnabled,
+          permissionDenied: permissionDenied,
+        ),
         'latitude': latitude,
         'longitude': longitude,
       },
     });
 
-    return DailyReading.fromJson((json['data']! as Map).cast<String, Object?>());
+    return DailyReading.fromJson(
+      (json['data']! as Map).cast<String, Object?>(),
+    );
   }
 
-  Future<DailyReading> createTodayFromRequest(DailyReadingCreateRequest request) {
+  Future<DailyReading> createTodayFromRequest(
+    DailyReadingCreateRequest request,
+  ) {
     return createToday(
       locale: request.locale,
       weatherEnabled: request.weatherEnabled,
@@ -50,7 +59,14 @@ class DailyReadingRepository {
     );
   }
 
-  String _weatherStatus({required bool weatherEnabled, required bool permissionDenied}) {
+  Future<void> deleteToday() async {
+    await _apiClient.deleteJson('/daily-readings/today');
+  }
+
+  String _weatherStatus({
+    required bool weatherEnabled,
+    required bool permissionDenied,
+  }) {
     if (!weatherEnabled) {
       return 'disabled';
     }

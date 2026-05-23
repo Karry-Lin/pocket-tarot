@@ -1443,6 +1443,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  Future<void> _confirmRedrawToday() async {
+    final l10n = AppLocalizations.of(context)!;
+    final usesChinese = _usesChineseCardText(l10n);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(usesChinese ? '重新抽牌？' : 'Redraw today?'),
+        content: Text(
+          usesChinese
+              ? '這會刪除今天的抽牌紀錄，並重新抽取一張今日牌。'
+              : 'This deletes today\'s reading and draws a new card for today.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(usesChinese ? '取消' : 'Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(usesChinese ? '確認重抽' : 'Confirm redraw'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await _redrawToday();
+    }
+  }
+
+  Future<void> _redrawToday() async {
+    final controller = await ref.read(dailyReadingControllerProvider.future);
+    final redrawFuture = controller.redrawToday();
+    if (mounted) {
+      setState(() => _dailyState = controller.state);
+    }
+    await redrawFuture;
+    if (mounted) {
+      setState(() => _dailyState = controller.state);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(dailyReadingControllerProvider);
@@ -1453,6 +1495,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return ScreenFrame(
       title: usesChinese ? (loaded ? '今日抽牌結果' : '每日抽牌') : l10n.homeTitle,
       eyebrow: loaded ? 'Daily result' : 'Daily ritual',
+      trailing: loaded
+          ? _DailyRedrawButton(
+              label: usesChinese ? '重抽' : 'Redraw',
+              onPressed: _confirmRedrawToday,
+            )
+          : null,
       child: controllerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) =>
@@ -1608,6 +1656,36 @@ class DailyResultCard extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DailyRedrawButton extends StatelessWidget {
+  const _DailyRedrawButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.refresh_rounded, size: 16),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 34),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        visualDensity: VisualDensity.compact,
+        foregroundColor: _ArcanaColors.gold2,
+        side: BorderSide(color: _ArcanaColors.gold2.withValues(alpha: 0.44)),
+        textStyle: _bodyTextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w900,
+          color: _ArcanaColors.gold2,
+          height: 1,
+        ),
+      ),
     );
   }
 }
@@ -3208,7 +3286,7 @@ class ScreenFrame extends StatelessWidget {
 
   final String title;
   final String? eyebrow;
-  final String? trailing;
+  final Widget? trailing;
   final Widget child;
 
   @override
@@ -3238,7 +3316,7 @@ class ScreenFrame extends StatelessWidget {
                         ],
                       ),
                     ),
-                    if (trailing != null) TagPill(text: trailing!),
+                    ?trailing,
                   ],
                 ),
               ),

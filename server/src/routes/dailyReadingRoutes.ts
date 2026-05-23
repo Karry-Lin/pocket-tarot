@@ -5,6 +5,7 @@ import { authenticateRequest } from "../http/authenticateRequest.js";
 import { serializeDailyReading } from "../services/readingSerializer.js";
 import {
   createTodayDailyReading,
+  deleteTodayDailyReading,
   getDailyReadingStreak,
   getTodayDailyReading
 } from "../services/dailyReadingService.js";
@@ -39,6 +40,18 @@ export function createDailyReadingRouter(dependencies: AppDependencies) {
       response.status(result.created ? 201 : 200).json({
         data: serializeDailyReading(result.reading, { dailyStreak })
       });
+    })
+  );
+
+  router.delete(
+    "/today",
+    asyncHandler(async (request, response) => {
+      const firebaseUser = await authenticateRequest(request, dependencies.firebaseAuthService);
+      const user = await getActiveUser(firebaseUser);
+
+      await deleteTodayDailyReading(user);
+
+      response.status(204).end();
     })
   );
 
