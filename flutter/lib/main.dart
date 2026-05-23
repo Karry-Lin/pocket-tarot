@@ -1883,6 +1883,7 @@ class _DailyEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final usesChineseText = _usesChineseCardText(l10n);
 
     return SizedBox(
       key: const ValueKey('daily-ritual-stage'),
@@ -1902,7 +1903,7 @@ class _DailyEmptyState extends StatelessWidget {
                   const Center(child: EyebrowText('One card today')),
                   const SizedBox(height: 10),
                   Text(
-                    _usesChineseCardText(l10n)
+                    usesChineseText
                         ? '把今天的問題放在掌心，讓牌背先替你呼吸。'
                         : l10n.dailyEmptyTitle,
                     maxLines: 2,
@@ -1912,7 +1913,7 @@ class _DailyEmptyState extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    _usesChineseCardText(l10n)
+                    usesChineseText
                         ? '今日尚未抽牌。輕觸中央牌背，抽出只屬於今天的一張牌。'
                         : l10n.dailyEmptyMessage,
                     maxLines: 2,
@@ -1937,17 +1938,22 @@ class _DailyEmptyState extends StatelessWidget {
             child: Center(
               key: const ValueKey('daily-ritual-action'),
               child: SizedBox(
-                width: 120,
+                width: usesChineseText ? 120 : 168,
                 height: 50,
-                child: _usesChineseCardText(l10n)
-                    ? ArcanaPrimaryButton(
-                        onPressed: onDraw,
-                        child: Text(l10n.dailyDrawButton),
-                      )
-                    : FilledButton(
-                        onPressed: onDraw,
-                        child: Text(l10n.dailyDrawButton),
+                child: ArcanaPrimaryButton(
+                  onPressed: onDraw,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        l10n.dailyDrawButton,
+                        maxLines: 1,
+                        textAlign: TextAlign.center,
                       ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
