@@ -5418,89 +5418,14 @@ Future<void> _showNameDialog(
   Future<void> Function(String displayName) onSave, {
   String initialName = '',
 }) async {
-  final l10n = AppLocalizations.of(context)!;
-  final usesChineseVisual = _usesChineseCardText(l10n);
-
-  if (usesChineseVisual) {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) =>
-          _VisualNameEditSheet(initialName: initialName, onSave: onSave),
-    );
-    return;
-  }
-
-  await showDialog<void>(
+  await showModalBottomSheet<void>(
     context: context,
-    builder: (dialogContext) =>
-        _NameEditDialog(initialName: initialName, onSave: onSave, l10n: l10n),
+    isScrollControlled: true,
+    useRootNavigator: true,
+    backgroundColor: Colors.transparent,
+    builder: (sheetContext) =>
+        _VisualNameEditSheet(initialName: initialName, onSave: onSave),
   );
-}
-
-class _NameEditDialog extends StatefulWidget {
-  const _NameEditDialog({
-    required this.initialName,
-    required this.onSave,
-    required this.l10n,
-  });
-
-  final String initialName;
-  final Future<void> Function(String displayName) onSave;
-  final AppLocalizations l10n;
-
-  @override
-  State<_NameEditDialog> createState() => _NameEditDialogState();
-}
-
-class _NameEditDialogState extends State<_NameEditDialog> {
-  late final TextEditingController _textController;
-
-  @override
-  void initState() {
-    super.initState();
-    _textController = TextEditingController(text: widget.initialName);
-    _textController.selection = TextSelection(
-      baseOffset: 0,
-      extentOffset: widget.initialName.length,
-    );
-  }
-
-  @override
-  void dispose() {
-    _textController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.l10n.editNameTitle),
-      content: TextField(
-        controller: _textController,
-        maxLength: 16,
-        decoration: InputDecoration(labelText: widget.l10n.nicknameLabel),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(widget.l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: () async {
-            final navigator = Navigator.of(context);
-            await widget.onSave(_textController.text);
-            if (mounted) {
-              navigator.pop();
-            }
-          },
-          child: Text(widget.l10n.save),
-        ),
-      ],
-    );
-  }
 }
 
 class _VisualNameEditSheet extends StatefulWidget {
