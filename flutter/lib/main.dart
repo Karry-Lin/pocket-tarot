@@ -1249,7 +1249,6 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final usesChineseVisual = _usesChineseCardText(l10n);
 
     return Scaffold(
       backgroundColor: _ArcanaColors.ink,
@@ -1285,29 +1284,29 @@ class AppShell extends StatelessWidget {
                     children: [
                       _BottomNavItem(
                         icon: Icons.auto_awesome,
-                        symbol: usesChineseVisual ? '⌂' : null,
+                        symbol: '⌂',
                         label: l10n.navHome,
                         selected: navigationShell.currentIndex == 0,
                         onTap: () => _goBranch(0),
                       ),
                       _BottomNavItem(
                         icon: Icons.grid_view,
-                        symbol: usesChineseVisual ? '✦' : null,
+                        symbol: '✦',
                         label: l10n.navDivination,
                         selected: navigationShell.currentIndex == 1,
                         onTap: () => _goBranch(1),
                       ),
                       _BottomNavItem(
                         icon: Icons.menu_book,
-                        symbol: usesChineseVisual ? '☽' : null,
+                        symbol: '☽',
                         label: l10n.navLibrary,
                         selected: navigationShell.currentIndex == 2,
                         onTap: () => _goBranch(2),
                       ),
                       _BottomNavItem(
                         icon: Icons.person,
-                        symbol: usesChineseVisual ? '♙' : null,
-                        label: usesChineseVisual ? '個人檔案' : l10n.navProfile,
+                        symbol: '♙',
+                        label: l10n.navProfile,
                         selected: navigationShell.currentIndex == 3,
                         onTap: () => _goBranch(3),
                       ),
@@ -1486,14 +1485,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-class DailyResultCard extends StatelessWidget {
+class DailyResultCard extends ConsumerWidget {
   const DailyResultCard({super.key, required this.reading});
 
   final DailyReading reading;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final cards = ref.watch(tarotCardsProvider).asData?.value ?? const [];
+    final tarotCard = _findCardById(cards, reading.card.cardId);
     final weatherDisplay = _dailyWeatherDisplay(reading, l10n);
     final streakDisplay = _dailyStreakDisplay(reading, l10n);
 
@@ -1524,7 +1525,7 @@ class DailyResultCard extends StatelessWidget {
                       const EyebrowText('Card of the day'),
                       const SizedBox(height: 8),
                       Text(
-                        _dailyCardDisplayName(reading.card, l10n),
+                        _dailyCardDisplayName(reading.card, l10n, tarotCard),
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 8),
@@ -1532,10 +1533,6 @@ class DailyResultCard extends StatelessWidget {
                         reading.summary,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                      if (!_usesChineseCardText(l10n)) ...[
-                        const SizedBox(height: 10),
-                        TagPill(text: reading.card.cardId),
-                      ],
                     ],
                   ),
                 ),
@@ -1544,48 +1541,53 @@ class DailyResultCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: GlassPanel(
-                padding: const EdgeInsets.all(14),
-                radius: 18,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const EyebrowText('Weather'),
-                    const SizedBox(height: 7),
-                    Text(
-                      weatherDisplay.title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(weatherDisplay.body),
-                  ],
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: GlassPanel(
+                  key: const ValueKey('daily-weather-card'),
+                  padding: const EdgeInsets.all(14),
+                  radius: 18,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const EyebrowText('Weather'),
+                      const SizedBox(height: 7),
+                      Text(
+                        weatherDisplay.title,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(weatherDisplay.body),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: GlassPanel(
-                padding: const EdgeInsets.all(14),
-                radius: 18,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const EyebrowText('Streak'),
-                    const SizedBox(height: 7),
-                    Text(
-                      streakDisplay.title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(streakDisplay.body),
-                  ],
+              const SizedBox(width: 12),
+              Expanded(
+                child: GlassPanel(
+                  key: const ValueKey('daily-streak-card'),
+                  padding: const EdgeInsets.all(14),
+                  radius: 18,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const EyebrowText('Streak'),
+                      const SizedBox(height: 7),
+                      Text(
+                        streakDisplay.title,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(streakDisplay.body),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         GlassPanel(
@@ -1965,18 +1967,6 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     super.dispose();
   }
 
-  Future<void> _startDraft() async {
-    final controller = await ref.read(deepReadingControllerProvider.future);
-    final draftFuture = controller.startDraft(_questionController.text);
-    if (mounted) {
-      setState(() => _deepState = controller.state);
-    }
-    await draftFuture;
-    if (mounted) {
-      setState(() => _deepState = controller.state);
-    }
-  }
-
   Future<void> _createResult() async {
     final l10n = AppLocalizations.of(context)!;
     final controller = await ref.read(deepReadingControllerProvider.future);
@@ -2040,6 +2030,9 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     await controller.loadSavedReading(id);
     if (mounted) {
       setState(() => _deepState = controller.state);
+      if (controller.state.reading != null) {
+        context.go('/result');
+      }
     }
   }
 
@@ -2051,9 +2044,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     return ScreenFrame(
       title: l10n.divinationTitle,
       eyebrow: 'Reading room',
-      trailing: _usesChineseCardText(l10n)
-          ? null
-          : '${_deepState.selectedIndexes.length}/3',
+      trailing: null,
       child: controllerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => InfoPanel(
@@ -2102,31 +2093,26 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
                         : 'Describe the situation or choose a theme before entering the three-card spread.',
                   ),
                   const SizedBox(height: 16),
-                  if (usesChinese) ...[
-                    Text('你想問什麼？'),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 108,
-                      child: TextField(
-                        controller: _questionController,
-                        expands: true,
-                        maxLines: null,
-                        minLines: null,
-                        textAlignVertical: TextAlignVertical.top,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: _ArcanaColors.ivory,
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: '例如：這段關係裡，我需要看見什麼？',
-                        ),
+                  Text(usesChinese ? '你想問什麼？' : l10n.questionLabel),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 108,
+                    child: TextField(
+                      controller: _questionController,
+                      expands: true,
+                      maxLines: null,
+                      minLines: null,
+                      textAlignVertical: TextAlignVertical.top,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: _ArcanaColors.ivory,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: usesChinese
+                            ? '例如：這段關係裡，我需要看見什麼？'
+                            : 'Example: What should I notice about this situation?',
                       ),
                     ),
-                  ] else
-                    AuthField(
-                      label: l10n.questionLabel,
-                      controller: _questionController,
-                      maxLines: 3,
-                    ),
+                  ),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
@@ -2157,17 +2143,12 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
                   ),
                   const SizedBox(height: 18),
                   if (canStartDraft)
-                    if (usesChinese)
-                      ArcanaPrimaryButton(
-                        onPressed: _openDrawRoute,
-                        child: const Text('進行深度占卜'),
-                      )
-                    else
-                      FilledButton.icon(
-                        onPressed: _startDraft,
-                        icon: const Icon(Icons.grid_3x3),
-                        label: Text(l10n.startDraft),
+                    ArcanaPrimaryButton(
+                      onPressed: _openDrawRoute,
+                      child: Text(
+                        usesChinese ? '進行深度占卜' : 'Begin deep reading',
                       ),
+                    ),
                 ],
               ),
             ],
@@ -2441,6 +2422,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
                   final card = drawCards[index];
                   final selectedOrder = selectedIndexes.indexOf(index) + 1;
                   return _VisualDrawCard(
+                    key: ValueKey('draw-card-$index'),
                     label: _drawCardLabel(index),
                     imagePath: _imageForCardId(card.cardId),
                     selected: selectedIndexes.contains(index),
@@ -2555,8 +2537,8 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => context.go('/home'),
-                      child: const Text('回到首頁'),
+                      onPressed: () => context.go('/divination'),
+                      child: const Text('回到占卜館'),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -2672,6 +2654,7 @@ class _ProgressLine extends StatelessWidget {
 
 class _VisualDrawCard extends StatelessWidget {
   const _VisualDrawCard({
+    super.key,
     required this.label,
     required this.imagePath,
     required this.selected,
@@ -2906,27 +2889,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     return ScreenFrame(
       title: l10n.libraryTitle,
       eyebrow: 'Arcana library',
-      trailing: usesChineseVisual ? null : '78',
+      trailing: null,
       child: cardsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) =>
             InfoPanel(title: l10n.libraryLoadFailed, child: Text('$error')),
         data: (cards) {
-          final categoryOptions = usesChineseVisual
-              ? const [
-                  TarotCategory.all,
-                  TarotCategory.major,
-                  TarotCategory.cups,
-                  TarotCategory.swords,
-                ]
-              : TarotCategory.values;
-          final sourceCards = usesChineseVisual
-              ? _referenceFeaturedCards(cards)
-              : cards;
-          final categorized = repository.filterByCategory(
-            sourceCards,
-            _category,
-          );
+          final categoryOptions = TarotCategory.values;
+          final categorized = repository.filterByCategory(cards, _category);
           final filtered = repository.search(categorized, _query);
 
           return Column(
@@ -2970,13 +2940,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 ],
               ),
               SizedBox(height: usesChineseVisual ? 16 : 16),
-              if (!usesChineseVisual) ...[
-                Text(
-                  l10n.cardsCount(filtered.length),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 8),
-              ],
+              Text(
+                l10n.cardsCount(filtered.length),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 8),
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -3098,14 +3066,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(profileControllerProvider);
     final l10n = AppLocalizations.of(context)!;
-    final usesChineseVisual = _usesChineseCardText(l10n);
 
     return ScreenFrame(
       title: l10n.profileTitle,
       eyebrow: 'Profile',
-      trailing: usesChineseVisual
-          ? null
-          : _profileState.snapshot?.user.displayName,
+      trailing: null,
       child: controllerAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stackTrace) => InfoPanel(
@@ -3174,16 +3139,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    if (!usesChinese) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        l10n.profileStats(
-                          snapshot.stats.dailyReadingCount,
-                          snapshot.stats.deepReadingCount,
-                        ),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -3278,135 +3233,64 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        if (usesChinese)
-          Column(
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const EyebrowText('Settings'),
+            const SizedBox(height: 8),
+            _SectionTitle(usesChinese ? '設定選項' : 'Settings'),
+            const SizedBox(height: 14),
+            _VisualSettingRow(
+              title: usesChinese ? '每日提醒' : 'Daily reminder',
+              subtitle: usesChinese
+                  ? '每天早上 8:30 提醒抽一張牌'
+                  : 'Draw one card every morning at 8:30',
+              toggled: true,
+            ),
+            const SizedBox(height: 16),
+            _VisualSettingRow(
+              title: usesChinese ? '使用所在地天氣' : l10n.weatherToggle,
+              subtitle: usesChinese
+                  ? '只用於生成今日心靈天氣'
+                  : 'Only used to generate daily spiritual weather.',
+              toggled: settings.weatherEnabled,
+              onTap: () => _setWeatherEnabled(!settings.weatherEnabled),
+            ),
+            const SizedBox(height: 16),
+            _VisualSettingRow(
+              title: usesChinese ? '語言設定' : 'Language',
+              subtitle: _localeModeLabel(settings.localeMode, l10n),
+              action: usesChinese ? '變更' : 'Change',
+              onTap: () => _showLocaleModeSheet(settings.localeMode),
+            ),
+          ],
+        ),
+        SizedBox(height: usesChinese ? 14 : 12),
+        GlassPanel(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const EyebrowText('Settings'),
+              const EyebrowText('Account'),
               const SizedBox(height: 8),
-              const _SectionTitle('設定選項'),
+              Text(
+                usesChinese ? '帳戶' : 'Account',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                usesChinese
+                    ? '目前使用帳號登入。登出後仍可保留你的雲端紀錄。'
+                    : 'You are signed in. Your saved readings remain available after signing out.',
+              ),
               const SizedBox(height: 14),
-              _VisualSettingRow(
-                title: '每日提醒',
-                subtitle: '每天早上 8:30 提醒抽一張牌',
-                toggled: true,
-              ),
-              const SizedBox(height: 16),
-              _VisualSettingRow(
-                title: '使用所在地天氣',
-                subtitle: '只用於生成今日心靈天氣',
-                toggled: settings.weatherEnabled,
-                onTap: () => _setWeatherEnabled(!settings.weatherEnabled),
-              ),
-              const SizedBox(height: 16),
-              _VisualSettingRow(
-                title: '語言設定',
-                subtitle: _localeModeLabel(settings.localeMode, l10n),
-                action: '變更',
-                onTap: () => _showLocaleModeSheet(settings.localeMode),
+              OutlinedButton.icon(
+                onPressed: _signOut,
+                icon: const Icon(Icons.logout),
+                label: Text(l10n.signOut),
               ),
             ],
-          )
-        else
-          GlassPanel(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const EyebrowText('Settings'),
-                const SizedBox(height: 8),
-                Text(
-                  usesChinese ? '設定選項' : 'Settings',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 14),
-                SegmentedButton<LocaleMode>(
-                  segments: [
-                    ButtonSegment(
-                      value: LocaleMode.system,
-                      label: Text(l10n.localeSystem),
-                    ),
-                    ButtonSegment(
-                      value: LocaleMode.zhTw,
-                      label: Text(l10n.localeZh),
-                    ),
-                    ButtonSegment(
-                      value: LocaleMode.en,
-                      label: Text(l10n.localeEn),
-                    ),
-                  ],
-                  selected: {settings.localeMode},
-                  onSelectionChanged: (value) => _setLocaleMode(value.first),
-                ),
-                const SizedBox(height: 10),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  value: settings.weatherEnabled,
-                  onChanged: _setWeatherEnabled,
-                  title: Text(l10n.weatherToggle),
-                  subtitle: Text(
-                    usesChinese
-                        ? '只用於生成今日心靈天氣'
-                        : 'Only used to generate daily spiritual weather.',
-                  ),
-                  secondary: const Icon(Icons.cloud),
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: () => _showNameDialog(
-                    context,
-                    _updateDisplayName,
-                    initialName: snapshot.user.displayName,
-                  ),
-                  icon: const Icon(Icons.edit),
-                  label: Text(l10n.editDisplayName),
-                ),
-              ],
-            ),
           ),
-        SizedBox(height: usesChinese ? 14 : 12),
-        if (usesChinese)
-          GlassPanel(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const EyebrowText('Account'),
-                const SizedBox(height: 8),
-                Text('帳戶', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 10),
-                const Text('目前使用 Google 帳號登入。登出後仍可保留本機原型資料。'),
-                const SizedBox(height: 14),
-                OutlinedButton.icon(
-                  onPressed: _signOut,
-                  icon: const Icon(Icons.logout),
-                  label: Text(
-                    snapshot.user.providerIds.contains('google.com')
-                        ? '登出 Google 帳號'
-                        : '登出',
-                  ),
-                ),
-              ],
-            ),
-          )
-        else
-          GlassPanel(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const EyebrowText('Account'),
-                const SizedBox(height: 8),
-                Text(
-                  usesChinese ? '帳戶' : 'Account',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 10),
-                TextButton.icon(
-                  onPressed: _signOut,
-                  icon: const Icon(Icons.logout),
-                  label: Text(l10n.signOut),
-                ),
-              ],
-            ),
-          ),
+        ),
       ],
     );
   }
@@ -4199,7 +4083,7 @@ class KnowledgeCard extends StatelessWidget {
               Text(
                 usesChineseVisual
                     ? _referenceCardSummary(card)
-                    : '${_secondaryCardName(card, l10n)}\n${card.id}',
+                    : _uprightCardMeaning(card, l10n),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: usesChineseVisual
@@ -4319,7 +4203,7 @@ class SelectableCardBack extends StatelessWidget {
   }
 }
 
-class DeepResultPanel extends StatelessWidget {
+class DeepResultPanel extends ConsumerWidget {
   const DeepResultPanel({
     super.key,
     required this.reading,
@@ -4332,8 +4216,9 @@ class DeepResultPanel extends StatelessWidget {
   final ValueChanged<bool> onHistoryVisibilityChanged;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final cards = ref.watch(tarotCardsProvider).asData?.value ?? const [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -4360,9 +4245,7 @@ class DeepResultPanel extends StatelessWidget {
               for (final card in reading.selectedCards)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    '${card.positionLabel} · ${card.cardId} · ${_orientationLabel(card.orientation, l10n)}',
-                  ),
+                  child: Text(_selectedCardLine(card, cards, l10n)),
                 ),
             ],
           ),
@@ -4387,105 +4270,58 @@ class DeepHistoryPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final usesChineseVisual = _usesChineseCardText(l10n);
+    final usesChinese = _usesChineseCardText(l10n);
     final previewHistory =
-        visualFixtureMode && usesChineseVisual && state.history.isEmpty
+        visualFixtureMode && usesChinese && state.history.isEmpty
         ? _visualPreviewHistory
         : state.history;
 
-    if (usesChineseVisual) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              const Expanded(child: EyebrowText('Saved readings')),
-              Text('點擊查看詳細結果', style: Theme.of(context).textTheme.bodySmall),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text('歷史紀錄', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 14),
-          if (state.status == DeepReadingStatus.historyLoading)
-            const GlassPanel(
-              padding: EdgeInsets.all(18),
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else if (state.historyErrorMessage != null)
-            const GlassPanel(
-              padding: EdgeInsets.all(18),
-              radius: 18,
-              child: Text('歷史紀錄暫時無法載入。'),
-            )
-          else if (previewHistory.isEmpty)
-            GlassPanel(
-              padding: const EdgeInsets.all(18),
-              radius: 18,
-              child: Text(l10n.emptyHistory),
-            )
-          else
-            for (var index = 0; index < previewHistory.length; index++) ...[
-              _VisualHistoryCard(
-                item: previewHistory[index],
-                onTap: () => onOpenHistory(previewHistory[index].id),
-              ),
-              if (index != previewHistory.length - 1)
-                const SizedBox(height: 10),
-            ],
-        ],
-      );
-    }
-
-    return InfoPanel(
-      title: l10n.historyTitle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          OutlinedButton.icon(
-            onPressed: onLoadHistory,
-            icon: const Icon(Icons.history),
-            label: Text(l10n.loadHistory),
-          ),
-          if (state.status == DeepReadingStatus.historyLoading) ...[
-            const SizedBox(height: 12),
-            const Center(child: CircularProgressIndicator()),
-          ] else if (state.historyErrorMessage != null) ...[
-            const SizedBox(height: 12),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            const Expanded(child: EyebrowText('Saved readings')),
             Text(
-              _usesChineseCardText(l10n)
+              usesChinese ? '點擊查看詳細結果' : 'Tap to open the full result',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(l10n.historyTitle, style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 14),
+        if (state.status == DeepReadingStatus.historyLoading)
+          const GlassPanel(
+            padding: EdgeInsets.all(18),
+            child: Center(child: CircularProgressIndicator()),
+          )
+        else if (state.historyErrorMessage != null)
+          GlassPanel(
+            padding: const EdgeInsets.all(18),
+            radius: 18,
+            child: Text(
+              usesChinese
                   ? '歷史紀錄暫時無法載入。'
                   : 'History could not be loaded right now.',
             ),
-          ] else if (state.status == DeepReadingStatus.historyReady &&
-              previewHistory.isEmpty) ...[
-            const SizedBox(height: 12),
-            Text(l10n.emptyHistory),
-          ] else if (previewHistory.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            for (final item in previewHistory)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  item.question.isEmpty ? l10n.unnamedQuestion : item.question,
-                ),
-                subtitle: Text(item.summary),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _readingDateLabel(item.createdAt),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.chevron_right),
-                  ],
-                ),
-                onTap: () => onOpenHistory(item.id),
-              ),
+          )
+        else if (previewHistory.isEmpty)
+          GlassPanel(
+            padding: const EdgeInsets.all(18),
+            radius: 18,
+            child: Text(l10n.emptyHistory),
+          )
+        else
+          for (var index = 0; index < previewHistory.length; index++) ...[
+            _VisualHistoryCard(
+              item: previewHistory[index],
+              onTap: () => onOpenHistory(previewHistory[index].id),
+            ),
+            if (index != previewHistory.length - 1) const SizedBox(height: 10),
           ],
-        ],
-      ),
+      ],
     );
   }
 }
@@ -4498,6 +4334,7 @@ class _VisualHistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final tag = _readingDateLabel(item.createdAt);
 
     return GestureDetector(
@@ -4512,7 +4349,9 @@ class _VisualHistoryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.question,
+                    item.question.isEmpty
+                        ? l10n.unnamedQuestion
+                        : item.question,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 4),
@@ -4540,6 +4379,7 @@ class _VisualLocaleModeSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final usesChinese = _usesChineseCardText(l10n);
     final modes = [LocaleMode.system, LocaleMode.zhTw, LocaleMode.en];
 
     return Padding(
@@ -4565,7 +4405,7 @@ class _VisualLocaleModeSheet extends StatelessWidget {
                       const EyebrowText('Language'),
                       const SizedBox(height: 8),
                       Text(
-                        '語言設定',
+                        usesChinese ? '語言設定' : 'Language',
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ],
@@ -4729,29 +4569,123 @@ String _imageForCard(TarotCard card) {
 }
 
 String _imageForCardId(String cardId) {
-  final referenceImage = switch (cardId) {
-    'major-18-moon' => 'moon.jpg',
-    'major-17-star' => 'star.jpg',
-    'major-14-temperance' => 'temperance.jpg',
-    'cups-02-two' => 'cups-02.jpg',
-    'swords-06-six' => 'swords-06.jpg',
-    'major-16-tower' => 'tower.jpg',
-    _ => null,
-  };
-  if (referenceImage != null) {
-    return 'assets/images/cards/$referenceImage';
-  }
-
-  return 'assets/images/cards/$cardId.png';
+  return 'assets/images/cards/$cardId.jpg';
 }
 
-String _dailyCardDisplayName(CardDraw card, AppLocalizations l10n) {
-  if (_usesChineseCardText(l10n) && card.cardId == 'major-18-moon') {
-    return card.orientation == 'reversed' ? '月亮逆位' : '月亮正位';
+String _dailyCardDisplayName(
+  CardDraw draw,
+  AppLocalizations l10n,
+  TarotCard? card,
+) {
+  final cardName = card == null
+      ? _cardNameFallback(draw.cardId, l10n)
+      : _primaryCardName(card, l10n);
+  final orientation = _orientationLabel(draw.orientation, l10n);
+  if (_usesChineseCardText(l10n)) {
+    return '$cardName$orientation';
   }
 
-  return '${card.cardId} / ${_orientationLabel(card.orientation, l10n)}';
+  return '$cardName ($orientation)';
 }
+
+TarotCard? _findCardById(List<TarotCard> cards, String cardId) {
+  for (final card in cards) {
+    if (card.id == cardId) {
+      return card;
+    }
+  }
+  return null;
+}
+
+String _selectedCardLine(
+  SelectedReadingCard selectedCard,
+  List<TarotCard> cards,
+  AppLocalizations l10n,
+) {
+  final card = _findCardById(cards, selectedCard.cardId);
+  final cardName = card == null
+      ? _cardNameFallback(selectedCard.cardId, l10n)
+      : _primaryCardName(card, l10n);
+  return '${selectedCard.positionLabel} · $cardName · ${_orientationLabel(selectedCard.orientation, l10n)}';
+}
+
+String _cardNameFallback(String cardId, AppLocalizations l10n) {
+  final usesChinese = _usesChineseCardText(l10n);
+  final parts = cardId.split('-');
+  if (parts.length < 3) {
+    return usesChinese ? '未知牌面' : 'Unknown card';
+  }
+
+  if (parts.first == 'major') {
+    final majorIndex = int.tryParse(parts[1]);
+    if (majorIndex != null &&
+        majorIndex >= 0 &&
+        majorIndex < _majorFallbackNames.length) {
+      final names = _majorFallbackNames[majorIndex];
+      return usesChinese ? names.$1 : names.$2;
+    }
+  }
+
+  final suit = _minorSuitFallbackNames[parts.first];
+  final rank = _minorRankFallbackNames[parts[1]];
+  if (suit == null || rank == null) {
+    return usesChinese ? '未知牌面' : 'Unknown card';
+  }
+
+  if (usesChinese) {
+    return '${suit.$1}${rank.$1}';
+  }
+  return '${rank.$2} of ${suit.$2}';
+}
+
+const _majorFallbackNames = <(String, String)>[
+  ('愚者', 'The Fool'),
+  ('魔術師', 'The Magician'),
+  ('女祭司', 'The High Priestess'),
+  ('皇后', 'The Empress'),
+  ('皇帝', 'The Emperor'),
+  ('教皇', 'The Hierophant'),
+  ('戀人', 'The Lovers'),
+  ('戰車', 'The Chariot'),
+  ('力量', 'Strength'),
+  ('隱者', 'The Hermit'),
+  ('命運之輪', 'Wheel of Fortune'),
+  ('正義', 'Justice'),
+  ('吊人', 'The Hanged Man'),
+  ('死神', 'Death'),
+  ('節制', 'Temperance'),
+  ('惡魔', 'The Devil'),
+  ('高塔', 'The Tower'),
+  ('星星', 'The Star'),
+  ('月亮', 'The Moon'),
+  ('太陽', 'The Sun'),
+  ('審判', 'Judgement'),
+  ('世界', 'The World'),
+];
+
+const _minorSuitFallbackNames = <String, (String, String)>{
+  'wands': ('權杖', 'Wands'),
+  'cups': ('聖杯', 'Cups'),
+  'swords': ('寶劍', 'Swords'),
+  'pentacles': ('錢幣', 'Pentacles'),
+};
+
+const _minorRankFallbackNames = <String, (String, String)>{
+  '01': ('一', 'Ace'),
+  '02': ('二', 'Two'),
+  '03': ('三', 'Three'),
+  '04': ('四', 'Four'),
+  '05': ('五', 'Five'),
+  '06': ('六', 'Six'),
+  '07': ('七', 'Seven'),
+  '08': ('八', 'Eight'),
+  '09': ('九', 'Nine'),
+  '10': ('十', 'Ten'),
+  '11': ('侍者', 'Page'),
+  '12': ('騎士', 'Knight'),
+  '13': ('皇后', 'Queen'),
+  '14': ('國王', 'King'),
+};
 
 String _primaryCardName(TarotCard card, AppLocalizations l10n) {
   return _usesChineseCardText(l10n) ? card.zhName : card.enName;
@@ -4824,23 +4758,6 @@ String _referenceCardSummary(TarotCard card) {
     'major-16-tower' => '突變、真相、舊結構被迫鬆動。',
     _ => card.uprightMeaning,
   };
-}
-
-List<TarotCard> _referenceFeaturedCards(List<TarotCard> cards) {
-  const featuredIds = [
-    'major-18-moon',
-    'major-17-star',
-    'major-14-temperance',
-    'cups-02-two',
-    'swords-06-six',
-    'major-16-tower',
-  ];
-  final byId = {for (final card in cards) card.id: card};
-  final featured = [
-    for (final id in featuredIds)
-      if (byId[id] != null) byId[id]!,
-  ];
-  return featured;
 }
 
 final _visualPreviewHistory = [
