@@ -5214,7 +5214,7 @@ class CardDetailSheet extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Center(child: TarotImageCard(imagePath: imagePath, height: 190)),
             const SizedBox(height: 16),
