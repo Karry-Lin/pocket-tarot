@@ -16,6 +16,22 @@ flutter test
 flutter build web --release
 ```
 
+## Build APK
+
+For Android emulator testing against the local backend, use `10.0.2.2` so the emulator can reach the host machine:
+
+```bash
+flutter build apk --release --dart-define=API_BASE_URL=http://10.0.2.2:4000/api/v1
+```
+
+The generated APK is written to:
+
+```text
+build/app/outputs/flutter-apk/app-release.apk
+```
+
+For a physical device or deployed environment, replace `API_BASE_URL` with a backend URL reachable from that device.
+
 ## Local Tarot Catalog
 
 The library tab reads the complete 78-card catalog from `assets/data/tarot_cards.json`. The catalog is local-only and is covered by `test/tarot_catalog_test.dart`.
