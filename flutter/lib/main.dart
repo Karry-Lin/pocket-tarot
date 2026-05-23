@@ -3600,14 +3600,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             _SectionTitle(usesChinese ? '設定選項' : 'Settings'),
             const SizedBox(height: 14),
             _VisualSettingRow(
-              title: usesChinese ? '每日提醒' : 'Daily reminder',
-              subtitle: usesChinese
-                  ? '每天早上 8:30 提醒抽一張牌'
-                  : 'Draw one card every morning at 8:30',
-              toggled: true,
-            ),
-            const SizedBox(height: 16),
-            _VisualSettingRow(
               title: usesChinese ? '使用所在地天氣' : l10n.weatherToggle,
               subtitle: usesChinese
                   ? '只用於生成今日心靈天氣'
