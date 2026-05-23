@@ -1450,21 +1450,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(usesChinese ? '重新抽牌？' : 'Redraw today?'),
-        content: Text(
-          usesChinese
-              ? '這會刪除今天的抽牌紀錄，並重新抽取一張今日牌。'
-              : 'This deletes today\'s reading and draws a new card for today.',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              usesChinese
+                  ? '這會刪除今天的抽牌紀錄，並重新抽取一張今日牌。'
+                  : 'This deletes today\'s reading and draws a new card for today.',
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 44,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: Text(usesChinese ? '取消' : 'Cancel'),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 44,
+                    child: FilledButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: Text(usesChinese ? '確認' : 'Confirm'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(usesChinese ? '取消' : 'Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(usesChinese ? '確認重抽' : 'Confirm redraw'),
-          ),
-        ],
       ),
     );
 
