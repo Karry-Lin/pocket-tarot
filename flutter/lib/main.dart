@@ -3484,31 +3484,62 @@ class ArcanaLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassPanel(
+    return SizedBox(
       key: const ValueKey('arcana-loading-view'),
-      ornate: true,
-      padding: const EdgeInsets.fromLTRB(18, 20, 18, 22),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
+      width: double.infinity,
+      height: 560,
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          const _ArcanaLoadingSpread(),
-          const SizedBox(height: 16),
-          const EyebrowText('Reading in progress'),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge,
+          Positioned(
+            top: 36,
+            child: Container(
+              width: 270,
+              height: 270,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    _ArcanaColors.gold2.withValues(alpha: 0.1),
+                    _ArcanaColors.wine.withValues(alpha: 0.08),
+                    Colors.transparent,
+                  ],
+                  stops: const [0, 0.38, 1],
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(painter: _ArcanaLoadingPagePainter()),
+            ),
           ),
-          const SizedBox(height: 16),
-          const _ArcanaLoadingPulse(),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const _ArcanaLoadingSpread(),
+              const SizedBox(height: 22),
+              const EyebrowText('Reading in progress'),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 300),
+                child: Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+              const SizedBox(height: 18),
+              const _ArcanaLoadingPulse(),
+            ],
+          ),
         ],
       ),
     );
@@ -3588,7 +3619,6 @@ class _ArcanaLoadingSpreadState extends State<_ArcanaLoadingSpread>
                   emphasized: true,
                 ),
               ),
-              Positioned(top: 68, child: _LoadingSigil(pulse: pulse)),
             ],
           ),
         );
@@ -3666,15 +3696,6 @@ class _LoadingTarotBack extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Center(
-                    child: Icon(
-                      Icons.nightlight_round,
-                      size: emphasized ? 30 : 26,
-                      color: _ArcanaColors.gold2.withValues(
-                        alpha: emphasized ? 0.86 : 0.64,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -3685,34 +3706,51 @@ class _LoadingTarotBack extends StatelessWidget {
   }
 }
 
-class _LoadingSigil extends StatelessWidget {
-  const _LoadingSigil({required this.pulse});
+class _ArcanaLoadingPagePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height * 0.43);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = _ArcanaColors.gold.withValues(alpha: 0.1);
+    final softPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = _ArcanaColors.muted.withValues(alpha: 0.08);
 
-  final double pulse;
+    canvas.drawCircle(center, 150, paint);
+    canvas.drawCircle(center, 104, softPaint);
+    canvas.drawLine(
+      Offset(center.dx - 124, center.dy),
+      Offset(center.dx + 124, center.dy),
+      softPaint,
+    );
+    canvas.drawLine(
+      Offset(center.dx, center.dy - 124),
+      Offset(center.dx, center.dy + 124),
+      softPaint,
+    );
+
+    final starPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = _ArcanaColors.gold2.withValues(alpha: 0.38);
+    for (var index = 0; index < 10; index += 1) {
+      final angle = index * math.pi / 5;
+      final radius = index.isEven ? 146.0 : 102.0;
+      canvas.drawCircle(
+        Offset(
+          center.dx + math.cos(angle) * radius,
+          center.dy + math.sin(angle) * radius,
+        ),
+        1.1,
+        starPaint,
+      );
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 42 + 4 * pulse,
-      height: 42 + 4 * pulse,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: _ArcanaColors.ink2.withValues(alpha: 0.9),
-        border: Border.all(color: _ArcanaColors.gold2.withValues(alpha: 0.88)),
-        boxShadow: [
-          BoxShadow(
-            color: _ArcanaColors.gold2.withValues(alpha: 0.22 + 0.18 * pulse),
-            blurRadius: 22 + 10 * pulse,
-          ),
-        ],
-      ),
-      child: const Icon(
-        Icons.auto_awesome,
-        color: _ArcanaColors.gold2,
-        size: 20,
-      ),
-    );
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _ArcanaLoadingPulse extends StatefulWidget {
