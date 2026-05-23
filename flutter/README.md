@@ -6,6 +6,7 @@ Android-first Flutter app for Pocket Tarot. Development checks use Flutter Web.
 
 ```bash
 flutter run -d web-server --web-port 3000 --dart-define=API_BASE_URL=http://127.0.0.1:4000/api/v1
+flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:4000/api/v1
 ```
 
 ## Verify
