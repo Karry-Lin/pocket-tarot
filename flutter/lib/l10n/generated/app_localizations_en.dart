@@ -240,6 +240,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resultSaving => 'Saving';
 
   @override
+  String get resultClear => 'Clear record';
+
+  @override
+  String get resultClearing => 'Clearing';
+
+  @override
   String get resultSaved => 'Saved';
 
   @override

@@ -1586,15 +1586,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(usesChinese ? '重新抽牌？' : 'Redraw today?'),
+        title: Text(usesChinese ? '清除今日抽牌？' : 'Clear today\'s reading?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               usesChinese
-                  ? '這會刪除今天的抽牌紀錄，並重新抽取一張今日牌。'
-                  : 'This deletes today\'s reading and draws a new card for today.',
+                  ? '這只會刪除今天的抽牌紀錄，不會自動重新抽牌。畫面會回到抽卡前。'
+                  : 'This only deletes today\'s reading. It will not redraw automatically, and the screen will return to before the draw.',
             ),
             const SizedBox(height: 24),
             Row(
@@ -1654,7 +1654,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       eyebrow: loaded ? 'Daily result' : 'Daily ritual',
       trailing: loaded
           ? _DailyRedrawButton(
-              label: usesChinese ? '重抽' : 'Redraw',
+              label: usesChinese ? '清除' : 'Clear',
               onPressed: _confirmRedrawToday,
             )
           : null,
@@ -2825,24 +2825,30 @@ class ReadingResultScreen extends ConsumerStatefulWidget {
 }
 
 class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
-  bool _isSaved = false;
+  bool? _historySavedOverride;
+  bool? _historySavingTarget;
   bool _saving = false;
 
-  Future<void> _saveReading(
+  Future<void> _setReadingSaved(
     DeepReadingController? controller,
     DeepReading? reading,
+    bool isSavedForHistory,
   ) async {
     if (controller == null || reading == null) {
-      setState(() => _isSaved = true);
+      setState(() => _historySavedOverride = isSavedForHistory);
       return;
     }
 
-    setState(() => _saving = true);
-    await controller.updateHistoryVisibility(true);
+    setState(() {
+      _saving = true;
+      _historySavingTarget = isSavedForHistory;
+    });
+    await controller.updateHistoryVisibility(isSavedForHistory);
     if (mounted) {
       setState(() {
-        _isSaved = controller.state.isResultSavedForHistory;
+        _historySavedOverride = controller.state.isResultSavedForHistory;
         _saving = false;
+        _historySavingTarget = null;
       });
     }
   }
@@ -2854,10 +2860,13 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
     final reading = controller?.state.reading;
     final resultCards = reading?.selectedCards ?? _fallbackResultCards;
     final isSaved =
-        _isSaved ||
+        _historySavedOverride ??
         (controller?.state.isResultSavedForHistory ??
             reading?.isSavedForHistory ??
             false);
+    final savingLabel = _historySavingTarget == false
+        ? l10n.resultClearing
+        : l10n.resultSaving;
 
     return AppBackdrop(
       child: SafeArea(
@@ -2920,13 +2929,14 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ArcanaPrimaryButton(
-                      onPressed: isSaved || _saving
+                      onPressed: _saving
                           ? null
-                          : () => _saveReading(controller, reading),
+                          : () =>
+                                _setReadingSaved(controller, reading, !isSaved),
                       child: Text(
                         _saving
-                            ? l10n.resultSaving
-                            : (isSaved ? l10n.resultSaved : l10n.resultSave),
+                            ? savingLabel
+                            : (isSaved ? l10n.resultClear : l10n.resultSave),
                       ),
                     ),
                   ),

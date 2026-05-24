@@ -537,6 +537,18 @@ abstract class AppLocalizations {
   /// **'Saving'**
   String get resultSaving;
 
+  /// No description provided for @resultClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear record'**
+  String get resultClear;
+
+  /// No description provided for @resultClearing.
+  ///
+  /// In en, this message translates to:
+  /// **'Clearing'**
+  String get resultClearing;
+
   /// No description provided for @resultSaved.
   ///
   /// In en, this message translates to:

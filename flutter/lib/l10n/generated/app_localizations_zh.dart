@@ -230,6 +230,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resultSaving => '保存中';
 
   @override
+  String get resultClear => '清除紀錄';
+
+  @override
+  String get resultClearing => '清除中';
+
+  @override
   String get resultSaved => '已保存';
 
   @override
@@ -590,6 +596,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get resultSaving => '保存中';
+
+  @override
+  String get resultClear => '清除紀錄';
+
+  @override
+  String get resultClearing => '清除中';
 
   @override
   String get resultSaved => '已保存';

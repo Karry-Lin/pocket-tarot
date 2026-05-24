@@ -79,6 +79,8 @@
   "resultBackToReading": "回到占卜館",
   "resultSave": "保存紀錄",
   "resultSaving": "保存中",
+  "resultClear": "清除紀錄",
+  "resultClearing": "清除中",
   "resultSaved": "已保存",
   "fallbackResultQuestion": "你正在問的不是「該不該前進」，而是「我能否在不確定裡仍然照顧自己」。月亮讓情緒浮上來，節制要求你把步伐放慢，星星則指出仍有一條溫柔但清楚的路。",
   "fallbackResultBulletMoon": "月亮：現在的模糊不是錯誤，它是在提醒你有些資訊還未被說出口。",
