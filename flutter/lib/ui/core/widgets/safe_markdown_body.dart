@@ -75,7 +75,12 @@ String sanitizeReadingMarkdown(String source) {
 }
 
 String _normalizeSupportedEscapes(String line) {
-  return line.replaceAll(r'\*', '*').replaceAll(r'\_', '_');
+  return line.replaceAll(r'\*', '*').replaceAll(r'\_', '_').replaceAllMapped(
+    RegExp(r'\*\*\s*([^*\n]*?\S)\s*\*\*'),
+    (match) {
+      return '**${match[1]}**';
+    },
+  );
 }
 
 bool _isForbiddenLine(String line) {
