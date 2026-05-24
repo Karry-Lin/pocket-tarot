@@ -2929,6 +2929,9 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ArcanaPrimaryButton(
+                      tone: isSaved
+                          ? ArcanaPrimaryButtonTone.danger
+                          : ArcanaPrimaryButtonTone.gold,
                       onPressed: _saving
                           ? null
                           : () =>
@@ -4272,19 +4275,39 @@ class _ArcanaLoadingOrbitPainter extends CustomPainter {
   }
 }
 
+enum ArcanaPrimaryButtonTone { gold, danger }
+
 class ArcanaPrimaryButton extends StatelessWidget {
   const ArcanaPrimaryButton({
     super.key,
     required this.onPressed,
     required this.child,
+    this.tone = ArcanaPrimaryButtonTone.gold,
   });
 
   final VoidCallback? onPressed;
   final Widget child;
+  final ArcanaPrimaryButtonTone tone;
 
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
+    final gradient = switch (tone) {
+      ArcanaPrimaryButtonTone.gold => const LinearGradient(
+        colors: [Color(0xFFF5DA95), Color(0xFFB8832F)],
+      ),
+      ArcanaPrimaryButtonTone.danger => const LinearGradient(
+        colors: [Color(0xFFFF8F82), Color(0xFFC4363E)],
+      ),
+    };
+    final shadowColor = switch (tone) {
+      ArcanaPrimaryButtonTone.gold => const Color(0xFFB8832F),
+      ArcanaPrimaryButtonTone.danger => const Color(0xFFC4363E),
+    };
+    final foregroundColor = switch (tone) {
+      ArcanaPrimaryButtonTone.gold => _ArcanaColors.ink2,
+      ArcanaPrimaryButtonTone.danger => _ArcanaColors.ivory,
+    };
 
     return Material(
       color: Colors.transparent,
@@ -4293,16 +4316,12 @@ class ArcanaPrimaryButton extends StatelessWidget {
         height: 50,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
-          gradient: enabled
-              ? const LinearGradient(
-                  colors: [Color(0xFFF5DA95), Color(0xFFB8832F)],
-                )
-              : null,
+          gradient: enabled ? gradient : null,
           color: enabled ? null : Colors.white.withValues(alpha: 0.08),
           boxShadow: enabled
               ? [
                   BoxShadow(
-                    color: const Color(0xFFB8832F).withValues(alpha: 0.28),
+                    color: shadowColor.withValues(alpha: 0.28),
                     blurRadius: 18,
                     offset: const Offset(0, 8),
                   ),
@@ -4317,7 +4336,7 @@ class ArcanaPrimaryButton extends StatelessWidget {
               style: _bodyTextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
-                color: _ArcanaColors.ink2,
+                color: foregroundColor,
                 height: 1,
               ),
               child: child,
