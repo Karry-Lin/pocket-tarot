@@ -50,6 +50,7 @@ final authActionsProvider = Provider<AuthActions>((ref) {
       registerWithEmail:
           ({required displayName, required email, required password}) async {},
       signInWithGoogle: () async {},
+      signInWithPlayGames: () async {},
       sendPasswordResetEmail: (_) async {},
       signOut: () async {},
     );
@@ -76,6 +77,10 @@ final authActionsProvider = Provider<AuthActions>((ref) {
     signInWithGoogle: () async {
       final service = await authService();
       await service.signInWithGoogle();
+    },
+    signInWithPlayGames: () async {
+      final service = await authService();
+      await service.signInWithPlayGames();
     },
     sendPasswordResetEmail: (email) async {
       final service = await authService();
@@ -302,6 +307,7 @@ class AuthActions {
     required this.signInWithEmail,
     required this.registerWithEmail,
     required this.signInWithGoogle,
+    required this.signInWithPlayGames,
     required this.sendPasswordResetEmail,
     required this.signOut,
   });
@@ -315,6 +321,7 @@ class AuthActions {
   })
   registerWithEmail;
   final Future<void> Function() signInWithGoogle;
+  final Future<void> Function() signInWithPlayGames;
   final Future<void> Function(String email) sendPasswordResetEmail;
   final Future<void> Function() signOut;
 }

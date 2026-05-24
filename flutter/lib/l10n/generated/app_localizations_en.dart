@@ -49,6 +49,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get googleLogin => 'Google sign-in';
 
   @override
+  String get playGamesLogin => 'Play Games sign-in';
+
+  @override
   String get loginAction => 'Sign in';
 
   @override
@@ -68,6 +71,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get googleFailure => 'Google sign-in failed. Please try again later.';
+
+  @override
+  String get playGamesFailure =>
+      'Play Games sign-in failed. Please try again later.';
 
   @override
   String get emailLogin => 'Email sign-in';

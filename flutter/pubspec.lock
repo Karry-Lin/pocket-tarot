@@ -169,6 +169,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.5.1"
+  firebase_auth_games_services:
+    dependency: "direct main"
+    description:
+      name: firebase_auth_games_services
+      sha256: fa1b5b214c40227cfb9e12a64f52bb5a17599d8347d1971d2ad50665c043346d
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.1"
   firebase_auth_platform_interface:
     dependency: transitive
     description:

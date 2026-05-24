@@ -392,6 +392,7 @@ components:
           maxLength: 16
         providerIds:
           type: array
+          description: Firebase provider ids, for example password, google.com, or playgames.google.com.
           items:
             type: string
     UpdateUserRequest:
@@ -413,6 +414,7 @@ components:
         email:
           type: string
           format: email
+          description: Firebase email, or a synthetic playgames+<uid>@pocket-tarot.local email for Play Games users without token email.
         displayName:
           type: string
         providerIds:

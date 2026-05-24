@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:pocket_tarot/data/services/games_auth_delegate.dart'
+    as games_auth;
 import 'package:pocket_tarot/domain/use_cases/auth_gate_evaluator.dart';
 
 class FirebaseAuthService {
@@ -8,9 +10,11 @@ class FirebaseAuthService {
     FirebaseAuthGateway? firebaseAuth,
     GoogleSignInGateway? googleSignIn,
     bool isWeb = kIsWeb,
-  })  : _firebaseAuth = firebaseAuth ?? FirebaseAuthSdkGateway(firebase.FirebaseAuth.instance),
-        _googleSignIn = googleSignIn ?? GoogleSignInSdkGateway(),
-        _isWeb = isWeb;
+  }) : _firebaseAuth =
+           firebaseAuth ??
+           FirebaseAuthSdkGateway(firebase.FirebaseAuth.instance),
+       _googleSignIn = googleSignIn ?? GoogleSignInSdkGateway(),
+       _isWeb = isWeb;
 
   final FirebaseAuthGateway _firebaseAuth;
   final GoogleSignInGateway _googleSignIn;
@@ -21,7 +25,9 @@ class FirebaseAuthService {
   }
 
   Future<AuthSession> loadSession({bool reload = false}) async {
-    final user = reload ? await _firebaseAuth.reloadCurrentUser() : _firebaseAuth.currentUser;
+    final user = reload
+        ? await _firebaseAuth.reloadCurrentUser()
+        : _firebaseAuth.currentUser;
     return _toSession(user);
   }
 
@@ -51,7 +57,9 @@ class FirebaseAuthService {
     await _firebaseAuth.sendCurrentUserEmailVerification();
 
     final reloadedUser = await _firebaseAuth.reloadCurrentUser();
-    return _toSession(reloadedUser ?? createdUser.copyWith(displayName: normalizedDisplayName));
+    return _toSession(
+      reloadedUser ?? createdUser.copyWith(displayName: normalizedDisplayName),
+    );
   }
 
   Future<AuthSession> signInWithGoogle() async {
@@ -62,6 +70,10 @@ class FirebaseAuthService {
     await _googleSignIn.initialize();
     final idToken = await _googleSignIn.authenticateIdToken();
     return _toSession(await _firebaseAuth.signInWithGoogleIdToken(idToken));
+  }
+
+  Future<AuthSession> signInWithPlayGames() async {
+    return _toSession(await _firebaseAuth.signInWithPlayGames());
   }
 
   Future<void> sendPasswordResetEmail(String email) {
@@ -96,7 +108,11 @@ class FirebaseAuthService {
   String _normalizeDisplayName(String value) {
     final normalized = value.trim();
     if (normalized.isEmpty || normalized.length > 16) {
-      throw ArgumentError.value(value, 'displayName', 'Display name must be 1-16 characters after trim.');
+      throw ArgumentError.value(
+        value,
+        'displayName',
+        'Display name must be 1-16 characters after trim.',
+      );
     }
     return normalized;
   }
@@ -122,6 +138,8 @@ abstract interface class FirebaseAuthGateway {
   Future<FirebaseUserSnapshot> signInWithGooglePopup();
 
   Future<FirebaseUserSnapshot> signInWithGoogleIdToken(String idToken);
+
+  Future<FirebaseUserSnapshot> signInWithPlayGames();
 
   Future<void> updateCurrentUserDisplayName(String displayName);
 
@@ -187,7 +205,9 @@ class FirebaseAuthSdkGateway implements FirebaseAuthGateway {
 
   @override
   Stream<FirebaseUserSnapshot?> authStateChanges() {
-    return _auth.authStateChanges().map((user) => user == null ? null : _snapshot(user));
+    return _auth.authStateChanges().map(
+      (user) => user == null ? null : _snapshot(user),
+    );
   }
 
   @override
@@ -195,7 +215,10 @@ class FirebaseAuthSdkGateway implements FirebaseAuthGateway {
     required String email,
     required String password,
   }) async {
-    final credential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+    final credential = await _auth.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
     return _snapshotCredential(credential);
   }
 
@@ -231,7 +254,10 @@ class FirebaseAuthSdkGateway implements FirebaseAuthGateway {
     required String email,
     required String password,
   }) async {
-    final credential = await _auth.signInWithEmailAndPassword(email: email, password: password);
+    final credential = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
     return _snapshotCredential(credential);
   }
 
@@ -244,7 +270,15 @@ class FirebaseAuthSdkGateway implements FirebaseAuthGateway {
 
   @override
   Future<FirebaseUserSnapshot> signInWithGooglePopup() async {
-    final credential = await _auth.signInWithPopup(firebase.GoogleAuthProvider());
+    final credential = await _auth.signInWithPopup(
+      firebase.GoogleAuthProvider(),
+    );
+    return _snapshotCredential(credential);
+  }
+
+  @override
+  Future<FirebaseUserSnapshot> signInWithPlayGames() async {
+    final credential = await games_auth.signInWithPlayGames(_auth);
     return _snapshotCredential(credential);
   }
 
@@ -279,7 +313,10 @@ class FirebaseAuthSdkGateway implements FirebaseAuthGateway {
       uid: user.uid,
       email: user.email,
       emailVerified: user.emailVerified,
-      providerIds: user.providerData.map((provider) => provider.providerId).where((providerId) => providerId.isNotEmpty).toList(growable: false),
+      providerIds: user.providerData
+          .map((provider) => provider.providerId)
+          .where((providerId) => providerId.isNotEmpty)
+          .toList(growable: false),
       displayName: user.displayName,
     );
   }

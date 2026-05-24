@@ -1,0 +1,4 @@
+<resources>
+    <string name="game_services_project_id" translatable="false">412089008005</string>
+    <string name="firebase_auth_oauth_2_web_client_id" translatable="false">412089008005-bb66da5h7geec8f89geb4e77cjr60gbn.apps.googleusercontent.com</string>
+</resources>

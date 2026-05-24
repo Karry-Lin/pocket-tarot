@@ -27,15 +27,12 @@ export async function registerProfile(firebaseUser: DecodedFirebaseToken, input:
     []
   );
 
-  if (!firebaseUser.email) {
-    throw new ApiError(422, "VALIDATION_ERROR", "Firebase token 缺少 email");
-  }
-
   if (providerIds.includes("password") && !firebaseUser.emailVerified) {
     throw new ApiError(403, "EMAIL_NOT_VERIFIED", "Email 尚未驗證");
   }
 
-  const emailNormalized = normalizeEmail(firebaseUser.email);
+  const email = resolveProfileEmail(firebaseUser, providerIds);
+  const emailNormalized = normalizeEmail(email);
   const existingByUid = await UserModel.findOne({ firebaseUid: firebaseUser.uid });
 
   if (existingByUid) {
@@ -59,7 +56,7 @@ export async function registerProfile(firebaseUser: DecodedFirebaseToken, input:
 
   const user = await UserModel.create({
     firebaseUid: firebaseUser.uid,
-    email: firebaseUser.email,
+    email,
     emailNormalized,
     displayName: parseDisplayName(input.displayName),
     providerIds,
@@ -229,6 +226,29 @@ function parseProviderIds(value: unknown, fallback: string[]) {
 
 function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
+}
+
+function resolveProfileEmail(firebaseUser: DecodedFirebaseToken, providerIds: string[]) {
+  if (firebaseUser.email) {
+    return firebaseUser.email;
+  }
+
+  if (providerIds.includes("playgames.google.com")) {
+    return `playgames+${emailSafeFirebaseUid(firebaseUser.uid)}@pocket-tarot.local`;
+  }
+
+  throw new ApiError(422, "VALIDATION_ERROR", "Firebase token 缺少 email");
+}
+
+function emailSafeFirebaseUid(uid: string) {
+  const localPart = uid
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._+-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return localPart || "unknown";
 }
 
 function escapeRegex(value: string) {

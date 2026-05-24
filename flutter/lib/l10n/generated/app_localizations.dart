@@ -177,6 +177,12 @@ abstract class AppLocalizations {
   /// **'Google sign-in'**
   String get googleLogin;
 
+  /// No description provided for @playGamesLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Games sign-in'**
+  String get playGamesLogin;
+
   /// No description provided for @loginAction.
   ///
   /// In en, this message translates to:
@@ -218,6 +224,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Google sign-in failed. Please try again later.'**
   String get googleFailure;
+
+  /// No description provided for @playGamesFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Games sign-in failed. Please try again later.'**
+  String get playGamesFailure;
 
   /// No description provided for @emailLogin.
   ///
