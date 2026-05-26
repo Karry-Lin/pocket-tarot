@@ -47,7 +47,6 @@ dependencies:
   flutter_markdown_plus: ^1.0.7
   markdown: ^7.3.0
   geolocator: ^14.0.2
-  firebase_auth_games_services: ^3.0.1
 
 dev_dependencies:
   flutter_test:

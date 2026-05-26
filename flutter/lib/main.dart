@@ -622,6 +622,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                           setState(() => _showEmailForm = true),
                                 child: Text(l10n.emailLogin),
                               ),
+                            if (_formError != null || _formMessage != null) ...[
+                              const SizedBox(height: 14),
+                              Text(
+                                _formError ?? _formMessage!,
+                                style: TextStyle(
+                                  color: _formError == null
+                                      ? _ArcanaColors.gold2
+                                      : Theme.of(context).colorScheme.error,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ],
                         )
                       else
