@@ -1,4 +1,7 @@
 <resources>
     <string name="game_services_project_id" translatable="false">412089008005</string>
     <string name="firebase_auth_oauth_2_web_client_id" translatable="false">412089008005-bb66da5h7geec8f89geb4e77cjr60gbn.apps.googleusercontent.com</string>
+    <string-array name="play_games_registered_sha1_fingerprints" translatable="false">
+        <item>E9:D6:3A:D5:AB:76:1D:DC:79:50:50:3A:1F:43:61:39:32:65:81:1B</item>
+    </string-array>
 </resources>

@@ -947,10 +947,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         context.go('/splash');
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         setState(() {
-          _formError = l10n.playGamesFailure;
+          _formError = _playGamesAuthFailureMessage(error, l10n);
           _formMessage = null;
         });
       }
@@ -977,6 +977,26 @@ const _emailCredentialFailureCodes = {
   'user-not-found',
   'wrong-password',
 };
+
+String _playGamesAuthFailureMessage(Object error, AppLocalizations l10n) {
+  if (error is PlatformException &&
+      error.code == 'play-games-unregistered-sha1') {
+    final currentSha1 = switch (error.details) {
+      {'currentSha1': final String value} when value.isNotEmpty => value,
+      _ => null,
+    };
+
+    if (_usesChineseCardText(l10n)) {
+      final suffix = currentSha1 == null ? '' : '（SHA-1：$currentSha1）';
+      return 'Play Games 設定未完成，請先登記此 APK 簽章$suffix。';
+    }
+
+    final suffix = currentSha1 == null ? '' : ' (SHA-1: $currentSha1)';
+    return 'Play Games setup is incomplete. Register this APK signature$suffix.';
+  }
+
+  return l10n.playGamesFailure;
+}
 
 class _LoginLanguageButton extends StatelessWidget {
   const _LoginLanguageButton({
