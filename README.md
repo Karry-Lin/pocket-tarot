@@ -27,6 +27,41 @@ flutter pub get
 flutter run -d web-server --web-port 3000 --dart-define=API_BASE_URL=http://127.0.0.1:4000/api/v1
 ```
 
+### API 環境切換
+
+Flutter 端使用 `--dart-define=API_BASE_URL=...` 控制 API base URL。這是編譯期設定，web build 產物完成後不能靠伺服器環境變數切換 API，需要重新 build。
+
+```bash
+# local web
+flutter run -d web-server --web-port 3000 --dart-define=API_BASE_URL=http://127.0.0.1:4000/api/v1
+
+# local Android emulator
+flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:4000/api/v1
+
+# dev Android emulator
+flutter run -d emulator-5554 --dart-define=API_BASE_URL=https://tarot-api-dev.julojulo.com/api/v1
+
+# dev
+flutter run -d web-server --web-port 3000 --dart-define=API_BASE_URL=https://tarot-api-dev.julojulo.com/api/v1
+
+# prod
+flutter build web --release --dart-define=API_BASE_URL=https://tarot-api.julojulo.com/api/v1
+```
+
+也可以用 `--dart-define-from-file` 管理環境檔，例如 `flutter/env/dev.json`：
+
+```json
+{
+  "API_BASE_URL": "https://tarot-api-dev.julojulo.com/api/v1"
+}
+```
+
+```bash
+flutter build web --release --dart-define-from-file=env/dev.json
+```
+
+不要把 MongoDB URI、LLM API key、Firebase Admin service account 等 server secrets 放進 Flutter build。
+
 驗證：
 
 ```bash

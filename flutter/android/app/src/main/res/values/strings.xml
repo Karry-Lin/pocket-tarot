@@ -1,0 +1,8 @@
+<resources>
+    <string name="game_services_project_id" translatable="false">412089008005</string>
+    <string name="firebase_auth_oauth_2_web_client_id" translatable="false">412089008005-74up1s277eqb3jipjvi0dunnk0vqie2p.apps.googleusercontent.com</string>
+    <string-array name="play_games_registered_sha1_fingerprints" translatable="false">
+        <item>E9:D6:3A:D5:AB:76:1D:DC:79:50:50:3A:1F:43:61:39:32:65:81:1B</item>
+        <item>AC:60:47:0B:9E:F2:C1:F9:66:1C:91:DA:21:D6:4F:90:8F:57:5A:D6</item>
+    </string-array>
+</resources>

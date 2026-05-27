@@ -1,5 +1,6 @@
 import type { DailyReadingDocument } from "../models/DailyReading.js";
 import type { DeepReadingDocument } from "../models/DeepReading.js";
+import { resolveTaiwanRegionName } from "./weatherService.js";
 
 type WithTimestamps<T> = T & {
   createdAt?: Date;
@@ -15,7 +16,7 @@ export function serializeDailyReading(
     localDate: reading.localDate,
     card: reading.card,
     timeContext: reading.timeContext,
-    weather: reading.weather,
+    weather: serializeWeatherSnapshot(reading.weather, reading.resultLocale),
     dailyStreak: options.dailyStreak ?? 0,
     markdownResult: reading.markdownResult,
     summary: reading.summary,
@@ -53,4 +54,22 @@ function requireDate(value: Date | undefined, fieldName: string) {
   }
 
   return value;
+}
+
+function serializeWeatherSnapshot(
+  weather: DailyReadingDocument["weather"],
+  locale: DailyReadingDocument["resultLocale"]
+) {
+  if (
+    weather.locationName ||
+    typeof weather.latitude !== "number" ||
+    typeof weather.longitude !== "number"
+  ) {
+    return weather;
+  }
+
+  return {
+    ...weather,
+    locationName: resolveTaiwanRegionName(weather.latitude, weather.longitude, locale)
+  };
 }

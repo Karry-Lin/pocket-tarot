@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:markdown/markdown.dart' as md;
 
 class SafeMarkdownBody extends StatelessWidget {
   const SafeMarkdownBody({super.key, required this.data});
@@ -12,6 +13,7 @@ class SafeMarkdownBody extends StatelessWidget {
 
     return MarkdownBody(
       data: sanitizeReadingMarkdown(data),
+      inlineSyntaxes: [_AdjacentStrongEmphasisSyntax()],
       selectable: false,
       styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
         h1: theme.textTheme.headlineSmall,
@@ -35,6 +37,17 @@ class SafeMarkdownBody extends StatelessWidget {
   }
 }
 
+class _AdjacentStrongEmphasisSyntax extends md.InlineSyntax {
+  _AdjacentStrongEmphasisSyntax()
+    : super(r'\*\*([^*\n]+?)\*\*', startCharacter: 0x2A);
+
+  @override
+  bool onMatch(md.InlineParser parser, Match match) {
+    parser.addNode(md.Element.text('strong', match[1]!));
+    return true;
+  }
+}
+
 String sanitizeReadingMarkdown(String source) {
   final output = <String>[];
   var insideCodeBlock = false;
@@ -55,10 +68,19 @@ String sanitizeReadingMarkdown(String source) {
       continue;
     }
 
-    output.add(line);
+    output.add(_normalizeSupportedEscapes(line));
   }
 
   return output.join('\n').trim();
+}
+
+String _normalizeSupportedEscapes(String line) {
+  return line.replaceAll(r'\*', '*').replaceAll(r'\_', '_').replaceAllMapped(
+    RegExp(r'\*\*\s*([^*\n]*?\S)\s*\*\*'),
+    (match) {
+      return '**${match[1]}**';
+    },
+  );
 }
 
 bool _isForbiddenLine(String line) {

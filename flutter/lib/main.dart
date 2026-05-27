@@ -317,6 +317,7 @@ ThemeData buildTheme() {
       backgroundColor: Colors.white.withValues(alpha: 0.035),
       selectedColor: _ArcanaColors.gold.withValues(alpha: 0.14),
       disabledColor: Colors.white.withValues(alpha: 0.04),
+      checkmarkColor: _ArcanaColors.gold2,
       side: BorderSide(color: _ArcanaColors.muted.withValues(alpha: 0.22)),
       labelStyle: _bodyTextStyle(fontSize: 12, color: _ArcanaColors.muted),
       secondaryLabelStyle: _bodyTextStyle(
@@ -534,6 +535,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final usesChinese = _usesChineseCardText(l10n);
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     if (usesChinese && _showEmailForm) {
       return _VisualEmailLoginScreen(
@@ -560,28 +562,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(26, 28, 26, 34),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(
+                26,
+                keyboardOpen ? 18 : 28,
+                26,
+                MediaQuery.viewInsetsOf(context).bottom + 34,
+              ),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 360),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SizedBox(height: _showEmailForm ? 88 : 242),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: BrandMark(size: 58, radius: 18),
+                      SizedBox(
+                        height: keyboardOpen
+                            ? (_showEmailForm ? 8 : 40)
+                            : (_showEmailForm ? 88 : 242),
                       ),
-                      const SizedBox(height: 19),
-                      const EyebrowText('Pocket Tarot'),
-                      const SizedBox(height: 7),
-                      Text(
-                        usesChinese ? '登入口袋塔羅' : 'Sign in to Pocket Tarot',
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(usesChinese ? '保存每日抽牌與占卜紀錄。' : l10n.loginTagline),
-                      const SizedBox(height: 21),
+                      if (!(_showEmailForm && keyboardOpen)) ...[
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: BrandMark(size: 58, radius: 18),
+                        ),
+                        const SizedBox(height: 19),
+                        const EyebrowText('Pocket Tarot'),
+                        const SizedBox(height: 7),
+                        Text(
+                          usesChinese ? '登入口袋塔羅' : 'Sign in to Pocket Tarot',
+                          style: Theme.of(context).textTheme.displaySmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(usesChinese ? '保存每日抽牌與占卜紀錄。' : l10n.loginTagline),
+                        const SizedBox(height: 21),
+                      ],
                       if (!_showEmailForm)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -591,6 +605,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               icon: const Text('G'),
                               label: Text(
                                 usesChinese ? '使用 Google 繼續' : l10n.googleLogin,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              onPressed: _submitting
+                                  ? null
+                                  : _signInWithPlayGames,
+                              icon: const Icon(Icons.sports_esports),
+                              label: Text(
+                                usesChinese
+                                    ? '使用 Play Games 繼續'
+                                    : l10n.playGamesLogin,
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -610,6 +636,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                           setState(() => _showEmailForm = true),
                                 child: Text(l10n.emailLogin),
                               ),
+                            if (_formError != null || _formMessage != null) ...[
+                              const SizedBox(height: 14),
+                              Text(
+                                _formError ?? _formMessage!,
+                                style: TextStyle(
+                                  color: _formError == null
+                                      ? _ArcanaColors.gold2
+                                      : Theme.of(context).colorScheme.error,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ],
                         )
                       else
@@ -908,9 +946,42 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     }
   }
+
+  Future<void> _signInWithPlayGames() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    setState(() {
+      _formError = null;
+      _formMessage = null;
+      _submitting = true;
+    });
+
+    try {
+      await ref.read(authActionsProvider).signInWithPlayGames();
+      if (mounted) {
+        context.go('/splash');
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _formError = _playGamesAuthFailureMessage(error, l10n);
+          _formMessage = null;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
+    }
+  }
 }
 
 String _emailAuthFailureMessage(Object error, AppLocalizations l10n) {
+  if (error is firebase.FirebaseAuthException &&
+      error.code == 'email-already-in-use') {
+    return l10n.emailAlreadyRegistered;
+  }
+
   if (error is firebase.FirebaseAuthException &&
       _emailCredentialFailureCodes.contains(error.code)) {
     return l10n.emailCredentialFailure;
@@ -925,6 +996,26 @@ const _emailCredentialFailureCodes = {
   'user-not-found',
   'wrong-password',
 };
+
+String _playGamesAuthFailureMessage(Object error, AppLocalizations l10n) {
+  if (error is PlatformException &&
+      error.code == 'play-games-unregistered-sha1') {
+    final currentSha1 = switch (error.details) {
+      {'currentSha1': final String value} when value.isNotEmpty => value,
+      _ => null,
+    };
+
+    if (_usesChineseCardText(l10n)) {
+      final suffix = currentSha1 == null ? '' : '（SHA-1：$currentSha1）';
+      return 'Play Games 設定未完成，請先登記此 APK 簽章$suffix。';
+    }
+
+    final suffix = currentSha1 == null ? '' : ' (SHA-1: $currentSha1)';
+    return 'Play Games setup is incomplete. Register this APK signature$suffix.';
+  }
+
+  return l10n.playGamesFailure;
+}
 
 class _LoginLanguageButton extends StatelessWidget {
   const _LoginLanguageButton({
@@ -941,7 +1032,7 @@ class _LoginLanguageButton extends StatelessWidget {
       key: const ValueKey('login-language-button'),
       onPressed: onPressed,
       icon: const Icon(Icons.language, size: 16),
-      label: Text(usesChinese ? '繁中' : 'EN'),
+      label: Text(usesChinese ? '繁體中文' : 'EN'),
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(0, 36),
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -994,6 +1085,7 @@ class _VisualEmailLoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isRegister = mode == EmailAuthMode.register;
     final isReset = mode == EmailAuthMode.resetPassword;
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final primaryLabel = switch (mode) {
       EmailAuthMode.signIn => '進入口袋塔羅',
       EmailAuthMode.register => '建立帳號',
@@ -1005,31 +1097,41 @@ class _VisualEmailLoginScreen extends StatelessWidget {
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(26, 28, 26, 34),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(
+                26,
+                keyboardOpen ? 18 : 28,
+                26,
+                MediaQuery.viewInsetsOf(context).bottom + 34,
+              ),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 360),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SizedBox(height: isRegister ? 122 : 242),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: BrandMark(size: 58, radius: 18),
+                      SizedBox(
+                        height: keyboardOpen ? 4 : (isRegister ? 122 : 242),
                       ),
-                      const SizedBox(height: 19),
-                      const EyebrowText('Pocket Tarot'),
-                      const SizedBox(height: 7),
-                      Text(
-                        '登入口袋塔羅',
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '保存每日抽牌與占卜紀錄。',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 21),
+                      if (!keyboardOpen) ...[
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: BrandMark(size: 58, radius: 18),
+                        ),
+                        const SizedBox(height: 19),
+                        const EyebrowText('Pocket Tarot'),
+                        const SizedBox(height: 7),
+                        Text(
+                          '登入口袋塔羅',
+                          style: Theme.of(context).textTheme.displaySmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '保存每日抽牌與占卜紀錄。',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 21),
+                      ],
                       _VisualAuthModeSwitch(
                         mode: mode,
                         enabled: !submitting,
@@ -1513,11 +1615,31 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   DailyReadingState _dailyState = const DailyReadingState.initial();
+  String? _displayName;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadToday());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadToday();
+      _loadHomeProfile();
+    });
+  }
+
+  Future<void> _loadHomeProfile() async {
+    try {
+      final controller = await ref.read(profileControllerProvider.future);
+      await controller.load();
+      if (mounted) {
+        setState(
+          () => _displayName = controller.state.snapshot?.user.displayName,
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _displayName = null);
+      }
+    }
   }
 
   Future<void> _loadToday() async {
@@ -1546,15 +1668,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(usesChinese ? '重新抽牌？' : 'Redraw today?'),
+        title: Text(usesChinese ? '清除今日抽牌？' : 'Clear today\'s reading?'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
               usesChinese
-                  ? '這會刪除今天的抽牌紀錄，並重新抽取一張今日牌。'
-                  : 'This deletes today\'s reading and draws a new card for today.',
+                  ? '這只會刪除今天的抽牌紀錄，不會自動重新抽牌。畫面會回到抽卡前。'
+                  : 'This only deletes today\'s reading. It will not redraw automatically, and the screen will return to before the draw.',
             ),
             const SizedBox(height: 24),
             Row(
@@ -1608,13 +1730,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
     final usesChinese = _usesChineseCardText(l10n);
     final loaded = _dailyState.status == DailyReadingStatus.loaded;
+    final scrollable = loaded || _dailyState.status == DailyReadingStatus.error;
 
     return ScreenFrame(
-      title: usesChinese ? (loaded ? '今日抽牌結果' : '每日抽牌') : l10n.homeTitle,
+      title: _homeTitle(
+        displayName: _displayName,
+        loaded: loaded,
+        usesChinese: usesChinese,
+        l10n: l10n,
+      ),
       eyebrow: loaded ? 'Daily result' : 'Daily ritual',
+      scrollable: scrollable,
       trailing: loaded
           ? _DailyRedrawButton(
-              label: usesChinese ? '重抽' : 'Redraw',
+              label: usesChinese ? '清除' : 'Clear',
               onPressed: _confirmRedrawToday,
             )
           : null,
@@ -1648,6 +1777,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     };
   }
+}
+
+String _homeTitle({
+  required String? displayName,
+  required bool loaded,
+  required bool usesChinese,
+  required AppLocalizations l10n,
+}) {
+  final name = displayName?.trim();
+  if (name != null && name.isNotEmpty) {
+    if (loaded) {
+      return usesChinese ? '$name，牌已翻面' : '$name, card revealed';
+    }
+
+    return usesChinese ? '$name，牌桌亮起' : '$name, the table is lit';
+  }
+
+  return usesChinese ? (loaded ? '今日抽牌結果' : '每日抽牌') : l10n.homeTitle;
 }
 
 class DailyResultCard extends ConsumerWidget {
@@ -1869,11 +2016,10 @@ _DailyInfoDisplay _successfulWeatherDisplay(
 
   final weatherName = _weatherCodeLabel(current.weatherCode, usesChinese);
   final temperature = current.temperature2m;
+  final locationLabel = _weatherLocationLabel(weather, usesChinese);
   final title = temperature == null
-      ? (usesChinese ? '所在地 $weatherName' : 'Local $weatherName')
-      : usesChinese
-      ? '所在地 ${temperature.round()}° $weatherName'
-      : 'Local ${temperature.round()}° $weatherName';
+      ? '$locationLabel $weatherName'
+      : '$locationLabel ${temperature.round()}° $weatherName';
   final humidity = current.relativeHumidity2m;
   final precipitation = current.precipitation;
   final bodyParts = <String>[];
@@ -1899,6 +2045,15 @@ _DailyInfoDisplay _successfulWeatherDisplay(
               : 'Current weather was included in this reading.')
         : bodyParts.join(usesChinese ? '，' : ', '),
   );
+}
+
+String _weatherLocationLabel(WeatherSnapshot weather, bool usesChinese) {
+  final locationName = weather.locationName?.trim();
+  if (locationName != null && locationName.isNotEmpty) {
+    return locationName;
+  }
+
+  return usesChinese ? '所在地' : 'Local';
 }
 
 String _weatherCodeLabel(double? weatherCode, bool usesChinese) {
@@ -1980,92 +2135,81 @@ class _DailyEmptyState extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final usesChineseText = _usesChineseCardText(l10n);
 
-    return SizedBox(
-      key: const ValueKey('daily-ritual-stage'),
-      height: 660,
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            right: 0,
-            left: 0,
-            child: SizedBox(
-              key: const ValueKey('daily-ritual-copy'),
-              height: 164,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Center(child: EyebrowText('One card today')),
-                  const SizedBox(height: 10),
-                  Text(
-                    usesChineseText
-                        ? '把今天的問題放在掌心，讓牌背先替你呼吸。'
-                        : l10n.dailyEmptyTitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    usesChineseText
-                        ? '今日尚未抽牌。輕觸中央牌背，抽出只屬於今天的一張牌。'
-                        : l10n.dailyEmptyMessage,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const Positioned(
-            top: 215,
-            right: 0,
-            left: 0,
-            child: DailyDeckStage(),
-          ),
-          Positioned(
-            top: 450,
-            right: 0,
-            left: 0,
-            child: Center(
-              key: const ValueKey('daily-ritual-action'),
-              child: SizedBox(
-                width: usesChineseText ? 120 : 168,
-                height: 50,
-                child: ArcanaPrimaryButton(
-                  onPressed: onDraw,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        l10n.dailyDrawButton,
-                        maxLines: 1,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stageHeight = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : 660.0;
+        final compact = stageHeight < 560 || constraints.maxWidth < 320;
+        final copyHeight = compact ? 172.0 : 164.0;
+        final deckTop = copyHeight + (compact ? 12.0 : 51.0);
+        final constellationBottom = compact ? 0.0 : 24.0;
+        final title = usesChineseText
+            ? '讓一張牌先替今天開口'
+            : 'Let one card speak first';
+
+        return SizedBox(
+          key: const ValueKey('daily-ritual-stage'),
+          height: stageHeight,
+          child: Stack(
+            children: [
+              Positioned(
+                top: 0,
+                right: 0,
+                left: 0,
+                child: SizedBox(
+                  key: const ValueKey('daily-ritual-copy'),
+                  height: copyHeight,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Center(child: EyebrowText('One card today')),
+                      const SizedBox(height: 10),
+                      Text(
+                        title,
                         textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      Text(
+                        usesChineseText
+                            ? '不用急著追完整答案；輕觸中央牌背，先接住此刻最靠近你的訊號。'
+                            : 'Tap the deck and let the closest signal surface for today.',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
+              Positioned(
+                top: deckTop,
+                right: 0,
+                left: 0,
+                child: DailyDeckStage(
+                  onTap: onDraw,
+                  semanticLabel: l10n.dailyDrawButton,
+                ),
+              ),
+              Positioned(
+                right: 0,
+                bottom: constellationBottom,
+                left: 0,
+                child: const _DailyRitualConstellation(),
+              ),
+            ],
           ),
-          const Positioned(
-            right: 0,
-            bottom: 24,
-            left: 0,
-            child: _DailyRitualConstellation(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class DailyDeckStage extends StatefulWidget {
-  const DailyDeckStage({super.key});
+  const DailyDeckStage({super.key, this.onTap, this.semanticLabel});
+
+  final VoidCallback? onTap;
+  final String? semanticLabel;
 
   @override
   State<DailyDeckStage> createState() => _DailyDeckStageState();
@@ -2096,7 +2240,7 @@ class _DailyDeckStageState extends State<DailyDeckStage>
 
   @override
   Widget build(BuildContext context) {
-    return KeyedSubtree(
+    final stage = KeyedSubtree(
       key: const ValueKey('daily-ritual-continuous-motion'),
       child: AnimatedBuilder(
         animation: _controller,
@@ -2143,6 +2287,22 @@ class _DailyDeckStageState extends State<DailyDeckStage>
             ),
           );
         },
+      ),
+    );
+
+    if (widget.onTap == null) {
+      return stage;
+    }
+
+    return Semantics(
+      key: const ValueKey('daily-ritual-deck-action'),
+      button: true,
+      label: widget.semanticLabel,
+      onTap: widget.onTap,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: MouseRegion(cursor: SystemMouseCursors.click, child: stage),
       ),
     );
   }
@@ -2785,24 +2945,30 @@ class ReadingResultScreen extends ConsumerStatefulWidget {
 }
 
 class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
-  bool _isSaved = false;
+  bool? _historySavedOverride;
+  bool? _historySavingTarget;
   bool _saving = false;
 
-  Future<void> _saveReading(
+  Future<void> _setReadingSaved(
     DeepReadingController? controller,
     DeepReading? reading,
+    bool isSavedForHistory,
   ) async {
     if (controller == null || reading == null) {
-      setState(() => _isSaved = true);
+      setState(() => _historySavedOverride = isSavedForHistory);
       return;
     }
 
-    setState(() => _saving = true);
-    await controller.updateHistoryVisibility(true);
+    setState(() {
+      _saving = true;
+      _historySavingTarget = isSavedForHistory;
+    });
+    await controller.updateHistoryVisibility(isSavedForHistory);
     if (mounted) {
       setState(() {
-        _isSaved = controller.state.isResultSavedForHistory;
+        _historySavedOverride = controller.state.isResultSavedForHistory;
         _saving = false;
+        _historySavingTarget = null;
       });
     }
   }
@@ -2814,10 +2980,13 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
     final reading = controller?.state.reading;
     final resultCards = reading?.selectedCards ?? _fallbackResultCards;
     final isSaved =
-        _isSaved ||
+        _historySavedOverride ??
         (controller?.state.isResultSavedForHistory ??
             reading?.isSavedForHistory ??
             false);
+    final savingLabel = _historySavingTarget == false
+        ? l10n.resultClearing
+        : l10n.resultSaving;
 
     return AppBackdrop(
       child: SafeArea(
@@ -2880,13 +3049,17 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ArcanaPrimaryButton(
-                      onPressed: isSaved || _saving
+                      tone: isSaved
+                          ? ArcanaPrimaryButtonTone.danger
+                          : ArcanaPrimaryButtonTone.gold,
+                      onPressed: _saving
                           ? null
-                          : () => _saveReading(controller, reading),
+                          : () =>
+                                _setReadingSaved(controller, reading, !isSaved),
                       child: Text(
                         _saving
-                            ? l10n.resultSaving
-                            : (isSaved ? l10n.resultSaved : l10n.resultSave),
+                            ? savingLabel
+                            : (isSaved ? l10n.resultClear : l10n.resultSave),
                       ),
                     ),
                   ),
@@ -3662,52 +3835,68 @@ class ScreenFrame extends StatelessWidget {
     required this.child,
     this.eyebrow,
     this.trailing,
+    this.scrollable = true,
   });
 
   final String title;
   final String? eyebrow;
   final Widget? trailing;
   final Widget child;
+  final bool scrollable;
 
   @override
   Widget build(BuildContext context) {
     return AppBackdrop(
       child: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
-              sliver: SliverToBoxAdapter(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (eyebrow != null) ...[
-                            EyebrowText(eyebrow!),
-                            const SizedBox(height: 6),
-                          ],
-                          Text(
-                            title,
-                            style: Theme.of(context).textTheme.displaySmall,
-                          ),
-                        ],
-                      ),
+        child: scrollable
+            ? CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+                    sliver: SliverToBoxAdapter(child: _header(context)),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(26, 12, 26, 18),
+                    sliver: SliverToBoxAdapter(child: child),
+                  ),
+                ],
+              )
+            : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+                    child: _header(context),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(26, 12, 26, 10),
+                      child: child,
                     ),
-                    ?trailing,
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(26, 12, 26, 116),
-              sliver: SliverToBoxAdapter(child: child),
-            ),
-          ],
-        ),
       ),
+    );
+  }
+
+  Widget _header(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (eyebrow != null) ...[
+                EyebrowText(eyebrow!),
+                const SizedBox(height: 6),
+              ],
+              Text(title, style: Theme.of(context).textTheme.displaySmall),
+            ],
+          ),
+        ),
+        ?trailing,
+      ],
     );
   }
 }
@@ -4222,19 +4411,42 @@ class _ArcanaLoadingOrbitPainter extends CustomPainter {
   }
 }
 
+enum ArcanaPrimaryButtonTone { gold, danger }
+
 class ArcanaPrimaryButton extends StatelessWidget {
   const ArcanaPrimaryButton({
     super.key,
     required this.onPressed,
     required this.child,
+    this.tone = ArcanaPrimaryButtonTone.gold,
   });
 
   final VoidCallback? onPressed;
   final Widget child;
+  final ArcanaPrimaryButtonTone tone;
 
   @override
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
+    final gradient = switch (tone) {
+      ArcanaPrimaryButtonTone.gold => const LinearGradient(
+        colors: [Color(0xFFF5DA95), Color(0xFFB8832F)],
+      ),
+      ArcanaPrimaryButtonTone.danger => const LinearGradient(
+        colors: [Color(0xFFFF8F82), Color(0xFFC4363E)],
+      ),
+    };
+    final shadowColor = switch (tone) {
+      ArcanaPrimaryButtonTone.gold => const Color(0xFFB8832F),
+      ArcanaPrimaryButtonTone.danger => const Color(0xFFC4363E),
+    };
+    final foregroundColor = switch (tone) {
+      ArcanaPrimaryButtonTone.gold => _ArcanaColors.ink2,
+      ArcanaPrimaryButtonTone.danger => _ArcanaColors.ivory,
+    };
+    final resolvedForegroundColor = enabled
+        ? foregroundColor
+        : _ArcanaColors.gold2;
 
     return Material(
       color: Colors.transparent,
@@ -4243,16 +4455,15 @@ class ArcanaPrimaryButton extends StatelessWidget {
         height: 50,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
-          gradient: enabled
-              ? const LinearGradient(
-                  colors: [Color(0xFFF5DA95), Color(0xFFB8832F)],
-                )
-              : null,
-          color: enabled ? null : Colors.white.withValues(alpha: 0.08),
+          gradient: enabled ? gradient : null,
+          color: enabled ? null : _ArcanaColors.gold.withValues(alpha: 0.14),
+          border: enabled
+              ? null
+              : Border.all(color: _ArcanaColors.gold2.withValues(alpha: 0.36)),
           boxShadow: enabled
               ? [
                   BoxShadow(
-                    color: const Color(0xFFB8832F).withValues(alpha: 0.28),
+                    color: shadowColor.withValues(alpha: 0.28),
                     blurRadius: 18,
                     offset: const Offset(0, 8),
                   ),
@@ -4267,7 +4478,7 @@ class ArcanaPrimaryButton extends StatelessWidget {
               style: _bodyTextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
-                color: _ArcanaColors.ink2,
+                color: resolvedForegroundColor,
                 height: 1,
               ),
               child: child,
@@ -4961,16 +5172,7 @@ class DeepHistoryPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            const Expanded(child: EyebrowText('Saved readings')),
-            Text(
-              usesChinese ? '點擊查看詳細結果' : 'Tap to open the full result',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
+        const EyebrowText('Saved readings'),
         const SizedBox(height: 8),
         Text(l10n.historyTitle, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 14),

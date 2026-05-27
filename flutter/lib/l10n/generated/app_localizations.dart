@@ -177,6 +177,12 @@ abstract class AppLocalizations {
   /// **'Google sign-in'**
   String get googleLogin;
 
+  /// No description provided for @playGamesLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Games sign-in'**
+  String get playGamesLogin;
+
   /// No description provided for @loginAction.
   ///
   /// In en, this message translates to:
@@ -213,11 +219,23 @@ abstract class AppLocalizations {
   /// **'Email or password is incorrect'**
   String get emailCredentialFailure;
 
+  /// No description provided for @emailAlreadyRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'This Email is already registered. Sign in instead or reset your password.'**
+  String get emailAlreadyRegistered;
+
   /// No description provided for @googleFailure.
   ///
   /// In en, this message translates to:
   /// **'Google sign-in failed. Please try again later.'**
   String get googleFailure;
+
+  /// No description provided for @playGamesFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'Play Games sign-in failed. Please try again later.'**
+  String get playGamesFailure;
 
   /// No description provided for @emailLogin.
   ///
@@ -525,6 +543,18 @@ abstract class AppLocalizations {
   /// **'Saving'**
   String get resultSaving;
 
+  /// No description provided for @resultClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear record'**
+  String get resultClear;
+
+  /// No description provided for @resultClearing.
+  ///
+  /// In en, this message translates to:
+  /// **'Clearing'**
+  String get resultClearing;
+
   /// No description provided for @resultSaved.
   ///
   /// In en, this message translates to:
@@ -672,7 +702,7 @@ abstract class AppLocalizations {
   /// No description provided for @localeZh.
   ///
   /// In en, this message translates to:
-  /// **'Traditional Chinese'**
+  /// **'繁體中文'**
   String get localeZh;
 
   /// No description provided for @localeEn.

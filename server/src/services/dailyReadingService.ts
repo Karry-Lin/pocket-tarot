@@ -74,9 +74,11 @@ export async function createTodayDailyReading(
     };
   }
 
-  const weather = await dependencies.weatherService.resolveWeather(
-    typeof input.weather === "object" && input.weather !== null ? input.weather : {}
-  );
+  const weatherInput = typeof input.weather === "object" && input.weather !== null ? input.weather : {};
+  const weather = await dependencies.weatherService.resolveWeather({
+    ...weatherInput,
+    locale
+  });
   const card = drawCards(1)[0];
   const markdownResult = cleanReadingMarkdown(
     await dependencies.llmService.generateDailyReading({

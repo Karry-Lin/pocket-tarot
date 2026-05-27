@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "412089008005-6phv7cv1nt3ks57dd0v0jk7e2i4hit6p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.karry.pocket_tarot",
+            "certificate_hash": "ac60470b9ef2c1f9661c91da21d64f908f575ad6"
+          }
+        },
+        {
           "client_id": "412089008005-dh730qcf9vlm5maoh5f5tjl8ru0bnd3s.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

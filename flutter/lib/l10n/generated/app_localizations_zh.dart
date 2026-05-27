@@ -48,6 +48,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get googleLogin => 'Google 登入';
 
   @override
+  String get playGamesLogin => 'Play Games 登入';
+
+  @override
   String get loginAction => '登入';
 
   @override
@@ -66,7 +69,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get emailCredentialFailure => '帳號或密碼錯誤';
 
   @override
+  String get emailAlreadyRegistered => '這個 Email 已註冊，請改用登入或重設密碼。';
+
+  @override
   String get googleFailure => 'Google 登入失敗，請稍後再試';
+
+  @override
+  String get playGamesFailure => 'Play Games 登入失敗，請稍後再試';
 
   @override
   String get emailLogin => 'Email 登入';
@@ -224,6 +233,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resultSaving => '保存中';
 
   @override
+  String get resultClear => '清除紀錄';
+
+  @override
+  String get resultClearing => '清除中';
+
+  @override
   String get resultSaved => '已保存';
 
   @override
@@ -301,7 +316,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localeSystem => '系統';
 
   @override
-  String get localeZh => '繁中';
+  String get localeZh => '繁體中文';
 
   @override
   String get localeEn => 'English';
@@ -404,6 +419,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get googleLogin => 'Google 登入';
 
   @override
+  String get playGamesLogin => 'Play Games 登入';
+
+  @override
   String get loginAction => '登入';
 
   @override
@@ -422,7 +440,13 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get emailCredentialFailure => '帳號或密碼錯誤';
 
   @override
+  String get emailAlreadyRegistered => '這個 Email 已註冊，請改用登入或重設密碼。';
+
+  @override
   String get googleFailure => 'Google 登入失敗，請稍後再試';
+
+  @override
+  String get playGamesFailure => 'Play Games 登入失敗，請稍後再試';
 
   @override
   String get emailLogin => 'Email 登入';
@@ -580,6 +604,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get resultSaving => '保存中';
 
   @override
+  String get resultClear => '清除紀錄';
+
+  @override
+  String get resultClearing => '清除中';
+
+  @override
   String get resultSaved => '已保存';
 
   @override
@@ -657,7 +687,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get localeSystem => '系統';
 
   @override
-  String get localeZh => '繁中';
+  String get localeZh => '繁體中文';
 
   @override
   String get localeEn => 'English';

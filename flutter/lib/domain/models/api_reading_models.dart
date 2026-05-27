@@ -68,6 +68,7 @@ class WeatherSnapshot {
     required this.provider,
     required this.latitude,
     required this.longitude,
+    this.locationName,
     required this.timezone,
     required this.current,
     required this.errorCode,
@@ -78,6 +79,7 @@ class WeatherSnapshot {
   final String? provider;
   final double? latitude;
   final double? longitude;
+  final String? locationName;
   final String timezone;
   final CurrentWeather? current;
   final String? errorCode;
@@ -89,6 +91,7 @@ class WeatherSnapshot {
       provider: json['provider'] as String?,
       latitude: _doubleOrNull(json['latitude']),
       longitude: _doubleOrNull(json['longitude']),
+      locationName: json['locationName'] as String?,
       timezone: json['timezone'] as String? ?? 'Asia/Taipei',
       current: json['current'] is Map
           ? CurrentWeather.fromJson(

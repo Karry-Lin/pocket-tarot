@@ -49,6 +49,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get googleLogin => 'Google sign-in';
 
   @override
+  String get playGamesLogin => 'Play Games sign-in';
+
+  @override
   String get loginAction => 'Sign in';
 
   @override
@@ -67,7 +70,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailCredentialFailure => 'Email or password is incorrect';
 
   @override
+  String get emailAlreadyRegistered =>
+      'This Email is already registered. Sign in instead or reset your password.';
+
+  @override
   String get googleFailure => 'Google sign-in failed. Please try again later.';
+
+  @override
+  String get playGamesFailure =>
+      'Play Games sign-in failed. Please try again later.';
 
   @override
   String get emailLogin => 'Email sign-in';
@@ -233,6 +244,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resultSaving => 'Saving';
 
   @override
+  String get resultClear => 'Clear record';
+
+  @override
+  String get resultClearing => 'Clearing';
+
+  @override
   String get resultSaved => 'Saved';
 
   @override
@@ -314,7 +331,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get localeSystem => 'System';
 
   @override
-  String get localeZh => 'Traditional Chinese';
+  String get localeZh => '繁體中文';
 
   @override
   String get localeEn => 'English';
