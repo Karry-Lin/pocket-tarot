@@ -70,6 +70,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailCredentialFailure => 'Email or password is incorrect';
 
   @override
+  String get emailAlreadyRegistered =>
+      'This Email is already registered. Sign in instead or reset your password.';
+
+  @override
   String get googleFailure => 'Google sign-in failed. Please try again later.';
 
   @override
@@ -327,7 +331,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get localeSystem => 'System';
 
   @override
-  String get localeZh => 'Traditional Chinese';
+  String get localeZh => '繁體中文';
 
   @override
   String get localeEn => 'English';

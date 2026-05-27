@@ -317,6 +317,7 @@ ThemeData buildTheme() {
       backgroundColor: Colors.white.withValues(alpha: 0.035),
       selectedColor: _ArcanaColors.gold.withValues(alpha: 0.14),
       disabledColor: Colors.white.withValues(alpha: 0.04),
+      checkmarkColor: _ArcanaColors.gold2,
       side: BorderSide(color: _ArcanaColors.muted.withValues(alpha: 0.22)),
       labelStyle: _bodyTextStyle(fontSize: 12, color: _ArcanaColors.muted),
       secondaryLabelStyle: _bodyTextStyle(
@@ -534,6 +535,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final usesChinese = _usesChineseCardText(l10n);
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     if (usesChinese && _showEmailForm) {
       return _VisualEmailLoginScreen(
@@ -560,28 +562,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(26, 28, 26, 34),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(
+                26,
+                keyboardOpen ? 18 : 28,
+                26,
+                MediaQuery.viewInsetsOf(context).bottom + 34,
+              ),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 360),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SizedBox(height: _showEmailForm ? 88 : 242),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: BrandMark(size: 58, radius: 18),
+                      SizedBox(
+                        height: keyboardOpen
+                            ? (_showEmailForm ? 8 : 40)
+                            : (_showEmailForm ? 88 : 242),
                       ),
-                      const SizedBox(height: 19),
-                      const EyebrowText('Pocket Tarot'),
-                      const SizedBox(height: 7),
-                      Text(
-                        usesChinese ? '登入口袋塔羅' : 'Sign in to Pocket Tarot',
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(usesChinese ? '保存每日抽牌與占卜紀錄。' : l10n.loginTagline),
-                      const SizedBox(height: 21),
+                      if (!(_showEmailForm && keyboardOpen)) ...[
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: BrandMark(size: 58, radius: 18),
+                        ),
+                        const SizedBox(height: 19),
+                        const EyebrowText('Pocket Tarot'),
+                        const SizedBox(height: 7),
+                        Text(
+                          usesChinese ? '登入口袋塔羅' : 'Sign in to Pocket Tarot',
+                          style: Theme.of(context).textTheme.displaySmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(usesChinese ? '保存每日抽牌與占卜紀錄。' : l10n.loginTagline),
+                        const SizedBox(height: 21),
+                      ],
                       if (!_showEmailForm)
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -964,6 +978,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
 String _emailAuthFailureMessage(Object error, AppLocalizations l10n) {
   if (error is firebase.FirebaseAuthException &&
+      error.code == 'email-already-in-use') {
+    return l10n.emailAlreadyRegistered;
+  }
+
+  if (error is firebase.FirebaseAuthException &&
       _emailCredentialFailureCodes.contains(error.code)) {
     return l10n.emailCredentialFailure;
   }
@@ -1013,7 +1032,7 @@ class _LoginLanguageButton extends StatelessWidget {
       key: const ValueKey('login-language-button'),
       onPressed: onPressed,
       icon: const Icon(Icons.language, size: 16),
-      label: Text(usesChinese ? '繁中' : 'EN'),
+      label: Text(usesChinese ? '繁體中文' : 'EN'),
       style: OutlinedButton.styleFrom(
         minimumSize: const Size(0, 36),
         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -1066,6 +1085,7 @@ class _VisualEmailLoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final isRegister = mode == EmailAuthMode.register;
     final isReset = mode == EmailAuthMode.resetPassword;
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final primaryLabel = switch (mode) {
       EmailAuthMode.signIn => '進入口袋塔羅',
       EmailAuthMode.register => '建立帳號',
@@ -1077,31 +1097,41 @@ class _VisualEmailLoginScreen extends StatelessWidget {
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(26, 28, 26, 34),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.fromLTRB(
+                26,
+                keyboardOpen ? 18 : 28,
+                26,
+                MediaQuery.viewInsetsOf(context).bottom + 34,
+              ),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 360),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      SizedBox(height: isRegister ? 122 : 242),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: BrandMark(size: 58, radius: 18),
+                      SizedBox(
+                        height: keyboardOpen ? 4 : (isRegister ? 122 : 242),
                       ),
-                      const SizedBox(height: 19),
-                      const EyebrowText('Pocket Tarot'),
-                      const SizedBox(height: 7),
-                      Text(
-                        '登入口袋塔羅',
-                        style: Theme.of(context).textTheme.displaySmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '保存每日抽牌與占卜紀錄。',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: 21),
+                      if (!keyboardOpen) ...[
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: BrandMark(size: 58, radius: 18),
+                        ),
+                        const SizedBox(height: 19),
+                        const EyebrowText('Pocket Tarot'),
+                        const SizedBox(height: 7),
+                        Text(
+                          '登入口袋塔羅',
+                          style: Theme.of(context).textTheme.displaySmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '保存每日抽牌與占卜紀錄。',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 21),
+                      ],
                       _VisualAuthModeSwitch(
                         mode: mode,
                         enabled: !submitting,
@@ -1585,11 +1615,31 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   DailyReadingState _dailyState = const DailyReadingState.initial();
+  String? _displayName;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadToday());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadToday();
+      _loadHomeProfile();
+    });
+  }
+
+  Future<void> _loadHomeProfile() async {
+    try {
+      final controller = await ref.read(profileControllerProvider.future);
+      await controller.load();
+      if (mounted) {
+        setState(
+          () => _displayName = controller.state.snapshot?.user.displayName,
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _displayName = null);
+      }
+    }
   }
 
   Future<void> _loadToday() async {
@@ -1680,10 +1730,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
     final usesChinese = _usesChineseCardText(l10n);
     final loaded = _dailyState.status == DailyReadingStatus.loaded;
+    final scrollable = loaded || _dailyState.status == DailyReadingStatus.error;
 
     return ScreenFrame(
-      title: usesChinese ? (loaded ? '今日抽牌結果' : '每日抽牌') : l10n.homeTitle,
+      title: _homeTitle(
+        displayName: _displayName,
+        loaded: loaded,
+        usesChinese: usesChinese,
+        l10n: l10n,
+      ),
       eyebrow: loaded ? 'Daily result' : 'Daily ritual',
+      scrollable: scrollable,
       trailing: loaded
           ? _DailyRedrawButton(
               label: usesChinese ? '清除' : 'Clear',
@@ -1706,7 +1763,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       DailyReadingStatus.initial || DailyReadingStatus.loading => const Center(
         child: CircularProgressIndicator(),
       ),
-      DailyReadingStatus.empty => _DailyEmptyState(onDraw: _drawToday),
+      DailyReadingStatus.empty => _DailyEmptyState(
+        displayName: _displayName,
+        onDraw: _drawToday,
+      ),
       DailyReadingStatus.creating => ArcanaLoadingView(
         title: l10n.dailyLoadingTitle,
         message: l10n.dailyLoadingMessage,
@@ -1720,6 +1780,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     };
   }
+}
+
+String _homeTitle({
+  required String? displayName,
+  required bool loaded,
+  required bool usesChinese,
+  required AppLocalizations l10n,
+}) {
+  final name = displayName?.trim();
+  if (name != null && name.isNotEmpty) {
+    return 'Hi $name';
+  }
+
+  return usesChinese ? (loaded ? '今日抽牌結果' : '每日抽牌') : l10n.homeTitle;
 }
 
 class DailyResultCard extends ConsumerWidget {
@@ -2043,8 +2117,9 @@ String _dailyReadingDateLabel(String localDate) {
 }
 
 class _DailyEmptyState extends StatelessWidget {
-  const _DailyEmptyState({required this.onDraw});
+  const _DailyEmptyState({required this.displayName, required this.onDraw});
 
+  final String? displayName;
   final VoidCallback onDraw;
 
   @override
@@ -2052,86 +2127,107 @@ class _DailyEmptyState extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final usesChineseText = _usesChineseCardText(l10n);
 
-    return SizedBox(
-      key: const ValueKey('daily-ritual-stage'),
-      height: 660,
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            right: 0,
-            left: 0,
-            child: SizedBox(
-              key: const ValueKey('daily-ritual-copy'),
-              height: 164,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Center(child: EyebrowText('One card today')),
-                  const SizedBox(height: 10),
-                  Text(
-                    usesChineseText
-                        ? '把今天的問題放在掌心，讓牌背先替你呼吸。'
-                        : l10n.dailyEmptyTitle,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    usesChineseText
-                        ? '今日尚未抽牌。輕觸中央牌背，抽出只屬於今天的一張牌。'
-                        : l10n.dailyEmptyMessage,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const Positioned(
-            top: 215,
-            right: 0,
-            left: 0,
-            child: DailyDeckStage(),
-          ),
-          Positioned(
-            top: 450,
-            right: 0,
-            left: 0,
-            child: Center(
-              key: const ValueKey('daily-ritual-action'),
-              child: SizedBox(
-                width: usesChineseText ? 120 : 168,
-                height: 50,
-                child: ArcanaPrimaryButton(
-                  onPressed: onDraw,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        l10n.dailyDrawButton,
-                        maxLines: 1,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stageHeight = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : 660.0;
+        final compact = stageHeight < 620;
+        final copyHeight = compact ? 136.0 : 164.0;
+        final deckTop = copyHeight + (compact ? 24.0 : 51.0);
+        final actionTop = math.min(
+          stageHeight - (compact ? 150.0 : 168.0),
+          deckTop + 218.0 + (compact ? 16.0 : 28.0),
+        );
+        final constellationBottom = compact ? 4.0 : 24.0;
+        final name = displayName?.trim();
+        final personalized = name != null && name.isNotEmpty;
+        final title = personalized
+            ? (usesChineseText
+                  ? 'Hi $name，今天想抽哪張牌？'
+                  : 'Hi $name, your card is waiting.')
+            : (usesChineseText ? '把今天的問題放在掌心，讓牌背先替你呼吸。' : l10n.dailyEmptyTitle);
+
+        return SizedBox(
+          key: const ValueKey('daily-ritual-stage'),
+          height: stageHeight,
+          child: Stack(
+            children: [
+              Positioned(
+                top: 0,
+                right: 0,
+                left: 0,
+                child: SizedBox(
+                  key: const ValueKey('daily-ritual-copy'),
+                  height: copyHeight,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Center(child: EyebrowText('One card today')),
+                      const SizedBox(height: 10),
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        usesChineseText
+                            ? '今日尚未抽牌。輕觸中央牌背，抽出只屬於今天的一張牌。'
+                            : l10n.dailyEmptyMessage,
+                        maxLines: compact ? 1 : 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                top: deckTop,
+                right: 0,
+                left: 0,
+                child: const DailyDeckStage(),
+              ),
+              Positioned(
+                top: actionTop,
+                right: 0,
+                left: 0,
+                child: Center(
+                  key: const ValueKey('daily-ritual-action'),
+                  child: SizedBox(
+                    width: usesChineseText ? 120 : 168,
+                    height: 50,
+                    child: ArcanaPrimaryButton(
+                      onPressed: onDraw,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            l10n.dailyDrawButton,
+                            maxLines: 1,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
-            ),
+              Positioned(
+                right: 0,
+                bottom: constellationBottom,
+                left: 0,
+                child: const _DailyRitualConstellation(),
+              ),
+            ],
           ),
-          const Positioned(
-            right: 0,
-            bottom: 24,
-            left: 0,
-            child: _DailyRitualConstellation(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -3747,52 +3843,68 @@ class ScreenFrame extends StatelessWidget {
     required this.child,
     this.eyebrow,
     this.trailing,
+    this.scrollable = true,
   });
 
   final String title;
   final String? eyebrow;
   final Widget? trailing;
   final Widget child;
+  final bool scrollable;
 
   @override
   Widget build(BuildContext context) {
     return AppBackdrop(
       child: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
-              sliver: SliverToBoxAdapter(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (eyebrow != null) ...[
-                            EyebrowText(eyebrow!),
-                            const SizedBox(height: 6),
-                          ],
-                          Text(
-                            title,
-                            style: Theme.of(context).textTheme.displaySmall,
-                          ),
-                        ],
-                      ),
+        child: scrollable
+            ? CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+                    sliver: SliverToBoxAdapter(child: _header(context)),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(26, 12, 26, 18),
+                    sliver: SliverToBoxAdapter(child: child),
+                  ),
+                ],
+              )
+            : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+                    child: _header(context),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(26, 12, 26, 10),
+                      child: child,
                     ),
-                    ?trailing,
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(26, 12, 26, 116),
-              sliver: SliverToBoxAdapter(child: child),
-            ),
-          ],
-        ),
       ),
+    );
+  }
+
+  Widget _header(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (eyebrow != null) ...[
+                EyebrowText(eyebrow!),
+                const SizedBox(height: 6),
+              ],
+              Text(title, style: Theme.of(context).textTheme.displaySmall),
+            ],
+          ),
+        ),
+        ?trailing,
+      ],
     );
   }
 }
@@ -4340,6 +4452,9 @@ class ArcanaPrimaryButton extends StatelessWidget {
       ArcanaPrimaryButtonTone.gold => _ArcanaColors.ink2,
       ArcanaPrimaryButtonTone.danger => _ArcanaColors.ivory,
     };
+    final resolvedForegroundColor = enabled
+        ? foregroundColor
+        : _ArcanaColors.gold2;
 
     return Material(
       color: Colors.transparent,
@@ -4349,7 +4464,10 @@ class ArcanaPrimaryButton extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
           gradient: enabled ? gradient : null,
-          color: enabled ? null : Colors.white.withValues(alpha: 0.08),
+          color: enabled ? null : _ArcanaColors.gold.withValues(alpha: 0.14),
+          border: enabled
+              ? null
+              : Border.all(color: _ArcanaColors.gold2.withValues(alpha: 0.36)),
           boxShadow: enabled
               ? [
                   BoxShadow(
@@ -4368,7 +4486,7 @@ class ArcanaPrimaryButton extends StatelessWidget {
               style: _bodyTextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w900,
-                color: foregroundColor,
+                color: resolvedForegroundColor,
                 height: 1,
               ),
               child: child,
@@ -5062,16 +5180,7 @@ class DeepHistoryPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            const Expanded(child: EyebrowText('Saved readings')),
-            Text(
-              usesChinese ? '點擊查看詳細結果' : 'Tap to open the full result',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
+        const EyebrowText('Saved readings'),
         const SizedBox(height: 8),
         Text(l10n.historyTitle, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 14),

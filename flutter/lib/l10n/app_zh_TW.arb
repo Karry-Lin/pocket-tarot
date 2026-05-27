@@ -19,6 +19,7 @@
   "passwordResetSent": "重設信已送出",
   "formFailure": "操作失敗，請稍後再試",
   "emailCredentialFailure": "帳號或密碼錯誤",
+  "emailAlreadyRegistered": "這個 Email 已註冊，請改用登入或重設密碼。",
   "googleFailure": "Google 登入失敗，請稍後再試",
   "playGamesFailure": "Play Games 登入失敗，請稍後再試",
   "emailLogin": "Email 登入",
@@ -122,7 +123,7 @@
     }
   },
   "localeSystem": "系統",
-  "localeZh": "繁中",
+  "localeZh": "繁體中文",
   "localeEn": "English",
   "weatherToggle": "每日抽牌使用天氣",
   "editDisplayName": "編輯暱稱",

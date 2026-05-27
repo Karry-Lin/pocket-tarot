@@ -22,6 +22,7 @@
   "passwordResetSent": "Password reset email sent",
   "formFailure": "Something went wrong. Please try again later.",
   "emailCredentialFailure": "Email or password is incorrect",
+  "emailAlreadyRegistered": "This Email is already registered. Sign in instead or reset your password.",
   "googleFailure": "Google sign-in failed. Please try again later.",
   "playGamesFailure": "Play Games sign-in failed. Please try again later.",
   "emailLogin": "Email sign-in",
@@ -125,7 +126,7 @@
     }
   },
   "localeSystem": "System",
-  "localeZh": "Traditional Chinese",
+  "localeZh": "繁體中文",
   "localeEn": "English",
   "weatherToggle": "Use weather for daily reading",
   "editDisplayName": "Edit display name",

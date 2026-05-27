@@ -219,6 +219,12 @@ abstract class AppLocalizations {
   /// **'Email or password is incorrect'**
   String get emailCredentialFailure;
 
+  /// No description provided for @emailAlreadyRegistered.
+  ///
+  /// In en, this message translates to:
+  /// **'This Email is already registered. Sign in instead or reset your password.'**
+  String get emailAlreadyRegistered;
+
   /// No description provided for @googleFailure.
   ///
   /// In en, this message translates to:
@@ -696,7 +702,7 @@ abstract class AppLocalizations {
   /// No description provided for @localeZh.
   ///
   /// In en, this message translates to:
-  /// **'Traditional Chinese'**
+  /// **'繁體中文'**
   String get localeZh;
 
   /// No description provided for @localeEn.
