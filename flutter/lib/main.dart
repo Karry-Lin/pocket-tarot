@@ -1790,7 +1790,11 @@ String _homeTitle({
 }) {
   final name = displayName?.trim();
   if (name != null && name.isNotEmpty) {
-    return 'Hi $name';
+    if (loaded) {
+      return usesChinese ? '$name，牌已翻面' : '$name, card revealed';
+    }
+
+    return usesChinese ? '$name，牌桌亮起' : '$name, the table is lit';
   }
 
   return usesChinese ? (loaded ? '今日抽牌結果' : '每日抽牌') : l10n.homeTitle;
@@ -2148,13 +2152,9 @@ class _DailyEmptyState extends StatelessWidget {
           deckTop + 218.0 + (compact ? 16.0 : 28.0),
         );
         final constellationBottom = compact ? 4.0 : 24.0;
-        final name = displayName?.trim();
-        final personalized = name != null && name.isNotEmpty;
-        final title = personalized
-            ? (usesChineseText
-                  ? 'Hi $name，今天想抽哪張牌？'
-                  : 'Hi $name, your card is waiting.')
-            : (usesChineseText ? '把今天的問題放在掌心，讓牌背先替你呼吸。' : l10n.dailyEmptyTitle);
+        final title = usesChineseText
+            ? '讓一張牌先替今天開口'
+            : 'Let one card speak first';
 
         return SizedBox(
           key: const ValueKey('daily-ritual-stage'),
@@ -2183,8 +2183,8 @@ class _DailyEmptyState extends StatelessWidget {
                       const SizedBox(height: 10),
                       Text(
                         usesChineseText
-                            ? '今日尚未抽牌。輕觸中央牌背，抽出只屬於今天的一張牌。'
-                            : l10n.dailyEmptyMessage,
+                            ? '不用急著追完整答案；輕觸中央牌背，先接住此刻最靠近你的訊號。'
+                            : 'Tap the deck and let the closest signal surface for today.',
                         maxLines: compact ? 1 : 2,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
