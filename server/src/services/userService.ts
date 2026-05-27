@@ -33,6 +33,7 @@ export async function registerProfile(firebaseUser: DecodedFirebaseToken, input:
 
   const email = resolveProfileEmail(firebaseUser, providerIds);
   const emailNormalized = normalizeEmail(email);
+  const now = new Date();
   const existingByUid = await UserModel.findOne({ firebaseUid: firebaseUser.uid });
 
   if (existingByUid) {
@@ -40,7 +41,7 @@ export async function registerProfile(firebaseUser: DecodedFirebaseToken, input:
       throw new ApiError(403, "ACCOUNT_DELETED", "帳號已刪除");
     }
 
-    existingByUid.lastLoginAt = new Date();
+    existingByUid.lastLoginAt = now;
     await existingByUid.save();
 
     return {
@@ -54,15 +55,16 @@ export async function registerProfile(firebaseUser: DecodedFirebaseToken, input:
     throw new ApiError(409, "EMAIL_ALREADY_REGISTERED", "Email 已註冊");
   }
 
+  const isActive = newUsersActiveByDefault();
   const user = await UserModel.create({
     firebaseUid: firebaseUser.uid,
     email,
     emailNormalized,
     displayName: parseDisplayName(input.displayName),
     providerIds,
-    isActive: false,
-    activatedAt: null,
-    lastLoginAt: new Date(),
+    isActive,
+    activatedAt: isActive ? now : null,
+    lastLoginAt: now,
     deletedAt: null
   });
 
@@ -253,4 +255,13 @@ function emailSafeFirebaseUid(uid: string) {
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function newUsersActiveByDefault() {
+  const value = process.env.NEW_USERS_ACTIVE_BY_DEFAULT;
+  if (value == null || value.trim() === "") {
+    return true;
+  }
+
+  return !["0", "false", "off", "no"].includes(value.trim().toLowerCase());
 }

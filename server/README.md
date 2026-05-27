@@ -12,6 +12,8 @@ npm test
 
 `src/server.ts` requires `MONGODB_URI`. Local development can copy `.env.example` to `.env`.
 
+`NEW_USERS_ACTIVE_BY_DEFAULT` controls whether newly registered profiles are immediately active. It defaults to `true`; set it to `false` to keep the previous admin-activation flow.
+
 ## Test Database
 
 Integration tests use the MongoDB URI from `MONGODB_URI`, or `mongodb://127.0.0.1:27017/pocket_tarot_test` when unset. Tests create emails with a `test+...@pocket-tarot.local` marker and clean up only those exact emails.
