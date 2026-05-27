@@ -1763,10 +1763,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       DailyReadingStatus.initial || DailyReadingStatus.loading => const Center(
         child: CircularProgressIndicator(),
       ),
-      DailyReadingStatus.empty => _DailyEmptyState(
-        displayName: _displayName,
-        onDraw: _drawToday,
-      ),
+      DailyReadingStatus.empty => _DailyEmptyState(onDraw: _drawToday),
       DailyReadingStatus.creating => ArcanaLoadingView(
         title: l10n.dailyLoadingTitle,
         message: l10n.dailyLoadingMessage,
@@ -2129,9 +2126,8 @@ String _dailyReadingDateLabel(String localDate) {
 }
 
 class _DailyEmptyState extends StatelessWidget {
-  const _DailyEmptyState({required this.displayName, required this.onDraw});
+  const _DailyEmptyState({required this.onDraw});
 
-  final String? displayName;
   final VoidCallback onDraw;
 
   @override
@@ -2144,14 +2140,10 @@ class _DailyEmptyState extends StatelessWidget {
         final stageHeight = constraints.maxHeight.isFinite
             ? constraints.maxHeight
             : 660.0;
-        final compact = stageHeight < 620;
-        final copyHeight = compact ? 136.0 : 164.0;
-        final deckTop = copyHeight + (compact ? 24.0 : 51.0);
-        final actionTop = math.min(
-          stageHeight - (compact ? 150.0 : 168.0),
-          deckTop + 218.0 + (compact ? 16.0 : 28.0),
-        );
-        final constellationBottom = compact ? 4.0 : 24.0;
+        final compact = stageHeight < 560 || constraints.maxWidth < 320;
+        final copyHeight = compact ? 172.0 : 164.0;
+        final deckTop = copyHeight + (compact ? 12.0 : 51.0);
+        final constellationBottom = compact ? 0.0 : 24.0;
         final title = usesChineseText
             ? '讓一張牌先替今天開口'
             : 'Let one card speak first';
@@ -2175,8 +2167,6 @@ class _DailyEmptyState extends StatelessWidget {
                       const SizedBox(height: 10),
                       Text(
                         title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
@@ -2185,8 +2175,6 @@ class _DailyEmptyState extends StatelessWidget {
                         usesChineseText
                             ? '不用急著追完整答案；輕觸中央牌背，先接住此刻最靠近你的訊號。'
                             : 'Tap the deck and let the closest signal surface for today.',
-                        maxLines: compact ? 1 : 2,
-                        overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
@@ -2198,32 +2186,9 @@ class _DailyEmptyState extends StatelessWidget {
                 top: deckTop,
                 right: 0,
                 left: 0,
-                child: const DailyDeckStage(),
-              ),
-              Positioned(
-                top: actionTop,
-                right: 0,
-                left: 0,
-                child: Center(
-                  key: const ValueKey('daily-ritual-action'),
-                  child: SizedBox(
-                    width: usesChineseText ? 120 : 168,
-                    height: 50,
-                    child: ArcanaPrimaryButton(
-                      onPressed: onDraw,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            l10n.dailyDrawButton,
-                            maxLines: 1,
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                child: DailyDeckStage(
+                  onTap: onDraw,
+                  semanticLabel: l10n.dailyDrawButton,
                 ),
               ),
               Positioned(
@@ -2241,7 +2206,10 @@ class _DailyEmptyState extends StatelessWidget {
 }
 
 class DailyDeckStage extends StatefulWidget {
-  const DailyDeckStage({super.key});
+  const DailyDeckStage({super.key, this.onTap, this.semanticLabel});
+
+  final VoidCallback? onTap;
+  final String? semanticLabel;
 
   @override
   State<DailyDeckStage> createState() => _DailyDeckStageState();
@@ -2272,7 +2240,7 @@ class _DailyDeckStageState extends State<DailyDeckStage>
 
   @override
   Widget build(BuildContext context) {
-    return KeyedSubtree(
+    final stage = KeyedSubtree(
       key: const ValueKey('daily-ritual-continuous-motion'),
       child: AnimatedBuilder(
         animation: _controller,
@@ -2319,6 +2287,22 @@ class _DailyDeckStageState extends State<DailyDeckStage>
             ),
           );
         },
+      ),
+    );
+
+    if (widget.onTap == null) {
+      return stage;
+    }
+
+    return Semantics(
+      key: const ValueKey('daily-ritual-deck-action'),
+      button: true,
+      label: widget.semanticLabel,
+      onTap: widget.onTap,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: MouseRegion(cursor: SystemMouseCursors.click, child: stage),
       ),
     );
   }
