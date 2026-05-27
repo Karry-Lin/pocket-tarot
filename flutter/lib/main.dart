@@ -2015,11 +2015,10 @@ _DailyInfoDisplay _successfulWeatherDisplay(
 
   final weatherName = _weatherCodeLabel(current.weatherCode, usesChinese);
   final temperature = current.temperature2m;
+  final locationLabel = _weatherLocationLabel(weather, usesChinese);
   final title = temperature == null
-      ? (usesChinese ? '所在地 $weatherName' : 'Local $weatherName')
-      : usesChinese
-      ? '所在地 ${temperature.round()}° $weatherName'
-      : 'Local ${temperature.round()}° $weatherName';
+      ? '$locationLabel $weatherName'
+      : '$locationLabel ${temperature.round()}° $weatherName';
   final humidity = current.relativeHumidity2m;
   final precipitation = current.precipitation;
   final bodyParts = <String>[];
@@ -2045,6 +2044,15 @@ _DailyInfoDisplay _successfulWeatherDisplay(
               : 'Current weather was included in this reading.')
         : bodyParts.join(usesChinese ? '，' : ', '),
   );
+}
+
+String _weatherLocationLabel(WeatherSnapshot weather, bool usesChinese) {
+  final locationName = weather.locationName?.trim();
+  if (locationName != null && locationName.isNotEmpty) {
+    return locationName;
+  }
+
+  return usesChinese ? '所在地' : 'Local';
 }
 
 String _weatherCodeLabel(double? weatherCode, bool usesChinese) {

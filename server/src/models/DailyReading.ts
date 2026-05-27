@@ -8,6 +8,7 @@ export type WeatherSnapshot = {
   provider: "open-meteo" | null;
   latitude: number | null;
   longitude: number | null;
+  locationName?: string | null;
   timezone: "Asia/Taipei";
   current: Record<string, unknown> | null;
   errorCode: string | null;

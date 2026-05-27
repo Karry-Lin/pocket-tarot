@@ -360,6 +360,7 @@ final _visualFixtureDailyReading = DailyReading(
     provider: 'open-meteo',
     latitude: 25.033,
     longitude: 121.5654,
+    locationName: '台北市',
     timezone: 'Asia/Taipei',
     current: CurrentWeather(
       time: '2026-05-22T08:30',

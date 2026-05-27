@@ -524,6 +524,10 @@ components:
         - type: object
           required: [provider, timezone, current, errorCode]
           properties:
+            locationName:
+              type:
+                - string
+                - "null"
             provider:
               type:
                 - string
