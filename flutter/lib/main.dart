@@ -414,35 +414,8 @@ class SplashCheckingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     return AppBackdrop(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(child: const BrandMark(size: 116, radius: 32)),
-              const SizedBox(height: 24),
-              Text(
-                l10n.startupCheckingTitle,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.startupCheckingMessage,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              const Center(child: CircularProgressIndicator()),
-            ],
-          ),
-        ),
-      ),
+      child: SafeArea(child: const Center(child: CircularProgressIndicator())),
     );
   }
 }
@@ -593,7 +566,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           style: Theme.of(context).textTheme.displaySmall,
                         ),
                         const SizedBox(height: 8),
-                        Text(usesChinese ? '保存每日抽牌與占卜紀錄。' : l10n.loginTagline),
+                        Text(usesChinese ? '用一張牌整理今天。' : l10n.loginTagline),
                         const SizedBox(height: 21),
                       ],
                       if (!_showEmailForm)
@@ -624,16 +597,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ArcanaPrimaryButton(
                                 onPressed: _submitting
                                     ? null
-                                    : () =>
-                                          setState(() => _showEmailForm = true),
+                                    : _openEmailAuthForm,
                                 child: const Text('使用 Email 登入'),
                               )
                             else
                               FilledButton(
                                 onPressed: _submitting
                                     ? null
-                                    : () =>
-                                          setState(() => _showEmailForm = true),
+                                    : _openEmailAuthForm,
                                 child: Text(l10n.emailLogin),
                               ),
                             if (_formError != null || _formMessage != null) ...[
@@ -818,6 +789,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _switchMode(EmailAuthMode mode) {
     setState(() {
       _mode = mode;
+      _errors = const {};
+      _formError = null;
+      _formMessage = null;
+    });
+  }
+
+  void _openEmailAuthForm() {
+    setState(() {
+      _showEmailForm = true;
       _errors = const {};
       _formError = null;
       _formMessage = null;
@@ -1092,128 +1072,142 @@ class _VisualEmailLoginScreen extends StatelessWidget {
       EmailAuthMode.resetPassword => '寄送重設信',
     };
 
+    Widget buildContent() {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(
+          26,
+          keyboardOpen ? 18 : 28,
+          26,
+          MediaQuery.viewInsetsOf(context).bottom + 34,
+        ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (!keyboardOpen) ...[
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: BrandMark(size: 58, radius: 18),
+                  ),
+                  const SizedBox(height: 19),
+                  const EyebrowText('Pocket Tarot'),
+                  const SizedBox(height: 7),
+                  Text(
+                    '登入口袋塔羅',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '用一張牌整理今天。',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 21),
+                ],
+                _VisualAuthModeSwitch(
+                  mode: mode,
+                  enabled: !submitting,
+                  onChanged: onModeChanged,
+                ),
+                const SizedBox(height: 16),
+                if (isRegister) ...[
+                  _VisualEmailField(
+                    label: '顯示名稱',
+                    hintText: '想被如何稱呼？',
+                    controller: displayNameController,
+                    errorText: displayNameError,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                _VisualEmailField(
+                  label: 'Email',
+                  hintText: 'you@example.com',
+                  controller: emailController,
+                  errorText: emailError,
+                ),
+                if (!isReset) ...[
+                  const SizedBox(height: 12),
+                  _VisualEmailField(
+                    label: '密碼',
+                    hintText: '至少 6 個字元',
+                    controller: passwordController,
+                    obscureText: true,
+                    errorText: passwordError,
+                  ),
+                ],
+                if (isRegister) ...[
+                  const SizedBox(height: 12),
+                  _VisualEmailField(
+                    label: '確認密碼',
+                    hintText: '再輸入一次密碼',
+                    controller: confirmPasswordController,
+                    obscureText: true,
+                    errorText: confirmPasswordError,
+                  ),
+                ],
+                if (formMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    formMessage!,
+                    textAlign: TextAlign.center,
+                    style: _bodyTextStyle(
+                      fontSize: 12,
+                      color: isError
+                          ? _ArcanaColors.error
+                          : _ArcanaColors.gold2,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 18),
+                ArcanaPrimaryButton(
+                  onPressed: submitting ? null : onSubmit,
+                  child: Text(primaryLabel),
+                ),
+                const SizedBox(height: 8),
+                if (mode == EmailAuthMode.signIn)
+                  TextButton(
+                    onPressed: submitting
+                        ? null
+                        : () => onModeChanged(EmailAuthMode.resetPassword),
+                    child: const Text('忘記密碼？'),
+                  )
+                else if (mode == EmailAuthMode.resetPassword)
+                  TextButton(
+                    onPressed: submitting
+                        ? null
+                        : () => onModeChanged(EmailAuthMode.signIn),
+                    child: const Text('回到 Email 登入'),
+                  )
+                else
+                  const SizedBox(height: 20),
+                const SizedBox(height: 18),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return AppBackdrop(
       child: SafeArea(
         child: Stack(
           children: [
-            SingleChildScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: EdgeInsets.fromLTRB(
-                26,
-                keyboardOpen ? 18 : 28,
-                26,
-                MediaQuery.viewInsetsOf(context).bottom + 34,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 360),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(
-                        height: keyboardOpen ? 4 : (isRegister ? 122 : 242),
-                      ),
-                      if (!keyboardOpen) ...[
-                        const Align(
-                          alignment: Alignment.centerLeft,
-                          child: BrandMark(size: 58, radius: 18),
-                        ),
-                        const SizedBox(height: 19),
-                        const EyebrowText('Pocket Tarot'),
-                        const SizedBox(height: 7),
-                        Text(
-                          '登入口袋塔羅',
-                          style: Theme.of(context).textTheme.displaySmall,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '保存每日抽牌與占卜紀錄。',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        const SizedBox(height: 21),
-                      ],
-                      _VisualAuthModeSwitch(
-                        mode: mode,
-                        enabled: !submitting,
-                        onChanged: onModeChanged,
-                      ),
-                      const SizedBox(height: 16),
-                      if (isRegister) ...[
-                        _VisualEmailField(
-                          label: '顯示名稱',
-                          hintText: '想被如何稱呼？',
-                          controller: displayNameController,
-                          errorText: displayNameError,
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      _VisualEmailField(
-                        label: 'Email',
-                        hintText: 'you@example.com',
-                        controller: emailController,
-                        errorText: emailError,
-                      ),
-                      if (!isReset) ...[
-                        const SizedBox(height: 12),
-                        _VisualEmailField(
-                          label: '密碼',
-                          hintText: '至少 6 個字元',
-                          controller: passwordController,
-                          obscureText: true,
-                          errorText: passwordError,
-                        ),
-                      ],
-                      if (isRegister) ...[
-                        const SizedBox(height: 12),
-                        _VisualEmailField(
-                          label: '確認密碼',
-                          hintText: '再輸入一次密碼',
-                          controller: confirmPasswordController,
-                          obscureText: true,
-                          errorText: confirmPasswordError,
-                        ),
-                      ],
-                      if (formMessage != null) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          formMessage!,
-                          textAlign: TextAlign.center,
-                          style: _bodyTextStyle(
-                            fontSize: 12,
-                            color: isError
-                                ? _ArcanaColors.error
-                                : _ArcanaColors.gold2,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 18),
-                      ArcanaPrimaryButton(
-                        onPressed: submitting ? null : onSubmit,
-                        child: Text(primaryLabel),
-                      ),
-                      const SizedBox(height: 8),
-                      if (mode == EmailAuthMode.signIn)
-                        TextButton(
-                          onPressed: submitting
-                              ? null
-                              : () =>
-                                    onModeChanged(EmailAuthMode.resetPassword),
-                          child: const Text('忘記密碼？'),
-                        )
-                      else if (mode == EmailAuthMode.resetPassword)
-                        TextButton(
-                          onPressed: submitting
-                              ? null
-                              : () => onModeChanged(EmailAuthMode.signIn),
-                          child: const Text('回到 Email 登入'),
-                        )
-                      else
-                        const SizedBox(height: 20),
-                      const SizedBox(height: 18),
-                    ],
-                  ),
-                ),
-              ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final shouldScroll =
+                    keyboardOpen || constraints.maxHeight < 760;
+                final content = buildContent();
+                if (!shouldScroll) {
+                  return content;
+                }
+
+                return SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  child: content,
+                );
+              },
             ),
             Positioned(
               top: 28,
@@ -1389,8 +1383,46 @@ class _PrimaryEmailAuthButton extends StatelessWidget {
   }
 }
 
-class VerifyEmailScreen extends StatelessWidget {
+class VerifyEmailScreen extends ConsumerStatefulWidget {
   const VerifyEmailScreen({super.key});
+
+  @override
+  ConsumerState<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
+}
+
+class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
+  String? _feedbackMessage;
+  bool _checking = false;
+
+  Future<void> _confirmVerified() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    setState(() {
+      _checking = true;
+      _feedbackMessage = null;
+    });
+
+    final controller = ref.read(appStartupControllerProvider);
+    await controller.check();
+    if (!mounted) {
+      return;
+    }
+
+    final state = controller.state;
+    if (state.status == AppStartupStatus.ready &&
+        state.targetRoute != null &&
+        state.targetRoute != '/verify-email') {
+      context.go(state.targetRoute!);
+      return;
+    }
+
+    setState(() {
+      _checking = false;
+      _feedbackMessage = state.status == AppStartupStatus.ready
+          ? l10n.verifyEmailStillPending
+          : (state.errorMessage ?? l10n.tryAgainLater);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1401,7 +1433,9 @@ class VerifyEmailScreen extends StatelessWidget {
       title: l10n.verifyEmailTitle,
       message: l10n.verifyEmailMessage,
       actionLabel: l10n.verifyEmailAction,
-      onAction: () => context.go('/splash'),
+      feedbackMessage: _feedbackMessage,
+      actionBusy: _checking,
+      onAction: _confirmVerified,
     );
   }
 }
@@ -1788,7 +1822,7 @@ String _homeTitle({
   final name = displayName?.trim();
   if (name != null && name.isNotEmpty) {
     if (loaded) {
-      return usesChinese ? '$name，牌已翻面' : '$name, card revealed';
+      return usesChinese ? '$name，今日牌面已揭曉' : '$name, today\'s card is revealed';
     }
 
     return usesChinese ? '$name，牌桌亮起' : '$name, the table is lit';
@@ -1906,15 +1940,13 @@ class DailyResultCard extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const EyebrowText('Today guidance'),
-              const SizedBox(height: 8),
               Text(
                 _usesChineseCardText(l10n)
                     ? '今日完整解讀'
                     : l10n.dailyReadingPanelTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 12),
+              const _ArcanaSectionDivider(),
               SafeMarkdownBody(data: reading.markdownResult),
             ],
           ),
@@ -2173,7 +2205,7 @@ class _DailyEmptyState extends StatelessWidget {
                       const SizedBox(height: 10),
                       Text(
                         usesChineseText
-                            ? '不用急著追完整答案；輕觸中央牌背，先接住此刻最靠近你的訊號。'
+                            ? '不用急著追完整答案，輕觸中央牌背，先接住此刻最靠近你的訊號。'
                             : 'Tap the deck and let the closest signal surface for today.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium,
@@ -2910,7 +2942,6 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
                                 selectedIndexes.indexOf(index) + 1;
                             return _VisualDrawCard(
                               key: ValueKey('draw-card-$index'),
-                              label: _drawCardLabel(index, l10n),
                               imagePath: _imageForCardId(card.cardId),
                               selected: selectedIndexes.contains(index),
                               selectedOrder: selectedOrder,
@@ -3086,14 +3117,14 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
           Text(
             reading.question.isEmpty ? l10n.resultNoQuestion : reading.question,
           ),
-          const SizedBox(height: 14),
+          const _ArcanaSectionDivider(),
           Text(
             l10n.resultCardsTitle,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 10),
           Text(reading.summary),
-          const SizedBox(height: 12),
+          const _ArcanaSectionDivider(),
           SafeMarkdownBody(data: reading.markdownResult),
         ],
       );
@@ -3108,7 +3139,7 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
         ),
         const SizedBox(height: 10),
         Text(l10n.fallbackResultQuestion),
-        const SizedBox(height: 14),
+        const _ArcanaSectionDivider(),
         Text(
           l10n.resultCardsTitle,
           style: Theme.of(context).textTheme.titleLarge,
@@ -3117,7 +3148,7 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
         _VisualBulletText(l10n.fallbackResultBulletMoon),
         _VisualBulletText(l10n.fallbackResultBulletTemperance),
         _VisualBulletText(l10n.fallbackResultBulletStar),
-        const SizedBox(height: 14),
+        const _ArcanaSectionDivider(),
         Text(
           l10n.fallbackResultAdviceTitle,
           style: Theme.of(context).textTheme.titleLarge,
@@ -3184,14 +3215,12 @@ class _ProgressLine extends StatelessWidget {
 class _VisualDrawCard extends StatelessWidget {
   const _VisualDrawCard({
     super.key,
-    required this.label,
     required this.imagePath,
     required this.selected,
     required this.selectedOrder,
     required this.onTap,
   });
 
-  final String label;
   final String imagePath;
   final bool selected;
   final int selectedOrder;
@@ -3281,36 +3310,6 @@ class _VisualDrawCard extends StatelessWidget {
                   ),
                 ),
               ),
-            if (selected)
-              Positioned(
-                right: 5,
-                bottom: 5,
-                left: 5,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    color: _ArcanaColors.ink.withValues(alpha: 0.68),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 4,
-                    ),
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: _bodyTextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: _ArcanaColors.ivory,
-                        height: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       ),
@@ -3338,29 +3337,21 @@ class _VisualBulletText extends StatelessWidget {
   }
 }
 
-class _VisualDrawCardData {
-  const _VisualDrawCardData(this.zhLabel, this.enLabel, this.cardId);
-
-  final String zhLabel;
-  final String enLabel;
-  final String cardId;
-}
-
-const _drawCards = [
-  _VisualDrawCardData('過去的霧', 'Past mist', 'major-18-moon'),
-  _VisualDrawCardData('現在的門', 'Present door', 'major-14-temperance'),
-  _VisualDrawCardData('尚未命名', 'Unnamed', 'major-17-star'),
-  _VisualDrawCardData('內在潮汐', 'Inner tide', 'cups-02-two'),
-  _VisualDrawCardData('月下答案', 'Moonlit answer', 'swords-06-six'),
-  _VisualDrawCardData('隱形代價', 'Hidden cost', 'major-16-tower'),
-  _VisualDrawCardData('需要放下', 'Release', 'major-00-fool'),
-  _VisualDrawCardData('可以靠近', 'Approach', 'major-11-justice'),
-  _VisualDrawCardData('下一步', 'Next step', 'major-09-hermit'),
+const _fallbackDrawCardIds = [
+  'major-18-moon',
+  'major-14-temperance',
+  'major-17-star',
+  'cups-02-two',
+  'swords-06-six',
+  'major-16-tower',
+  'major-00-fool',
+  'major-11-justice',
+  'major-09-hermit',
 ];
 
 final _fallbackDrawCardDraws = [
-  for (final card in _drawCards)
-    CardDraw(cardId: card.cardId, orientation: 'upright'),
+  for (final cardId in _fallbackDrawCardIds)
+    CardDraw(cardId: cardId, orientation: 'upright'),
 ];
 
 const _fallbackResultCards = [
@@ -3383,15 +3374,6 @@ const _fallbackResultCards = [
     orientation: 'upright',
   ),
 ];
-
-String _drawCardLabel(int index, AppLocalizations l10n) {
-  if (index >= 0 && index < _drawCards.length) {
-    return _usesChineseCardText(l10n)
-        ? _drawCards[index].zhLabel
-        : _drawCards[index].enLabel;
-  }
-  return _usesChineseCardText(l10n) ? '第 ${index + 1} 張' : 'Card ${index + 1}';
-}
 
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
@@ -3471,6 +3453,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     ),
                 ],
               ),
+              const SizedBox(height: 10),
+              TarotCategoryDescription(category: _category),
               SizedBox(height: usesChineseVisual ? 16 : 16),
               Text(
                 l10n.cardsCount(filtered.length),
@@ -3508,6 +3492,21 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+class TarotCategoryDescription extends StatelessWidget {
+  const TarotCategoryDescription({super.key, required this.category});
+
+  final TarotCategory category;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Text(
+      _categoryDescription(category, l10n),
+      style: Theme.of(context).textTheme.bodySmall,
     );
   }
 }
@@ -3930,6 +3929,10 @@ class AppBackdrop extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 const CustomPaint(painter: _CelestialBackdropPainter()),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(34),
+                  child: child,
+                ),
                 Positioned(
                   top: 13,
                   right: 12,
@@ -3947,7 +3950,6 @@ class AppBackdrop extends StatelessWidget {
                     ),
                   ),
                 ),
-                child,
               ],
             ),
           ),
@@ -4444,22 +4446,40 @@ class ArcanaPrimaryButton extends StatelessWidget {
       ArcanaPrimaryButtonTone.gold => _ArcanaColors.ink2,
       ArcanaPrimaryButtonTone.danger => _ArcanaColors.ivory,
     };
+    final disabledBackgroundColor = switch (tone) {
+      ArcanaPrimaryButtonTone.gold => _ArcanaColors.gold.withValues(
+        alpha: 0.14,
+      ),
+      ArcanaPrimaryButtonTone.danger => const Color(
+        0xFFC4363E,
+      ).withValues(alpha: 0.16),
+    };
+    final disabledBorderColor = switch (tone) {
+      ArcanaPrimaryButtonTone.gold => _ArcanaColors.gold2.withValues(
+        alpha: 0.36,
+      ),
+      ArcanaPrimaryButtonTone.danger => const Color(
+        0xFFFF8F82,
+      ).withValues(alpha: 0.38),
+    };
     final resolvedForegroundColor = enabled
         ? foregroundColor
-        : _ArcanaColors.gold2;
+        : switch (tone) {
+            ArcanaPrimaryButtonTone.gold => _ArcanaColors.gold2,
+            ArcanaPrimaryButtonTone.danger => const Color(0xFFFFC3BC),
+          };
 
     return Material(
       color: Colors.transparent,
       shape: const StadiumBorder(),
       child: Ink(
+        width: double.infinity,
         height: 50,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
           gradient: enabled ? gradient : null,
-          color: enabled ? null : _ArcanaColors.gold.withValues(alpha: 0.14),
-          border: enabled
-              ? null
-              : Border.all(color: _ArcanaColors.gold2.withValues(alpha: 0.36)),
+          color: enabled ? null : disabledBackgroundColor,
+          border: enabled ? null : Border.all(color: disabledBorderColor),
           boxShadow: enabled
               ? [
                   BoxShadow(
@@ -4625,6 +4645,19 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
+class _ArcanaSectionDivider extends StatelessWidget {
+  const _ArcanaSectionDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 28,
+      thickness: 1,
+      color: _ArcanaColors.gold.withValues(alpha: 0.22),
+    );
+  }
+}
+
 class _VisualSettingRow extends StatelessWidget {
   const _VisualSettingRow({
     required this.title,
@@ -4759,6 +4792,8 @@ class GateScaffold extends ConsumerWidget {
     required this.message,
     required this.actionLabel,
     required this.onAction,
+    this.feedbackMessage,
+    this.actionBusy = false,
   });
 
   final IconData icon;
@@ -4766,6 +4801,8 @@ class GateScaffold extends ConsumerWidget {
   final String message;
   final String actionLabel;
   final VoidCallback onAction;
+  final String? feedbackMessage;
+  final bool actionBusy;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -4792,8 +4829,33 @@ class GateScaffold extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(message, textAlign: TextAlign.center),
+              if (feedbackMessage != null) ...[
+                const SizedBox(height: 14),
+                Text(
+                  feedbackMessage!,
+                  textAlign: TextAlign.center,
+                  style: _bodyTextStyle(color: _ArcanaColors.error),
+                ),
+              ],
               const SizedBox(height: 24),
-              FilledButton(onPressed: onAction, child: Text(actionLabel)),
+              Align(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minWidth: 180,
+                    maxWidth: 240,
+                    minHeight: 48,
+                  ),
+                  child: FilledButton(
+                    onPressed: actionBusy ? null : onAction,
+                    child: actionBusy
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(actionLabel),
+                  ),
+                ),
+              ),
               TextButton(
                 onPressed: () async {
                   try {
@@ -5621,6 +5683,36 @@ String _categoryLabel(TarotCategory category, AppLocalizations l10n) {
     TarotCategory.cups => l10n.categoryCups,
     TarotCategory.swords => l10n.categorySwords,
     TarotCategory.pentacles => l10n.categoryPentacles,
+  };
+}
+
+String _categoryDescription(TarotCategory category, AppLocalizations l10n) {
+  final usesChinese = _usesChineseCardText(l10n);
+  if (usesChinese) {
+    return switch (category) {
+      TarotCategory.all =>
+        '塔羅牌用 22 張大阿爾克那與 56 張小阿爾克那分類，小阿爾克那再分成權杖、聖杯、寶劍、錢幣，方便從人生主題、行動、情感、思考與現實資源理解牌義。',
+      TarotCategory.major => '大阿爾克那代表人生主題與關鍵轉折，像是開始、選擇、失衡、轉化與完成。',
+      TarotCategory.wands => '權杖屬於小阿爾克那，常看行動力、熱情、創造與事業推進。',
+      TarotCategory.cups => '聖杯屬於小阿爾克那，常看情感、關係、直覺與內在感受。',
+      TarotCategory.swords => '寶劍屬於小阿爾克那，常看思考、溝通、衝突、判斷與壓力。',
+      TarotCategory.pentacles => '錢幣屬於小阿爾克那，常看工作、金錢、身體、資源與現實穩定。',
+    };
+  }
+
+  return switch (category) {
+    TarotCategory.all =>
+      'Major Arcana are the deck-wide life themes; Minor Arcana are split into Wands, Cups, Swords, and Pentacles to read action, emotion, thought, and practical resources.',
+    TarotCategory.major =>
+      'Major Arcana show larger life themes and turning points: beginnings, choices, imbalance, transformation, and completion.',
+    TarotCategory.wands =>
+      'Wands are Minor Arcana cards for action, drive, creative energy, and momentum.',
+    TarotCategory.cups =>
+      'Cups are Minor Arcana cards for emotion, relationships, intuition, and inner response.',
+    TarotCategory.swords =>
+      'Swords are Minor Arcana cards for thought, communication, conflict, judgment, and pressure.',
+    TarotCategory.pentacles =>
+      'Pentacles are Minor Arcana cards for work, money, body, resources, and practical stability.',
   };
 }
 

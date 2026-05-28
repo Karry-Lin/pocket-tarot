@@ -106,10 +106,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get verifyEmailMessage =>
-      'The verification email has been sent. Return to the app after verifying to continue creating your profile.';
+      'We sent a verification email. Open it and tap the verification link before continuing.';
 
   @override
   String get verifyEmailAction => 'I have verified';
+
+  @override
+  String get verifyEmailStillPending =>
+      'Email is not verified yet. Open the verification email first, then try again.';
 
   @override
   String get pendingTitle => 'Waiting for activation';
