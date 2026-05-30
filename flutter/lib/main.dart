@@ -488,6 +488,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final FocusNode _displayNameFocusNode = FocusNode();
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+  final FocusNode _confirmPasswordFocusNode = FocusNode();
+  final GlobalKey _displayNameFieldKey = GlobalKey(
+    debugLabel: 'email-auth-display-name-field',
+  );
+  final GlobalKey _emailFieldKey = GlobalKey(
+    debugLabel: 'email-auth-email-field',
+  );
+  final GlobalKey _passwordFieldKey = GlobalKey(
+    debugLabel: 'email-auth-password-field',
+  );
+  final GlobalKey _confirmPasswordFieldKey = GlobalKey(
+    debugLabel: 'email-auth-confirm-password-field',
+  );
   EmailAuthMode _mode = EmailAuthMode.signIn;
   Map<AuthFormField, String> _errors = const {};
   String? _formError;
@@ -501,6 +517,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _displayNameFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _confirmPasswordFocusNode.dispose();
     super.dispose();
   }
 
@@ -517,6 +537,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         emailController: _emailController,
         passwordController: _passwordController,
         confirmPasswordController: _confirmPasswordController,
+        displayNameFocusNode: _displayNameFocusNode,
+        emailFocusNode: _emailFocusNode,
+        passwordFocusNode: _passwordFocusNode,
+        confirmPasswordFocusNode: _confirmPasswordFocusNode,
+        displayNameFieldKey: _displayNameFieldKey,
+        emailFieldKey: _emailFieldKey,
+        passwordFieldKey: _passwordFieldKey,
+        confirmPasswordFieldKey: _confirmPasswordFieldKey,
         displayNameError: _errors[AuthFormField.displayName],
         emailError: _errors[AuthFormField.email],
         passwordError: _errors[AuthFormField.password],
@@ -659,30 +687,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               const SizedBox(height: 16),
                               if (_mode == EmailAuthMode.register) ...[
                                 AuthField(
+                                  key: _displayNameFieldKey,
                                   label: l10n.displayNameLabel,
                                   controller: _displayNameController,
+                                  focusNode: _displayNameFocusNode,
                                   errorText: _errors[AuthFormField.displayName],
                                 ),
                                 const SizedBox(height: 12),
                               ],
                               AuthField(
+                                key: _emailFieldKey,
                                 label: 'Email',
                                 controller: _emailController,
+                                focusNode: _emailFocusNode,
                                 errorText: _errors[AuthFormField.email],
                               ),
                               const SizedBox(height: 12),
                               if (_mode != EmailAuthMode.resetPassword)
                                 AuthField(
+                                  key: _passwordFieldKey,
                                   label: l10n.passwordLabel,
                                   controller: _passwordController,
+                                  focusNode: _passwordFocusNode,
                                   obscureText: true,
                                   errorText: _errors[AuthFormField.password],
                                 ),
                               if (_mode == EmailAuthMode.register) ...[
                                 const SizedBox(height: 12),
                                 AuthField(
+                                  key: _confirmPasswordFieldKey,
                                   label: l10n.confirmPasswordLabel,
                                   controller: _confirmPasswordController,
+                                  focusNode: _confirmPasswordFocusNode,
                                   obscureText: true,
                                   errorText:
                                       _errors[AuthFormField.confirmPassword],
@@ -1033,6 +1069,14 @@ class _VisualEmailLoginScreen extends StatelessWidget {
     required this.emailController,
     required this.passwordController,
     required this.confirmPasswordController,
+    required this.displayNameFocusNode,
+    required this.emailFocusNode,
+    required this.passwordFocusNode,
+    required this.confirmPasswordFocusNode,
+    required this.displayNameFieldKey,
+    required this.emailFieldKey,
+    required this.passwordFieldKey,
+    required this.confirmPasswordFieldKey,
     required this.displayNameError,
     required this.emailError,
     required this.passwordError,
@@ -1050,6 +1094,14 @@ class _VisualEmailLoginScreen extends StatelessWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
+  final FocusNode displayNameFocusNode;
+  final FocusNode emailFocusNode;
+  final FocusNode passwordFocusNode;
+  final FocusNode confirmPasswordFocusNode;
+  final Key displayNameFieldKey;
+  final Key emailFieldKey;
+  final Key passwordFieldKey;
+  final Key confirmPasswordFieldKey;
   final String? displayNameError;
   final String? emailError;
   final String? passwordError;
@@ -1086,25 +1138,32 @@ class _VisualEmailLoginScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (!keyboardOpen) ...[
-                  const Align(
-                    alignment: Alignment.centerLeft,
-                    child: BrandMark(size: 58, radius: 18),
+                Visibility(
+                  visible: !keyboardOpen,
+                  maintainState: true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: BrandMark(size: 58, radius: 18),
+                      ),
+                      const SizedBox(height: 19),
+                      const EyebrowText('Pocket Tarot'),
+                      const SizedBox(height: 7),
+                      Text(
+                        '登入口袋塔羅',
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '用一張牌整理今天。',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 21),
+                    ],
                   ),
-                  const SizedBox(height: 19),
-                  const EyebrowText('Pocket Tarot'),
-                  const SizedBox(height: 7),
-                  Text(
-                    '登入口袋塔羅',
-                    style: Theme.of(context).textTheme.displaySmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '用一張牌整理今天。',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 21),
-                ],
+                ),
                 _VisualAuthModeSwitch(
                   mode: mode,
                   enabled: !submitting,
@@ -1113,25 +1172,31 @@ class _VisualEmailLoginScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 if (isRegister) ...[
                   _VisualEmailField(
+                    key: displayNameFieldKey,
                     label: '顯示名稱',
                     hintText: '想被如何稱呼？',
                     controller: displayNameController,
+                    focusNode: displayNameFocusNode,
                     errorText: displayNameError,
                   ),
                   const SizedBox(height: 12),
                 ],
                 _VisualEmailField(
+                  key: emailFieldKey,
                   label: 'Email',
                   hintText: 'you@example.com',
                   controller: emailController,
+                  focusNode: emailFocusNode,
                   errorText: emailError,
                 ),
                 if (!isReset) ...[
                   const SizedBox(height: 12),
                   _VisualEmailField(
+                    key: passwordFieldKey,
                     label: '密碼',
                     hintText: '至少 6 個字元',
                     controller: passwordController,
+                    focusNode: passwordFocusNode,
                     obscureText: true,
                     errorText: passwordError,
                   ),
@@ -1139,9 +1204,11 @@ class _VisualEmailLoginScreen extends StatelessWidget {
                 if (isRegister) ...[
                   const SizedBox(height: 12),
                   _VisualEmailField(
+                    key: confirmPasswordFieldKey,
                     label: '確認密碼',
                     hintText: '再輸入一次密碼',
                     controller: confirmPasswordController,
+                    focusNode: confirmPasswordFocusNode,
                     obscureText: true,
                     errorText: confirmPasswordError,
                   ),
@@ -1198,13 +1265,14 @@ class _VisualEmailLoginScreen extends StatelessWidget {
                 final shouldScroll =
                     keyboardOpen || constraints.maxHeight < 760;
                 final content = buildContent();
-                if (!shouldScroll) {
-                  return content;
-                }
-
                 return SingleChildScrollView(
-                  keyboardDismissBehavior:
-                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  key: const ValueKey('visual-email-auth-scroll'),
+                  keyboardDismissBehavior: shouldScroll
+                      ? ScrollViewKeyboardDismissBehavior.onDrag
+                      : ScrollViewKeyboardDismissBehavior.manual,
+                  physics: shouldScroll
+                      ? const ClampingScrollPhysics()
+                      : const NeverScrollableScrollPhysics(),
                   child: content,
                 );
               },
@@ -1307,9 +1375,11 @@ class _VisualAuthModeOption extends StatelessWidget {
 
 class _VisualEmailField extends StatelessWidget {
   const _VisualEmailField({
+    super.key,
     required this.label,
     required this.hintText,
     required this.controller,
+    this.focusNode,
     this.obscureText = false,
     this.errorText,
   });
@@ -1317,6 +1387,7 @@ class _VisualEmailField extends StatelessWidget {
   final String label;
   final String hintText;
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final bool obscureText;
   final String? errorText;
 
@@ -1334,6 +1405,7 @@ class _VisualEmailField extends StatelessWidget {
         const SizedBox(height: 8),
         TextField(
           controller: controller,
+          focusNode: focusNode,
           obscureText: obscureText,
           style: Theme.of(
             context,
@@ -4881,6 +4953,7 @@ class AuthField extends StatelessWidget {
     super.key,
     required this.label,
     this.controller,
+    this.focusNode,
     this.obscureText = false,
     this.maxLines = 1,
     this.errorText,
@@ -4888,6 +4961,7 @@ class AuthField extends StatelessWidget {
 
   final String label;
   final TextEditingController? controller;
+  final FocusNode? focusNode;
   final bool obscureText;
   final int maxLines;
   final String? errorText;
@@ -4896,6 +4970,7 @@ class AuthField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      focusNode: focusNode,
       obscureText: obscureText,
       maxLines: maxLines,
       style: Theme.of(
