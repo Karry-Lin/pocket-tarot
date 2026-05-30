@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
@@ -438,34 +439,36 @@ class SplashNetworkBlockedScreen extends StatelessWidget {
     final resolvedTitle = title ?? l10n.networkBlockedTitle;
     final resolvedMessage = message ?? l10n.networkBlockedMessage;
 
-    return AppBackdrop(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(child: const BrandMark(size: 116, radius: 32)),
-              const SizedBox(height: 24),
-              Text(
-                resolvedTitle,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                resolvedMessage,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: Text(l10n.retryCheck),
-              ),
-            ],
+    return _RootBackExitGuard(
+      child: AppBackdrop(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(child: const BrandMark(size: 116, radius: 32)),
+                const SizedBox(height: 24),
+                Text(
+                  resolvedTitle,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  resolvedMessage,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(l10n.retryCheck),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -531,34 +534,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     if (usesChinese && _showEmailForm) {
-      return _VisualEmailLoginScreen(
-        mode: _mode,
-        displayNameController: _displayNameController,
-        emailController: _emailController,
-        passwordController: _passwordController,
-        confirmPasswordController: _confirmPasswordController,
-        displayNameFocusNode: _displayNameFocusNode,
-        emailFocusNode: _emailFocusNode,
-        passwordFocusNode: _passwordFocusNode,
-        confirmPasswordFocusNode: _confirmPasswordFocusNode,
-        displayNameFieldKey: _displayNameFieldKey,
-        emailFieldKey: _emailFieldKey,
-        passwordFieldKey: _passwordFieldKey,
-        confirmPasswordFieldKey: _confirmPasswordFieldKey,
-        displayNameError: _errors[AuthFormField.displayName],
-        emailError: _errors[AuthFormField.email],
-        passwordError: _errors[AuthFormField.password],
-        confirmPasswordError: _errors[AuthFormField.confirmPassword],
-        formMessage: _formError ?? _formMessage,
-        isError: _formError != null,
-        submitting: _submitting,
-        onBack: _returnToLoginOptions,
-        onModeChanged: _switchMode,
-        onSubmit: _submit,
+      return _emailAuthBackScope(
+        _VisualEmailLoginScreen(
+          mode: _mode,
+          displayNameController: _displayNameController,
+          emailController: _emailController,
+          passwordController: _passwordController,
+          confirmPasswordController: _confirmPasswordController,
+          displayNameFocusNode: _displayNameFocusNode,
+          emailFocusNode: _emailFocusNode,
+          passwordFocusNode: _passwordFocusNode,
+          confirmPasswordFocusNode: _confirmPasswordFocusNode,
+          displayNameFieldKey: _displayNameFieldKey,
+          emailFieldKey: _emailFieldKey,
+          passwordFieldKey: _passwordFieldKey,
+          confirmPasswordFieldKey: _confirmPasswordFieldKey,
+          displayNameError: _errors[AuthFormField.displayName],
+          emailError: _errors[AuthFormField.email],
+          passwordError: _errors[AuthFormField.password],
+          confirmPasswordError: _errors[AuthFormField.confirmPassword],
+          formMessage: _formError ?? _formMessage,
+          isError: _formError != null,
+          submitting: _submitting,
+          onBack: _returnToLoginOptions,
+          onModeChanged: _switchMode,
+          onSubmit: _submit,
+        ),
       );
     }
 
-    return AppBackdrop(
+    final content = AppBackdrop(
       child: SafeArea(
         child: Stack(
           children: [
@@ -788,6 +793,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ],
         ),
       ),
+    );
+
+    if (_showEmailForm) {
+      return _emailAuthBackScope(content);
+    }
+
+    return _RootBackExitGuard(child: content);
+  }
+
+  Widget _emailAuthBackScope(Widget child) {
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop || _submitting) {
+          return;
+        }
+        _returnToLoginOptions();
+      },
+      child: child,
     );
   }
 
@@ -1555,67 +1579,69 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: _ArcanaColors.ink,
-      extendBody: false,
-      body: navigationShell,
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(19, 0, 19, 13),
-          child: Center(
-            heightFactor: 1,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 392),
-              child: DecoratedBox(
-                key: const ValueKey('bottom-nav-glass'),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: _ArcanaColors.gold.withValues(alpha: 0.28),
-                  ),
-                  color: _ArcanaColors.ink.withValues(alpha: 0.86),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.42),
-                      blurRadius: 38,
-                      offset: const Offset(0, 18),
+    return _RootBackExitGuard(
+      child: Scaffold(
+        backgroundColor: _ArcanaColors.ink,
+        extendBody: false,
+        body: navigationShell,
+        bottomNavigationBar: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(19, 0, 19, 13),
+            child: Center(
+              heightFactor: 1,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 392),
+                child: DecoratedBox(
+                  key: const ValueKey('bottom-nav-glass'),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: _ArcanaColors.gold.withValues(alpha: 0.28),
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      _BottomNavItem(
-                        icon: Icons.auto_awesome,
-                        symbol: '⌂',
-                        label: l10n.navHome,
-                        selected: navigationShell.currentIndex == 0,
-                        onTap: () => _goBranch(0),
-                      ),
-                      _BottomNavItem(
-                        icon: Icons.grid_view,
-                        symbol: '✦',
-                        label: l10n.navDivination,
-                        selected: navigationShell.currentIndex == 1,
-                        onTap: () => _goBranch(1),
-                      ),
-                      _BottomNavItem(
-                        icon: Icons.menu_book,
-                        symbol: '☽',
-                        label: l10n.navLibrary,
-                        selected: navigationShell.currentIndex == 2,
-                        onTap: () => _goBranch(2),
-                      ),
-                      _BottomNavItem(
-                        icon: Icons.person,
-                        symbol: '♙',
-                        label: l10n.navProfile,
-                        selected: navigationShell.currentIndex == 3,
-                        onTap: () => _goBranch(3),
+                    color: _ArcanaColors.ink.withValues(alpha: 0.86),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.42),
+                        blurRadius: 38,
+                        offset: const Offset(0, 18),
                       ),
                     ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        _BottomNavItem(
+                          icon: Icons.auto_awesome,
+                          symbol: '⌂',
+                          label: l10n.navHome,
+                          selected: navigationShell.currentIndex == 0,
+                          onTap: () => _goBranch(0),
+                        ),
+                        _BottomNavItem(
+                          icon: Icons.grid_view,
+                          symbol: '✦',
+                          label: l10n.navDivination,
+                          selected: navigationShell.currentIndex == 1,
+                          onTap: () => _goBranch(1),
+                        ),
+                        _BottomNavItem(
+                          icon: Icons.menu_book,
+                          symbol: '☽',
+                          label: l10n.navLibrary,
+                          selected: navigationShell.currentIndex == 2,
+                          onTap: () => _goBranch(2),
+                        ),
+                        _BottomNavItem(
+                          icon: Icons.person,
+                          symbol: '♙',
+                          label: l10n.navProfile,
+                          selected: navigationShell.currentIndex == 3,
+                          onTap: () => _goBranch(3),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -1632,6 +1658,132 @@ class AppShell extends StatelessWidget {
       initialLocation: index == navigationShell.currentIndex,
     );
   }
+}
+
+const _appExitBackWindow = Duration(seconds: 2);
+
+class _RootBackExitGuard extends StatefulWidget {
+  const _RootBackExitGuard({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_RootBackExitGuard> createState() => _RootBackExitGuardState();
+}
+
+class _RootBackExitGuardState extends State<_RootBackExitGuard> {
+  DateTime? _lastBackPressedAt;
+  Timer? _hidePromptTimer;
+  bool _showPrompt = false;
+
+  @override
+  void dispose() {
+    _hidePromptTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
+        _handleBackAttempt();
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          widget.child,
+          if (_showPrompt)
+            _ExitPromptToast(message: _exitPromptMessage(context)),
+        ],
+      ),
+    );
+  }
+
+  void _handleBackAttempt() {
+    final now = DateTime.now();
+    final lastPressedAt = _lastBackPressedAt;
+    if (lastPressedAt != null &&
+        now.difference(lastPressedAt) <= _appExitBackWindow) {
+      SystemNavigator.pop();
+      return;
+    }
+
+    _lastBackPressedAt = now;
+    _hidePromptTimer?.cancel();
+    setState(() => _showPrompt = true);
+    _hidePromptTimer = Timer(_appExitBackWindow, () {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _showPrompt = false);
+      _lastBackPressedAt = null;
+    });
+  }
+}
+
+class _ExitPromptToast extends StatelessWidget {
+  const _ExitPromptToast({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: 24,
+      right: 24,
+      bottom: 28,
+      child: IgnorePointer(
+        child: SafeArea(
+          top: false,
+          child: Center(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: _ArcanaColors.ink2.withValues(alpha: 0.94),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: _ArcanaColors.gold.withValues(alpha: 0.34),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.38),
+                    blurRadius: 22,
+                    offset: const Offset(0, 12),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: _bodyTextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                    color: _ArcanaColors.ivory,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _exitPromptMessage(BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
+  return _usesChineseCardText(l10n)
+      ? '再按一次返回退出 APP'
+      : 'Press back again to exit';
 }
 
 class _BottomNavItem extends StatelessWidget {
@@ -2632,7 +2784,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     }
     final question = Uri.encodeComponent(questionText);
     _questionController.clear();
-    context.go('/draw?question=$question');
+    context.push<void>('/draw?question=$question');
   }
 
   Future<void> _loadHistory() async {
@@ -2653,7 +2805,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     if (mounted) {
       setState(() => _deepState = controller.state);
       if (controller.state.reading != null) {
-        context.go('/result');
+        await context.push<void>('/result');
       }
     }
   }
@@ -2901,7 +3053,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
           : null;
     });
     if (controller.state.status == DeepReadingStatus.resultReady) {
-      context.go('/result');
+      await context.push<void>('/result');
     }
   }
 
@@ -2915,14 +3067,16 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
         : _deepState.draftCards;
 
     if (_isCreatingResult) {
-      return AppBackdrop(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
-            child: Center(
-              child: ArcanaLoadingView(
-                title: l10n.deepLoadingTitle,
-                message: l10n.deepLoadingMessage,
+      return _DeepReadingBackScope(
+        child: AppBackdrop(
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
+              child: Center(
+                child: ArcanaLoadingView(
+                  title: l10n.deepLoadingTitle,
+                  message: l10n.deepLoadingMessage,
+                ),
               ),
             ),
           ),
@@ -2931,14 +3085,16 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
     }
 
     if (_isDraftLoading) {
-      return AppBackdrop(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
-            child: Center(
-              child: ArcanaLoadingView(
-                title: l10n.drawPreparingTitle,
-                message: l10n.drawPreparingMessage,
+      return _DeepReadingBackScope(
+        child: AppBackdrop(
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
+              child: Center(
+                child: ArcanaLoadingView(
+                  title: l10n.drawPreparingTitle,
+                  message: l10n.drawPreparingMessage,
+                ),
               ),
             ),
           ),
@@ -2946,92 +3102,94 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
       );
     }
 
-    return AppBackdrop(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
-          child: LayoutBuilder(
-            builder: (context, _) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      _RoundBackButton(
-                        onPressed: () => context.go('/divination'),
-                      ),
-                      const SizedBox(width: 12),
-                      const EyebrowText('Choose three'),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.drawTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 10),
-                  _ProgressLine(progress: selectedCount / 3),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.drawSelectedStatus(selectedCount),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  if (_errorMessage != null) ...[
+    return _DeepReadingBackScope(
+      child: AppBackdrop(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
+            child: LayoutBuilder(
+              builder: (context, _) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        _RoundBackButton(
+                          onPressed: () => context.go('/divination'),
+                        ),
+                        const SizedBox(width: 12),
+                        const EyebrowText('Choose three'),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.drawTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 10),
+                    _ProgressLine(progress: selectedCount / 3),
                     const SizedBox(height: 8),
                     Text(
-                      _errorMessage!,
-                      style: _bodyTextStyle(color: _ArcanaColors.error),
+                      l10n.drawSelectedStatus(selectedCount),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        _errorMessage!,
+                        style: _bodyTextStyle(color: _ArcanaColors.error),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, gridConstraints) {
+                          const spacing = 8.0;
+                          final tileWidth =
+                              (gridConstraints.maxWidth - spacing * 2) / 3;
+                          final tileHeight =
+                              (gridConstraints.maxHeight - spacing * 2) / 3;
+                          final aspectRatio = tileWidth / tileHeight;
+
+                          return GridView.builder(
+                            key: const ValueKey('visual-draw-grid'),
+                            padding: EdgeInsets.zero,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3,
+                                  childAspectRatio: aspectRatio,
+                                  crossAxisSpacing: spacing,
+                                  mainAxisSpacing: spacing,
+                                ),
+                            itemCount: drawCards.length,
+                            itemBuilder: (context, index) {
+                              final card = drawCards[index];
+                              final selectedOrder =
+                                  selectedIndexes.indexOf(index) + 1;
+                              return _VisualDrawCard(
+                                key: ValueKey('draw-card-$index'),
+                                imagePath: _imageForCardId(card.cardId),
+                                selected: selectedIndexes.contains(index),
+                                selectedOrder: selectedOrder,
+                                onTap: () => _toggleCard(index),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ArcanaPrimaryButton(
+                      onPressed: selectedCount == 3 ? _showResult : null,
+                      child: Text(l10n.drawReadButton),
                     ),
                   ],
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, gridConstraints) {
-                        const spacing = 8.0;
-                        final tileWidth =
-                            (gridConstraints.maxWidth - spacing * 2) / 3;
-                        final tileHeight =
-                            (gridConstraints.maxHeight - spacing * 2) / 3;
-                        final aspectRatio = tileWidth / tileHeight;
-
-                        return GridView.builder(
-                          key: const ValueKey('visual-draw-grid'),
-                          padding: EdgeInsets.zero,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                childAspectRatio: aspectRatio,
-                                crossAxisSpacing: spacing,
-                                mainAxisSpacing: spacing,
-                              ),
-                          itemCount: drawCards.length,
-                          itemBuilder: (context, index) {
-                            final card = drawCards[index];
-                            final selectedOrder =
-                                selectedIndexes.indexOf(index) + 1;
-                            return _VisualDrawCard(
-                              key: ValueKey('draw-card-$index'),
-                              imagePath: _imageForCardId(card.cardId),
-                              selected: selectedIndexes.contains(index),
-                              selectedOrder: selectedOrder,
-                              onTap: () => _toggleCard(index),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ArcanaPrimaryButton(
-                    onPressed: selectedCount == 3 ? _showResult : null,
-                    child: Text(l10n.drawReadButton),
-                  ),
-                ],
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -3091,84 +3249,95 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
         ? l10n.resultClearing
         : l10n.resultSaving;
 
-    return AppBackdrop(
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _RoundBackButton(onPressed: () => context.go('/divination')),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const EyebrowText('Reading result'),
-                        const SizedBox(height: 5),
-                        Text(
-                          l10n.resultTitle,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                      ],
+    return _DeepReadingBackScope(
+      child: AppBackdrop(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _RoundBackButton(
+                      onPressed: () => context.go('/divination'),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  for (var index = 0; index < resultCards.length; index++) ...[
+                    const SizedBox(width: 14),
                     Expanded(
-                      child: TarotImageCard(
-                        imagePath: _imageForCardId(resultCards[index].cardId),
-                        height: 178,
-                        radius: 12,
-                        fit: BoxFit.contain,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const EyebrowText('Reading result'),
+                          const SizedBox(height: 5),
+                          Text(
+                            l10n.resultTitle,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ],
                       ),
                     ),
-                    if (index != resultCards.length - 1)
-                      const SizedBox(width: 10),
                   ],
-                ],
-              ),
-              const SizedBox(height: 16),
-              GlassPanel(child: _resultBody(context, reading)),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 50,
-                      child: OutlinedButton(
-                        onPressed: () => context.go('/divination'),
-                        child: Text(l10n.resultBackToReading),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    for (
+                      var index = 0;
+                      index < resultCards.length;
+                      index++
+                    ) ...[
+                      Expanded(
+                        child: TarotImageCard(
+                          imagePath: _imageForCardId(resultCards[index].cardId),
+                          height: 178,
+                          radius: 12,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      if (index != resultCards.length - 1)
+                        const SizedBox(width: 10),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 16),
+                GlassPanel(child: _resultBody(context, reading)),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+                        child: OutlinedButton(
+                          onPressed: () => context.go('/divination'),
+                          child: Text(l10n.resultBackToReading),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ArcanaPrimaryButton(
-                      tone: isSaved
-                          ? ArcanaPrimaryButtonTone.danger
-                          : ArcanaPrimaryButtonTone.gold,
-                      onPressed: _saving
-                          ? null
-                          : () =>
-                                _setReadingSaved(controller, reading, !isSaved),
-                      child: Text(
-                        _saving
-                            ? savingLabel
-                            : (isSaved ? l10n.resultClear : l10n.resultSave),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ArcanaPrimaryButton(
+                        tone: isSaved
+                            ? ArcanaPrimaryButtonTone.danger
+                            : ArcanaPrimaryButtonTone.gold,
+                        onPressed: _saving
+                            ? null
+                            : () => _setReadingSaved(
+                                controller,
+                                reading,
+                                !isSaved,
+                              ),
+                        child: Text(
+                          _saving
+                              ? savingLabel
+                              : (isSaved ? l10n.resultClear : l10n.resultSave),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -3228,6 +3397,26 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
         const SizedBox(height: 10),
         Text(l10n.fallbackResultAdvice),
       ],
+    );
+  }
+}
+
+class _DeepReadingBackScope extends StatelessWidget {
+  const _DeepReadingBackScope({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope<Object?>(
+      canPop: Navigator.of(context).canPop(),
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop || !context.mounted) {
+          return;
+        }
+        context.go('/divination');
+      },
+      child: child,
     );
   }
 }
@@ -4880,67 +5069,69 @@ class GateScaffold extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
 
-    return AppBackdrop(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Icon(
-                icon,
-                size: 54,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 18),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(message, textAlign: TextAlign.center),
-              if (feedbackMessage != null) ...[
-                const SizedBox(height: 14),
+    return _RootBackExitGuard(
+      child: AppBackdrop(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(
+                  icon,
+                  size: 54,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 18),
                 Text(
-                  feedbackMessage!,
+                  title,
                   textAlign: TextAlign.center,
-                  style: _bodyTextStyle(color: _ArcanaColors.error),
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(message, textAlign: TextAlign.center),
+                if (feedbackMessage != null) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    feedbackMessage!,
+                    textAlign: TextAlign.center,
+                    style: _bodyTextStyle(color: _ArcanaColors.error),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                Align(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: 180,
+                      maxWidth: 240,
+                      minHeight: 48,
+                    ),
+                    child: FilledButton(
+                      onPressed: actionBusy ? null : onAction,
+                      child: actionBusy
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(actionLabel),
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      await ref.read(authActionsProvider).signOut();
+                    } finally {
+                      if (context.mounted) {
+                        context.go('/login');
+                      }
+                    }
+                  },
+                  child: Text(l10n.signOut),
                 ),
               ],
-              const SizedBox(height: 24),
-              Align(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minWidth: 180,
-                    maxWidth: 240,
-                    minHeight: 48,
-                  ),
-                  child: FilledButton(
-                    onPressed: actionBusy ? null : onAction,
-                    child: actionBusy
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(actionLabel),
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () async {
-                  try {
-                    await ref.read(authActionsProvider).signOut();
-                  } finally {
-                    if (context.mounted) {
-                      context.go('/login');
-                    }
-                  }
-                },
-                child: Text(l10n.signOut),
-              ),
-            ],
+            ),
           ),
         ),
       ),
