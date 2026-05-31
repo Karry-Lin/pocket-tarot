@@ -1579,69 +1579,67 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return _RootBackExitGuard(
-      child: Scaffold(
-        backgroundColor: _ArcanaColors.ink,
-        extendBody: false,
-        body: navigationShell,
-        bottomNavigationBar: SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(19, 0, 19, 13),
-            child: Center(
-              heightFactor: 1,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 392),
-                child: DecoratedBox(
-                  key: const ValueKey('bottom-nav-glass'),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: _ArcanaColors.gold.withValues(alpha: 0.28),
+    return Scaffold(
+      backgroundColor: _ArcanaColors.ink,
+      extendBody: false,
+      body: navigationShell,
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(19, 0, 19, 13),
+          child: Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 392),
+              child: DecoratedBox(
+                key: const ValueKey('bottom-nav-glass'),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: _ArcanaColors.gold.withValues(alpha: 0.28),
+                  ),
+                  color: _ArcanaColors.ink.withValues(alpha: 0.86),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.42),
+                      blurRadius: 38,
+                      offset: const Offset(0, 18),
                     ),
-                    color: _ArcanaColors.ink.withValues(alpha: 0.86),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.42),
-                        blurRadius: 38,
-                        offset: const Offset(0, 18),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      _BottomNavItem(
+                        icon: Icons.auto_awesome,
+                        symbol: '⌂',
+                        label: l10n.navHome,
+                        selected: navigationShell.currentIndex == 0,
+                        onTap: () => _goBranch(0),
+                      ),
+                      _BottomNavItem(
+                        icon: Icons.grid_view,
+                        symbol: '✦',
+                        label: l10n.navDivination,
+                        selected: navigationShell.currentIndex == 1,
+                        onTap: () => _goBranch(1),
+                      ),
+                      _BottomNavItem(
+                        icon: Icons.menu_book,
+                        symbol: '☽',
+                        label: l10n.navLibrary,
+                        selected: navigationShell.currentIndex == 2,
+                        onTap: () => _goBranch(2),
+                      ),
+                      _BottomNavItem(
+                        icon: Icons.person,
+                        symbol: '♙',
+                        label: l10n.navProfile,
+                        selected: navigationShell.currentIndex == 3,
+                        onTap: () => _goBranch(3),
                       ),
                     ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        _BottomNavItem(
-                          icon: Icons.auto_awesome,
-                          symbol: '⌂',
-                          label: l10n.navHome,
-                          selected: navigationShell.currentIndex == 0,
-                          onTap: () => _goBranch(0),
-                        ),
-                        _BottomNavItem(
-                          icon: Icons.grid_view,
-                          symbol: '✦',
-                          label: l10n.navDivination,
-                          selected: navigationShell.currentIndex == 1,
-                          onTap: () => _goBranch(1),
-                        ),
-                        _BottomNavItem(
-                          icon: Icons.menu_book,
-                          symbol: '☽',
-                          label: l10n.navLibrary,
-                          selected: navigationShell.currentIndex == 2,
-                          onTap: () => _goBranch(2),
-                        ),
-                        _BottomNavItem(
-                          icon: Icons.person,
-                          symbol: '♙',
-                          label: l10n.navProfile,
-                          selected: navigationShell.currentIndex == 3,
-                          onTap: () => _goBranch(3),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ),
@@ -1735,39 +1733,76 @@ class _ExitPromptToast extends StatelessWidget {
     return Positioned(
       left: 24,
       right: 24,
-      bottom: 28,
+      bottom: 22,
       child: IgnorePointer(
         child: SafeArea(
           top: false,
           child: Center(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: _ArcanaColors.ink2.withValues(alpha: 0.94),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: _ArcanaColors.gold.withValues(alpha: 0.34),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.38),
-                    blurRadius: 22,
-                    offset: const Offset(0, 12),
+            child: Material(
+              type: MaterialType.transparency,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 316),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: _ArcanaColors.ink2.withValues(alpha: 0.96),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: _ArcanaColors.gold.withValues(alpha: 0.38),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.42),
+                        blurRadius: 24,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                child: Text(
-                  message,
-                  textAlign: TextAlign.center,
-                  style: _bodyTextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: _ArcanaColors.ivory,
-                    height: 1.2,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 13,
+                      vertical: 11,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _ArcanaColors.gold.withValues(alpha: 0.16),
+                            border: Border.all(
+                              color: _ArcanaColors.gold2.withValues(
+                                alpha: 0.34,
+                              ),
+                            ),
+                          ),
+                          child: const SizedBox.square(
+                            dimension: 30,
+                            child: Icon(
+                              Icons.keyboard_return,
+                              size: 16,
+                              color: _ArcanaColors.gold2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(
+                            message,
+                            textAlign: TextAlign.left,
+                            style:
+                                _bodyTextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: _ArcanaColors.ivory,
+                                  height: 1.2,
+                                ).copyWith(
+                                  decoration: TextDecoration.none,
+                                  decorationColor: Colors.transparent,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -4106,35 +4141,37 @@ class ScreenFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBackdrop(
-      child: SafeArea(
-        child: scrollable
-            ? CustomScrollView(
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
-                    sliver: SliverToBoxAdapter(child: _header(context)),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(26, 12, 26, 18),
-                    sliver: SliverToBoxAdapter(child: child),
-                  ),
-                ],
-              )
-            : Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
-                    child: _header(context),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(26, 12, 26, 10),
-                      child: child,
+    return _RootBackExitGuard(
+      child: AppBackdrop(
+        child: SafeArea(
+          child: scrollable
+              ? CustomScrollView(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+                      sliver: SliverToBoxAdapter(child: _header(context)),
                     ),
-                  ),
-                ],
-              ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(26, 12, 26, 18),
+                      sliver: SliverToBoxAdapter(child: child),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+                      child: _header(context),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(26, 12, 26, 10),
+                        child: child,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }
