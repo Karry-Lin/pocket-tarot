@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:firebase_auth/firebase_auth.dart' as firebase;
@@ -414,35 +415,8 @@ class SplashCheckingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     return AppBackdrop(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(child: const BrandMark(size: 116, radius: 32)),
-              const SizedBox(height: 24),
-              Text(
-                l10n.startupCheckingTitle,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.startupCheckingMessage,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              const Center(child: CircularProgressIndicator()),
-            ],
-          ),
-        ),
-      ),
+      child: SafeArea(child: const Center(child: CircularProgressIndicator())),
     );
   }
 }
@@ -465,34 +439,36 @@ class SplashNetworkBlockedScreen extends StatelessWidget {
     final resolvedTitle = title ?? l10n.networkBlockedTitle;
     final resolvedMessage = message ?? l10n.networkBlockedMessage;
 
-    return AppBackdrop(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Center(child: const BrandMark(size: 116, radius: 32)),
-              const SizedBox(height: 24),
-              Text(
-                resolvedTitle,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                resolvedMessage,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: Text(l10n.retryCheck),
-              ),
-            ],
+    return _RootBackExitGuard(
+      child: AppBackdrop(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(child: const BrandMark(size: 116, radius: 32)),
+                const SizedBox(height: 24),
+                Text(
+                  resolvedTitle,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  resolvedMessage,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(l10n.retryCheck),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -515,6 +491,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final FocusNode _displayNameFocusNode = FocusNode();
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+  final FocusNode _confirmPasswordFocusNode = FocusNode();
+  final GlobalKey _displayNameFieldKey = GlobalKey(
+    debugLabel: 'email-auth-display-name-field',
+  );
+  final GlobalKey _emailFieldKey = GlobalKey(
+    debugLabel: 'email-auth-email-field',
+  );
+  final GlobalKey _passwordFieldKey = GlobalKey(
+    debugLabel: 'email-auth-password-field',
+  );
+  final GlobalKey _confirmPasswordFieldKey = GlobalKey(
+    debugLabel: 'email-auth-confirm-password-field',
+  );
   EmailAuthMode _mode = EmailAuthMode.signIn;
   Map<AuthFormField, String> _errors = const {};
   String? _formError;
@@ -528,6 +520,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _displayNameFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _confirmPasswordFocusNode.dispose();
     super.dispose();
   }
 
@@ -538,26 +534,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
     if (usesChinese && _showEmailForm) {
-      return _VisualEmailLoginScreen(
-        mode: _mode,
-        displayNameController: _displayNameController,
-        emailController: _emailController,
-        passwordController: _passwordController,
-        confirmPasswordController: _confirmPasswordController,
-        displayNameError: _errors[AuthFormField.displayName],
-        emailError: _errors[AuthFormField.email],
-        passwordError: _errors[AuthFormField.password],
-        confirmPasswordError: _errors[AuthFormField.confirmPassword],
-        formMessage: _formError ?? _formMessage,
-        isError: _formError != null,
-        submitting: _submitting,
-        onBack: _returnToLoginOptions,
-        onModeChanged: _switchMode,
-        onSubmit: _submit,
+      return _emailAuthBackScope(
+        _VisualEmailLoginScreen(
+          mode: _mode,
+          displayNameController: _displayNameController,
+          emailController: _emailController,
+          passwordController: _passwordController,
+          confirmPasswordController: _confirmPasswordController,
+          displayNameFocusNode: _displayNameFocusNode,
+          emailFocusNode: _emailFocusNode,
+          passwordFocusNode: _passwordFocusNode,
+          confirmPasswordFocusNode: _confirmPasswordFocusNode,
+          displayNameFieldKey: _displayNameFieldKey,
+          emailFieldKey: _emailFieldKey,
+          passwordFieldKey: _passwordFieldKey,
+          confirmPasswordFieldKey: _confirmPasswordFieldKey,
+          displayNameError: _errors[AuthFormField.displayName],
+          emailError: _errors[AuthFormField.email],
+          passwordError: _errors[AuthFormField.password],
+          confirmPasswordError: _errors[AuthFormField.confirmPassword],
+          formMessage: _formError ?? _formMessage,
+          isError: _formError != null,
+          submitting: _submitting,
+          onBack: _returnToLoginOptions,
+          onModeChanged: _switchMode,
+          onSubmit: _submit,
+        ),
       );
     }
 
-    return AppBackdrop(
+    final content = AppBackdrop(
       child: SafeArea(
         child: Stack(
           children: [
@@ -593,7 +599,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           style: Theme.of(context).textTheme.displaySmall,
                         ),
                         const SizedBox(height: 8),
-                        Text(usesChinese ? '保存每日抽牌與占卜紀錄。' : l10n.loginTagline),
+                        Text(usesChinese ? '用一張牌整理今天。' : l10n.loginTagline),
                         const SizedBox(height: 21),
                       ],
                       if (!_showEmailForm)
@@ -624,16 +630,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ArcanaPrimaryButton(
                                 onPressed: _submitting
                                     ? null
-                                    : () =>
-                                          setState(() => _showEmailForm = true),
+                                    : _openEmailAuthForm,
                                 child: const Text('使用 Email 登入'),
                               )
                             else
                               FilledButton(
                                 onPressed: _submitting
                                     ? null
-                                    : () =>
-                                          setState(() => _showEmailForm = true),
+                                    : _openEmailAuthForm,
                                 child: Text(l10n.emailLogin),
                               ),
                             if (_formError != null || _formMessage != null) ...[
@@ -688,30 +692,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               const SizedBox(height: 16),
                               if (_mode == EmailAuthMode.register) ...[
                                 AuthField(
+                                  key: _displayNameFieldKey,
                                   label: l10n.displayNameLabel,
                                   controller: _displayNameController,
+                                  focusNode: _displayNameFocusNode,
                                   errorText: _errors[AuthFormField.displayName],
                                 ),
                                 const SizedBox(height: 12),
                               ],
                               AuthField(
+                                key: _emailFieldKey,
                                 label: 'Email',
                                 controller: _emailController,
+                                focusNode: _emailFocusNode,
                                 errorText: _errors[AuthFormField.email],
                               ),
                               const SizedBox(height: 12),
                               if (_mode != EmailAuthMode.resetPassword)
                                 AuthField(
+                                  key: _passwordFieldKey,
                                   label: l10n.passwordLabel,
                                   controller: _passwordController,
+                                  focusNode: _passwordFocusNode,
                                   obscureText: true,
                                   errorText: _errors[AuthFormField.password],
                                 ),
                               if (_mode == EmailAuthMode.register) ...[
                                 const SizedBox(height: 12),
                                 AuthField(
+                                  key: _confirmPasswordFieldKey,
                                   label: l10n.confirmPasswordLabel,
                                   controller: _confirmPasswordController,
+                                  focusNode: _confirmPasswordFocusNode,
                                   obscureText: true,
                                   errorText:
                                       _errors[AuthFormField.confirmPassword],
@@ -782,6 +794,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         ),
       ),
     );
+
+    if (_showEmailForm) {
+      return _emailAuthBackScope(content);
+    }
+
+    return _RootBackExitGuard(child: content);
+  }
+
+  Widget _emailAuthBackScope(Widget child) {
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop || _submitting) {
+          return;
+        }
+        _returnToLoginOptions();
+      },
+      child: child,
+    );
   }
 
   Future<void> _showLoginLocaleModeSheet() async {
@@ -818,6 +849,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _switchMode(EmailAuthMode mode) {
     setState(() {
       _mode = mode;
+      _errors = const {};
+      _formError = null;
+      _formMessage = null;
+    });
+  }
+
+  void _openEmailAuthForm() {
+    setState(() {
+      _showEmailForm = true;
       _errors = const {};
       _formError = null;
       _formMessage = null;
@@ -1053,6 +1093,14 @@ class _VisualEmailLoginScreen extends StatelessWidget {
     required this.emailController,
     required this.passwordController,
     required this.confirmPasswordController,
+    required this.displayNameFocusNode,
+    required this.emailFocusNode,
+    required this.passwordFocusNode,
+    required this.confirmPasswordFocusNode,
+    required this.displayNameFieldKey,
+    required this.emailFieldKey,
+    required this.passwordFieldKey,
+    required this.confirmPasswordFieldKey,
     required this.displayNameError,
     required this.emailError,
     required this.passwordError,
@@ -1070,6 +1118,14 @@ class _VisualEmailLoginScreen extends StatelessWidget {
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
+  final FocusNode displayNameFocusNode;
+  final FocusNode emailFocusNode;
+  final FocusNode passwordFocusNode;
+  final FocusNode confirmPasswordFocusNode;
+  final Key displayNameFieldKey;
+  final Key emailFieldKey;
+  final Key passwordFieldKey;
+  final Key confirmPasswordFieldKey;
   final String? displayNameError;
   final String? emailError;
   final String? passwordError;
@@ -1092,128 +1148,158 @@ class _VisualEmailLoginScreen extends StatelessWidget {
       EmailAuthMode.resetPassword => '寄送重設信',
     };
 
+    Widget buildContent() {
+      return Padding(
+        padding: EdgeInsets.fromLTRB(
+          26,
+          keyboardOpen ? 18 : 28,
+          26,
+          MediaQuery.viewInsetsOf(context).bottom + 34,
+        ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Visibility(
+                  visible: !keyboardOpen,
+                  maintainState: true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: BrandMark(size: 58, radius: 18),
+                      ),
+                      const SizedBox(height: 19),
+                      const EyebrowText('Pocket Tarot'),
+                      const SizedBox(height: 7),
+                      Text(
+                        '登入口袋塔羅',
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '用一張牌整理今天。',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 21),
+                    ],
+                  ),
+                ),
+                _VisualAuthModeSwitch(
+                  mode: mode,
+                  enabled: !submitting,
+                  onChanged: onModeChanged,
+                ),
+                const SizedBox(height: 16),
+                if (isRegister) ...[
+                  _VisualEmailField(
+                    key: displayNameFieldKey,
+                    label: '顯示名稱',
+                    hintText: '想被如何稱呼？',
+                    controller: displayNameController,
+                    focusNode: displayNameFocusNode,
+                    errorText: displayNameError,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                _VisualEmailField(
+                  key: emailFieldKey,
+                  label: 'Email',
+                  hintText: 'you@example.com',
+                  controller: emailController,
+                  focusNode: emailFocusNode,
+                  errorText: emailError,
+                ),
+                if (!isReset) ...[
+                  const SizedBox(height: 12),
+                  _VisualEmailField(
+                    key: passwordFieldKey,
+                    label: '密碼',
+                    hintText: '至少 6 個字元',
+                    controller: passwordController,
+                    focusNode: passwordFocusNode,
+                    obscureText: true,
+                    errorText: passwordError,
+                  ),
+                ],
+                if (isRegister) ...[
+                  const SizedBox(height: 12),
+                  _VisualEmailField(
+                    key: confirmPasswordFieldKey,
+                    label: '確認密碼',
+                    hintText: '再輸入一次密碼',
+                    controller: confirmPasswordController,
+                    focusNode: confirmPasswordFocusNode,
+                    obscureText: true,
+                    errorText: confirmPasswordError,
+                  ),
+                ],
+                if (formMessage != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    formMessage!,
+                    textAlign: TextAlign.center,
+                    style: _bodyTextStyle(
+                      fontSize: 12,
+                      color: isError
+                          ? _ArcanaColors.error
+                          : _ArcanaColors.gold2,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 18),
+                ArcanaPrimaryButton(
+                  onPressed: submitting ? null : onSubmit,
+                  child: Text(primaryLabel),
+                ),
+                const SizedBox(height: 8),
+                if (mode == EmailAuthMode.signIn)
+                  TextButton(
+                    onPressed: submitting
+                        ? null
+                        : () => onModeChanged(EmailAuthMode.resetPassword),
+                    child: const Text('忘記密碼？'),
+                  )
+                else if (mode == EmailAuthMode.resetPassword)
+                  TextButton(
+                    onPressed: submitting
+                        ? null
+                        : () => onModeChanged(EmailAuthMode.signIn),
+                    child: const Text('回到 Email 登入'),
+                  )
+                else
+                  const SizedBox(height: 20),
+                const SizedBox(height: 18),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return AppBackdrop(
       child: SafeArea(
         child: Stack(
           children: [
-            SingleChildScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              padding: EdgeInsets.fromLTRB(
-                26,
-                keyboardOpen ? 18 : 28,
-                26,
-                MediaQuery.viewInsetsOf(context).bottom + 34,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 360),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SizedBox(
-                        height: keyboardOpen ? 4 : (isRegister ? 122 : 242),
-                      ),
-                      if (!keyboardOpen) ...[
-                        const Align(
-                          alignment: Alignment.centerLeft,
-                          child: BrandMark(size: 58, radius: 18),
-                        ),
-                        const SizedBox(height: 19),
-                        const EyebrowText('Pocket Tarot'),
-                        const SizedBox(height: 7),
-                        Text(
-                          '登入口袋塔羅',
-                          style: Theme.of(context).textTheme.displaySmall,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '保存每日抽牌與占卜紀錄。',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        const SizedBox(height: 21),
-                      ],
-                      _VisualAuthModeSwitch(
-                        mode: mode,
-                        enabled: !submitting,
-                        onChanged: onModeChanged,
-                      ),
-                      const SizedBox(height: 16),
-                      if (isRegister) ...[
-                        _VisualEmailField(
-                          label: '顯示名稱',
-                          hintText: '想被如何稱呼？',
-                          controller: displayNameController,
-                          errorText: displayNameError,
-                        ),
-                        const SizedBox(height: 12),
-                      ],
-                      _VisualEmailField(
-                        label: 'Email',
-                        hintText: 'you@example.com',
-                        controller: emailController,
-                        errorText: emailError,
-                      ),
-                      if (!isReset) ...[
-                        const SizedBox(height: 12),
-                        _VisualEmailField(
-                          label: '密碼',
-                          hintText: '至少 6 個字元',
-                          controller: passwordController,
-                          obscureText: true,
-                          errorText: passwordError,
-                        ),
-                      ],
-                      if (isRegister) ...[
-                        const SizedBox(height: 12),
-                        _VisualEmailField(
-                          label: '確認密碼',
-                          hintText: '再輸入一次密碼',
-                          controller: confirmPasswordController,
-                          obscureText: true,
-                          errorText: confirmPasswordError,
-                        ),
-                      ],
-                      if (formMessage != null) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          formMessage!,
-                          textAlign: TextAlign.center,
-                          style: _bodyTextStyle(
-                            fontSize: 12,
-                            color: isError
-                                ? _ArcanaColors.error
-                                : _ArcanaColors.gold2,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 18),
-                      ArcanaPrimaryButton(
-                        onPressed: submitting ? null : onSubmit,
-                        child: Text(primaryLabel),
-                      ),
-                      const SizedBox(height: 8),
-                      if (mode == EmailAuthMode.signIn)
-                        TextButton(
-                          onPressed: submitting
-                              ? null
-                              : () =>
-                                    onModeChanged(EmailAuthMode.resetPassword),
-                          child: const Text('忘記密碼？'),
-                        )
-                      else if (mode == EmailAuthMode.resetPassword)
-                        TextButton(
-                          onPressed: submitting
-                              ? null
-                              : () => onModeChanged(EmailAuthMode.signIn),
-                          child: const Text('回到 Email 登入'),
-                        )
-                      else
-                        const SizedBox(height: 20),
-                      const SizedBox(height: 18),
-                    ],
-                  ),
-                ),
-              ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final shouldScroll =
+                    keyboardOpen || constraints.maxHeight < 760;
+                final content = buildContent();
+                return SingleChildScrollView(
+                  key: const ValueKey('visual-email-auth-scroll'),
+                  keyboardDismissBehavior: shouldScroll
+                      ? ScrollViewKeyboardDismissBehavior.onDrag
+                      : ScrollViewKeyboardDismissBehavior.manual,
+                  physics: shouldScroll
+                      ? const ClampingScrollPhysics()
+                      : const NeverScrollableScrollPhysics(),
+                  child: content,
+                );
+              },
             ),
             Positioned(
               top: 28,
@@ -1313,9 +1399,11 @@ class _VisualAuthModeOption extends StatelessWidget {
 
 class _VisualEmailField extends StatelessWidget {
   const _VisualEmailField({
+    super.key,
     required this.label,
     required this.hintText,
     required this.controller,
+    this.focusNode,
     this.obscureText = false,
     this.errorText,
   });
@@ -1323,6 +1411,7 @@ class _VisualEmailField extends StatelessWidget {
   final String label;
   final String hintText;
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final bool obscureText;
   final String? errorText;
 
@@ -1340,6 +1429,7 @@ class _VisualEmailField extends StatelessWidget {
         const SizedBox(height: 8),
         TextField(
           controller: controller,
+          focusNode: focusNode,
           obscureText: obscureText,
           style: Theme.of(
             context,
@@ -1389,8 +1479,46 @@ class _PrimaryEmailAuthButton extends StatelessWidget {
   }
 }
 
-class VerifyEmailScreen extends StatelessWidget {
+class VerifyEmailScreen extends ConsumerStatefulWidget {
   const VerifyEmailScreen({super.key});
+
+  @override
+  ConsumerState<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
+}
+
+class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
+  String? _feedbackMessage;
+  bool _checking = false;
+
+  Future<void> _confirmVerified() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    setState(() {
+      _checking = true;
+      _feedbackMessage = null;
+    });
+
+    final controller = ref.read(appStartupControllerProvider);
+    await controller.check();
+    if (!mounted) {
+      return;
+    }
+
+    final state = controller.state;
+    if (state.status == AppStartupStatus.ready &&
+        state.targetRoute != null &&
+        state.targetRoute != '/verify-email') {
+      context.go(state.targetRoute!);
+      return;
+    }
+
+    setState(() {
+      _checking = false;
+      _feedbackMessage = state.status == AppStartupStatus.ready
+          ? l10n.verifyEmailStillPending
+          : (state.errorMessage ?? l10n.tryAgainLater);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1401,7 +1529,9 @@ class VerifyEmailScreen extends StatelessWidget {
       title: l10n.verifyEmailTitle,
       message: l10n.verifyEmailMessage,
       actionLabel: l10n.verifyEmailAction,
-      onAction: () => context.go('/splash'),
+      feedbackMessage: _feedbackMessage,
+      actionBusy: _checking,
+      onAction: _confirmVerified,
     );
   }
 }
@@ -1526,6 +1656,169 @@ class AppShell extends StatelessWidget {
       initialLocation: index == navigationShell.currentIndex,
     );
   }
+}
+
+const _appExitBackWindow = Duration(seconds: 2);
+
+class _RootBackExitGuard extends StatefulWidget {
+  const _RootBackExitGuard({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_RootBackExitGuard> createState() => _RootBackExitGuardState();
+}
+
+class _RootBackExitGuardState extends State<_RootBackExitGuard> {
+  DateTime? _lastBackPressedAt;
+  Timer? _hidePromptTimer;
+  bool _showPrompt = false;
+
+  @override
+  void dispose() {
+    _hidePromptTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          return;
+        }
+        _handleBackAttempt();
+      },
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          widget.child,
+          if (_showPrompt)
+            _ExitPromptToast(message: _exitPromptMessage(context)),
+        ],
+      ),
+    );
+  }
+
+  void _handleBackAttempt() {
+    final now = DateTime.now();
+    final lastPressedAt = _lastBackPressedAt;
+    if (lastPressedAt != null &&
+        now.difference(lastPressedAt) <= _appExitBackWindow) {
+      SystemNavigator.pop();
+      return;
+    }
+
+    _lastBackPressedAt = now;
+    _hidePromptTimer?.cancel();
+    setState(() => _showPrompt = true);
+    _hidePromptTimer = Timer(_appExitBackWindow, () {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _showPrompt = false);
+      _lastBackPressedAt = null;
+    });
+  }
+}
+
+class _ExitPromptToast extends StatelessWidget {
+  const _ExitPromptToast({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: 24,
+      right: 24,
+      bottom: 22,
+      child: IgnorePointer(
+        child: SafeArea(
+          top: false,
+          child: Center(
+            child: Material(
+              type: MaterialType.transparency,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 316),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: _ArcanaColors.ink2.withValues(alpha: 0.96),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: _ArcanaColors.gold.withValues(alpha: 0.38),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.42),
+                        blurRadius: 24,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 13,
+                      vertical: 11,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _ArcanaColors.gold.withValues(alpha: 0.16),
+                            border: Border.all(
+                              color: _ArcanaColors.gold2.withValues(
+                                alpha: 0.34,
+                              ),
+                            ),
+                          ),
+                          child: const SizedBox.square(
+                            dimension: 30,
+                            child: Icon(
+                              Icons.keyboard_return,
+                              size: 16,
+                              color: _ArcanaColors.gold2,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(
+                            message,
+                            textAlign: TextAlign.left,
+                            style:
+                                _bodyTextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: _ArcanaColors.ivory,
+                                  height: 1.2,
+                                ).copyWith(
+                                  decoration: TextDecoration.none,
+                                  decorationColor: Colors.transparent,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String _exitPromptMessage(BuildContext context) {
+  final l10n = AppLocalizations.of(context)!;
+  return _usesChineseCardText(l10n)
+      ? '再按一次返回退出 APP'
+      : 'Press back again to exit';
 }
 
 class _BottomNavItem extends StatelessWidget {
@@ -1788,7 +2081,7 @@ String _homeTitle({
   final name = displayName?.trim();
   if (name != null && name.isNotEmpty) {
     if (loaded) {
-      return usesChinese ? '$name，牌已翻面' : '$name, card revealed';
+      return usesChinese ? '$name，今日牌面已揭曉' : '$name, today\'s card is revealed';
     }
 
     return usesChinese ? '$name，牌桌亮起' : '$name, the table is lit';
@@ -1906,15 +2199,13 @@ class DailyResultCard extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const EyebrowText('Today guidance'),
-              const SizedBox(height: 8),
               Text(
                 _usesChineseCardText(l10n)
                     ? '今日完整解讀'
                     : l10n.dailyReadingPanelTitle,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 12),
+              const _ArcanaSectionDivider(),
               SafeMarkdownBody(data: reading.markdownResult),
             ],
           ),
@@ -2173,7 +2464,7 @@ class _DailyEmptyState extends StatelessWidget {
                       const SizedBox(height: 10),
                       Text(
                         usesChineseText
-                            ? '不用急著追完整答案；輕觸中央牌背，先接住此刻最靠近你的訊號。'
+                            ? '不用急著追完整答案，輕觸中央牌背，先接住此刻最靠近你的訊號。'
                             : 'Tap the deck and let the closest signal surface for today.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyMedium,
@@ -2528,7 +2819,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     }
     final question = Uri.encodeComponent(questionText);
     _questionController.clear();
-    context.go('/draw?question=$question');
+    context.push<void>('/draw?question=$question');
   }
 
   Future<void> _loadHistory() async {
@@ -2549,7 +2840,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     if (mounted) {
       setState(() => _deepState = controller.state);
       if (controller.state.reading != null) {
-        context.go('/result');
+        await context.push<void>('/result');
       }
     }
   }
@@ -2797,7 +3088,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
           : null;
     });
     if (controller.state.status == DeepReadingStatus.resultReady) {
-      context.go('/result');
+      await context.push<void>('/result');
     }
   }
 
@@ -2811,14 +3102,16 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
         : _deepState.draftCards;
 
     if (_isCreatingResult) {
-      return AppBackdrop(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
-            child: Center(
-              child: ArcanaLoadingView(
-                title: l10n.deepLoadingTitle,
-                message: l10n.deepLoadingMessage,
+      return _DeepReadingBackScope(
+        child: AppBackdrop(
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
+              child: Center(
+                child: ArcanaLoadingView(
+                  title: l10n.deepLoadingTitle,
+                  message: l10n.deepLoadingMessage,
+                ),
               ),
             ),
           ),
@@ -2827,14 +3120,16 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
     }
 
     if (_isDraftLoading) {
-      return AppBackdrop(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
-            child: Center(
-              child: ArcanaLoadingView(
-                title: l10n.drawPreparingTitle,
-                message: l10n.drawPreparingMessage,
+      return _DeepReadingBackScope(
+        child: AppBackdrop(
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
+              child: Center(
+                child: ArcanaLoadingView(
+                  title: l10n.drawPreparingTitle,
+                  message: l10n.drawPreparingMessage,
+                ),
               ),
             ),
           ),
@@ -2842,93 +3137,94 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
       );
     }
 
-    return AppBackdrop(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
-          child: LayoutBuilder(
-            builder: (context, _) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    children: [
-                      _RoundBackButton(
-                        onPressed: () => context.go('/divination'),
-                      ),
-                      const SizedBox(width: 12),
-                      const EyebrowText('Choose three'),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.drawTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 10),
-                  _ProgressLine(progress: selectedCount / 3),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.drawSelectedStatus(selectedCount),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  if (_errorMessage != null) ...[
+    return _DeepReadingBackScope(
+      child: AppBackdrop(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
+            child: LayoutBuilder(
+              builder: (context, _) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        _RoundBackButton(
+                          onPressed: () => context.go('/divination'),
+                        ),
+                        const SizedBox(width: 12),
+                        const EyebrowText('Choose three'),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.drawTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 10),
+                    _ProgressLine(progress: selectedCount / 3),
                     const SizedBox(height: 8),
                     Text(
-                      _errorMessage!,
-                      style: _bodyTextStyle(color: _ArcanaColors.error),
+                      l10n.drawSelectedStatus(selectedCount),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        _errorMessage!,
+                        style: _bodyTextStyle(color: _ArcanaColors.error),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, gridConstraints) {
+                          const spacing = 8.0;
+                          final tileWidth =
+                              (gridConstraints.maxWidth - spacing * 2) / 3;
+                          final tileHeight =
+                              (gridConstraints.maxHeight - spacing * 2) / 3;
+                          final aspectRatio = tileWidth / tileHeight;
+
+                          return GridView.builder(
+                            key: const ValueKey('visual-draw-grid'),
+                            padding: EdgeInsets.zero,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 3,
+                                  childAspectRatio: aspectRatio,
+                                  crossAxisSpacing: spacing,
+                                  mainAxisSpacing: spacing,
+                                ),
+                            itemCount: drawCards.length,
+                            itemBuilder: (context, index) {
+                              final card = drawCards[index];
+                              final selectedOrder =
+                                  selectedIndexes.indexOf(index) + 1;
+                              return _VisualDrawCard(
+                                key: ValueKey('draw-card-$index'),
+                                imagePath: _imageForCardId(card.cardId),
+                                selected: selectedIndexes.contains(index),
+                                selectedOrder: selectedOrder,
+                                onTap: () => _toggleCard(index),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ArcanaPrimaryButton(
+                      onPressed: selectedCount == 3 ? _showResult : null,
+                      child: Text(l10n.drawReadButton),
                     ),
                   ],
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, gridConstraints) {
-                        const spacing = 8.0;
-                        final tileWidth =
-                            (gridConstraints.maxWidth - spacing * 2) / 3;
-                        final tileHeight =
-                            (gridConstraints.maxHeight - spacing * 2) / 3;
-                        final aspectRatio = tileWidth / tileHeight;
-
-                        return GridView.builder(
-                          key: const ValueKey('visual-draw-grid'),
-                          padding: EdgeInsets.zero,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                childAspectRatio: aspectRatio,
-                                crossAxisSpacing: spacing,
-                                mainAxisSpacing: spacing,
-                              ),
-                          itemCount: drawCards.length,
-                          itemBuilder: (context, index) {
-                            final card = drawCards[index];
-                            final selectedOrder =
-                                selectedIndexes.indexOf(index) + 1;
-                            return _VisualDrawCard(
-                              key: ValueKey('draw-card-$index'),
-                              label: _drawCardLabel(index, l10n),
-                              imagePath: _imageForCardId(card.cardId),
-                              selected: selectedIndexes.contains(index),
-                              selectedOrder: selectedOrder,
-                              onTap: () => _toggleCard(index),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ArcanaPrimaryButton(
-                    onPressed: selectedCount == 3 ? _showResult : null,
-                    child: Text(l10n.drawReadButton),
-                  ),
-                ],
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -2988,84 +3284,95 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
         ? l10n.resultClearing
         : l10n.resultSaving;
 
-    return AppBackdrop(
-      child: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _RoundBackButton(onPressed: () => context.go('/divination')),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const EyebrowText('Reading result'),
-                        const SizedBox(height: 5),
-                        Text(
-                          l10n.resultTitle,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                      ],
+    return _DeepReadingBackScope(
+      child: AppBackdrop(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _RoundBackButton(
+                      onPressed: () => context.go('/divination'),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  for (var index = 0; index < resultCards.length; index++) ...[
+                    const SizedBox(width: 14),
                     Expanded(
-                      child: TarotImageCard(
-                        imagePath: _imageForCardId(resultCards[index].cardId),
-                        height: 178,
-                        radius: 12,
-                        fit: BoxFit.contain,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const EyebrowText('Reading result'),
+                          const SizedBox(height: 5),
+                          Text(
+                            l10n.resultTitle,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ],
                       ),
                     ),
-                    if (index != resultCards.length - 1)
-                      const SizedBox(width: 10),
                   ],
-                ],
-              ),
-              const SizedBox(height: 16),
-              GlassPanel(child: _resultBody(context, reading)),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 50,
-                      child: OutlinedButton(
-                        onPressed: () => context.go('/divination'),
-                        child: Text(l10n.resultBackToReading),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    for (
+                      var index = 0;
+                      index < resultCards.length;
+                      index++
+                    ) ...[
+                      Expanded(
+                        child: TarotImageCard(
+                          imagePath: _imageForCardId(resultCards[index].cardId),
+                          height: 178,
+                          radius: 12,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      if (index != resultCards.length - 1)
+                        const SizedBox(width: 10),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 16),
+                GlassPanel(child: _resultBody(context, reading)),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 50,
+                        child: OutlinedButton(
+                          onPressed: () => context.go('/divination'),
+                          child: Text(l10n.resultBackToReading),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ArcanaPrimaryButton(
-                      tone: isSaved
-                          ? ArcanaPrimaryButtonTone.danger
-                          : ArcanaPrimaryButtonTone.gold,
-                      onPressed: _saving
-                          ? null
-                          : () =>
-                                _setReadingSaved(controller, reading, !isSaved),
-                      child: Text(
-                        _saving
-                            ? savingLabel
-                            : (isSaved ? l10n.resultClear : l10n.resultSave),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ArcanaPrimaryButton(
+                        tone: isSaved
+                            ? ArcanaPrimaryButtonTone.danger
+                            : ArcanaPrimaryButtonTone.gold,
+                        onPressed: _saving
+                            ? null
+                            : () => _setReadingSaved(
+                                controller,
+                                reading,
+                                !isSaved,
+                              ),
+                        child: Text(
+                          _saving
+                              ? savingLabel
+                              : (isSaved ? l10n.resultClear : l10n.resultSave),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -3086,14 +3393,14 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
           Text(
             reading.question.isEmpty ? l10n.resultNoQuestion : reading.question,
           ),
-          const SizedBox(height: 14),
+          const _ArcanaSectionDivider(),
           Text(
             l10n.resultCardsTitle,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 10),
           Text(reading.summary),
-          const SizedBox(height: 12),
+          const _ArcanaSectionDivider(),
           SafeMarkdownBody(data: reading.markdownResult),
         ],
       );
@@ -3108,7 +3415,7 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
         ),
         const SizedBox(height: 10),
         Text(l10n.fallbackResultQuestion),
-        const SizedBox(height: 14),
+        const _ArcanaSectionDivider(),
         Text(
           l10n.resultCardsTitle,
           style: Theme.of(context).textTheme.titleLarge,
@@ -3117,7 +3424,7 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
         _VisualBulletText(l10n.fallbackResultBulletMoon),
         _VisualBulletText(l10n.fallbackResultBulletTemperance),
         _VisualBulletText(l10n.fallbackResultBulletStar),
-        const SizedBox(height: 14),
+        const _ArcanaSectionDivider(),
         Text(
           l10n.fallbackResultAdviceTitle,
           style: Theme.of(context).textTheme.titleLarge,
@@ -3125,6 +3432,26 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
         const SizedBox(height: 10),
         Text(l10n.fallbackResultAdvice),
       ],
+    );
+  }
+}
+
+class _DeepReadingBackScope extends StatelessWidget {
+  const _DeepReadingBackScope({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope<Object?>(
+      canPop: Navigator.of(context).canPop(),
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop || !context.mounted) {
+          return;
+        }
+        context.go('/divination');
+      },
+      child: child,
     );
   }
 }
@@ -3184,14 +3511,12 @@ class _ProgressLine extends StatelessWidget {
 class _VisualDrawCard extends StatelessWidget {
   const _VisualDrawCard({
     super.key,
-    required this.label,
     required this.imagePath,
     required this.selected,
     required this.selectedOrder,
     required this.onTap,
   });
 
-  final String label;
   final String imagePath;
   final bool selected;
   final int selectedOrder;
@@ -3281,36 +3606,6 @@ class _VisualDrawCard extends StatelessWidget {
                   ),
                 ),
               ),
-            if (selected)
-              Positioned(
-                right: 5,
-                bottom: 5,
-                left: 5,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    color: _ArcanaColors.ink.withValues(alpha: 0.68),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 4,
-                    ),
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: _bodyTextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: _ArcanaColors.ivory,
-                        height: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       ),
@@ -3338,29 +3633,21 @@ class _VisualBulletText extends StatelessWidget {
   }
 }
 
-class _VisualDrawCardData {
-  const _VisualDrawCardData(this.zhLabel, this.enLabel, this.cardId);
-
-  final String zhLabel;
-  final String enLabel;
-  final String cardId;
-}
-
-const _drawCards = [
-  _VisualDrawCardData('過去的霧', 'Past mist', 'major-18-moon'),
-  _VisualDrawCardData('現在的門', 'Present door', 'major-14-temperance'),
-  _VisualDrawCardData('尚未命名', 'Unnamed', 'major-17-star'),
-  _VisualDrawCardData('內在潮汐', 'Inner tide', 'cups-02-two'),
-  _VisualDrawCardData('月下答案', 'Moonlit answer', 'swords-06-six'),
-  _VisualDrawCardData('隱形代價', 'Hidden cost', 'major-16-tower'),
-  _VisualDrawCardData('需要放下', 'Release', 'major-00-fool'),
-  _VisualDrawCardData('可以靠近', 'Approach', 'major-11-justice'),
-  _VisualDrawCardData('下一步', 'Next step', 'major-09-hermit'),
+const _fallbackDrawCardIds = [
+  'major-18-moon',
+  'major-14-temperance',
+  'major-17-star',
+  'cups-02-two',
+  'swords-06-six',
+  'major-16-tower',
+  'major-00-fool',
+  'major-11-justice',
+  'major-09-hermit',
 ];
 
 final _fallbackDrawCardDraws = [
-  for (final card in _drawCards)
-    CardDraw(cardId: card.cardId, orientation: 'upright'),
+  for (final cardId in _fallbackDrawCardIds)
+    CardDraw(cardId: cardId, orientation: 'upright'),
 ];
 
 const _fallbackResultCards = [
@@ -3383,15 +3670,6 @@ const _fallbackResultCards = [
     orientation: 'upright',
   ),
 ];
-
-String _drawCardLabel(int index, AppLocalizations l10n) {
-  if (index >= 0 && index < _drawCards.length) {
-    return _usesChineseCardText(l10n)
-        ? _drawCards[index].zhLabel
-        : _drawCards[index].enLabel;
-  }
-  return _usesChineseCardText(l10n) ? '第 ${index + 1} 張' : 'Card ${index + 1}';
-}
 
 class LibraryScreen extends ConsumerStatefulWidget {
   const LibraryScreen({super.key});
@@ -3471,6 +3749,8 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     ),
                 ],
               ),
+              const SizedBox(height: 10),
+              TarotCategoryDescription(category: _category),
               SizedBox(height: usesChineseVisual ? 16 : 16),
               Text(
                 l10n.cardsCount(filtered.length),
@@ -3508,6 +3788,21 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+class TarotCategoryDescription extends StatelessWidget {
+  const TarotCategoryDescription({super.key, required this.category});
+
+  final TarotCategory category;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Text(
+      _categoryDescription(category, l10n),
+      style: Theme.of(context).textTheme.bodySmall,
     );
   }
 }
@@ -3846,35 +4141,37 @@ class ScreenFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBackdrop(
-      child: SafeArea(
-        child: scrollable
-            ? CustomScrollView(
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
-                    sliver: SliverToBoxAdapter(child: _header(context)),
-                  ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(26, 12, 26, 18),
-                    sliver: SliverToBoxAdapter(child: child),
-                  ),
-                ],
-              )
-            : Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
-                    child: _header(context),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(26, 12, 26, 10),
-                      child: child,
+    return _RootBackExitGuard(
+      child: AppBackdrop(
+        child: SafeArea(
+          child: scrollable
+              ? CustomScrollView(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+                      sliver: SliverToBoxAdapter(child: _header(context)),
                     ),
-                  ),
-                ],
-              ),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(26, 12, 26, 18),
+                      sliver: SliverToBoxAdapter(child: child),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+                      child: _header(context),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(26, 12, 26, 10),
+                        child: child,
+                      ),
+                    ),
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -3930,6 +4227,10 @@ class AppBackdrop extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 const CustomPaint(painter: _CelestialBackdropPainter()),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(34),
+                  child: child,
+                ),
                 Positioned(
                   top: 13,
                   right: 12,
@@ -3947,7 +4248,6 @@ class AppBackdrop extends StatelessWidget {
                     ),
                   ),
                 ),
-                child,
               ],
             ),
           ),
@@ -4444,22 +4744,40 @@ class ArcanaPrimaryButton extends StatelessWidget {
       ArcanaPrimaryButtonTone.gold => _ArcanaColors.ink2,
       ArcanaPrimaryButtonTone.danger => _ArcanaColors.ivory,
     };
+    final disabledBackgroundColor = switch (tone) {
+      ArcanaPrimaryButtonTone.gold => _ArcanaColors.gold.withValues(
+        alpha: 0.14,
+      ),
+      ArcanaPrimaryButtonTone.danger => const Color(
+        0xFFC4363E,
+      ).withValues(alpha: 0.16),
+    };
+    final disabledBorderColor = switch (tone) {
+      ArcanaPrimaryButtonTone.gold => _ArcanaColors.gold2.withValues(
+        alpha: 0.36,
+      ),
+      ArcanaPrimaryButtonTone.danger => const Color(
+        0xFFFF8F82,
+      ).withValues(alpha: 0.38),
+    };
     final resolvedForegroundColor = enabled
         ? foregroundColor
-        : _ArcanaColors.gold2;
+        : switch (tone) {
+            ArcanaPrimaryButtonTone.gold => _ArcanaColors.gold2,
+            ArcanaPrimaryButtonTone.danger => const Color(0xFFFFC3BC),
+          };
 
     return Material(
       color: Colors.transparent,
       shape: const StadiumBorder(),
       child: Ink(
+        width: double.infinity,
         height: 50,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
           gradient: enabled ? gradient : null,
-          color: enabled ? null : _ArcanaColors.gold.withValues(alpha: 0.14),
-          border: enabled
-              ? null
-              : Border.all(color: _ArcanaColors.gold2.withValues(alpha: 0.36)),
+          color: enabled ? null : disabledBackgroundColor,
+          border: enabled ? null : Border.all(color: disabledBorderColor),
           boxShadow: enabled
               ? [
                   BoxShadow(
@@ -4625,6 +4943,19 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
+class _ArcanaSectionDivider extends StatelessWidget {
+  const _ArcanaSectionDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 28,
+      thickness: 1,
+      color: _ArcanaColors.gold.withValues(alpha: 0.22),
+    );
+  }
+}
+
 class _VisualSettingRow extends StatelessWidget {
   const _VisualSettingRow({
     required this.title,
@@ -4759,6 +5090,8 @@ class GateScaffold extends ConsumerWidget {
     required this.message,
     required this.actionLabel,
     required this.onAction,
+    this.feedbackMessage,
+    this.actionBusy = false,
   });
 
   final IconData icon;
@@ -4766,47 +5099,76 @@ class GateScaffold extends ConsumerWidget {
   final String message;
   final String actionLabel;
   final VoidCallback onAction;
+  final String? feedbackMessage;
+  final bool actionBusy;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
 
-    return AppBackdrop(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Icon(
-                icon,
-                size: 54,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(height: 18),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 8),
-              Text(message, textAlign: TextAlign.center),
-              const SizedBox(height: 24),
-              FilledButton(onPressed: onAction, child: Text(actionLabel)),
-              TextButton(
-                onPressed: () async {
-                  try {
-                    await ref.read(authActionsProvider).signOut();
-                  } finally {
-                    if (context.mounted) {
-                      context.go('/login');
+    return _RootBackExitGuard(
+      child: AppBackdrop(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Icon(
+                  icon,
+                  size: 54,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
+                const SizedBox(height: 8),
+                Text(message, textAlign: TextAlign.center),
+                if (feedbackMessage != null) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    feedbackMessage!,
+                    textAlign: TextAlign.center,
+                    style: _bodyTextStyle(color: _ArcanaColors.error),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                Align(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: 180,
+                      maxWidth: 240,
+                      minHeight: 48,
+                    ),
+                    child: FilledButton(
+                      onPressed: actionBusy ? null : onAction,
+                      child: actionBusy
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(actionLabel),
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      await ref.read(authActionsProvider).signOut();
+                    } finally {
+                      if (context.mounted) {
+                        context.go('/login');
+                      }
                     }
-                  }
-                },
-                child: Text(l10n.signOut),
-              ),
-            ],
+                  },
+                  child: Text(l10n.signOut),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -4819,6 +5181,7 @@ class AuthField extends StatelessWidget {
     super.key,
     required this.label,
     this.controller,
+    this.focusNode,
     this.obscureText = false,
     this.maxLines = 1,
     this.errorText,
@@ -4826,6 +5189,7 @@ class AuthField extends StatelessWidget {
 
   final String label;
   final TextEditingController? controller;
+  final FocusNode? focusNode;
   final bool obscureText;
   final int maxLines;
   final String? errorText;
@@ -4834,6 +5198,7 @@ class AuthField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      focusNode: focusNode,
       obscureText: obscureText,
       maxLines: maxLines,
       style: Theme.of(
@@ -5621,6 +5986,36 @@ String _categoryLabel(TarotCategory category, AppLocalizations l10n) {
     TarotCategory.cups => l10n.categoryCups,
     TarotCategory.swords => l10n.categorySwords,
     TarotCategory.pentacles => l10n.categoryPentacles,
+  };
+}
+
+String _categoryDescription(TarotCategory category, AppLocalizations l10n) {
+  final usesChinese = _usesChineseCardText(l10n);
+  if (usesChinese) {
+    return switch (category) {
+      TarotCategory.all =>
+        '塔羅牌用 22 張大阿爾克那與 56 張小阿爾克那分類，小阿爾克那再分成權杖、聖杯、寶劍、錢幣，方便從人生主題、行動、情感、思考與現實資源理解牌義。',
+      TarotCategory.major => '大阿爾克那代表人生主題與關鍵轉折，像是開始、選擇、失衡、轉化與完成。',
+      TarotCategory.wands => '權杖屬於小阿爾克那，常看行動力、熱情、創造與事業推進。',
+      TarotCategory.cups => '聖杯屬於小阿爾克那，常看情感、關係、直覺與內在感受。',
+      TarotCategory.swords => '寶劍屬於小阿爾克那，常看思考、溝通、衝突、判斷與壓力。',
+      TarotCategory.pentacles => '錢幣屬於小阿爾克那，常看工作、金錢、身體、資源與現實穩定。',
+    };
+  }
+
+  return switch (category) {
+    TarotCategory.all =>
+      'Major Arcana are the deck-wide life themes; Minor Arcana are split into Wands, Cups, Swords, and Pentacles to read action, emotion, thought, and practical resources.',
+    TarotCategory.major =>
+      'Major Arcana show larger life themes and turning points: beginnings, choices, imbalance, transformation, and completion.',
+    TarotCategory.wands =>
+      'Wands are Minor Arcana cards for action, drive, creative energy, and momentum.',
+    TarotCategory.cups =>
+      'Cups are Minor Arcana cards for emotion, relationships, intuition, and inner response.',
+    TarotCategory.swords =>
+      'Swords are Minor Arcana cards for thought, communication, conflict, judgment, and pressure.',
+    TarotCategory.pentacles =>
+      'Pentacles are Minor Arcana cards for work, money, body, resources, and practical stability.',
   };
 }
 

@@ -102,10 +102,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get verifyEmailTitle => '確認 Email';
 
   @override
-  String get verifyEmailMessage => '驗證信已送出，完成後回到 App 繼續建立 profile。';
+  String get verifyEmailMessage => '我們已寄出驗證信。請先到信箱點擊驗證連結，再回來按下按鈕。';
 
   @override
   String get verifyEmailAction => '我已完成驗證';
+
+  @override
+  String get verifyEmailStillPending => 'Email 尚未完成驗證，請先到信箱點擊驗證連結後再試。';
 
   @override
   String get pendingTitle => '等待啟用';
@@ -473,10 +476,13 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get verifyEmailTitle => '確認 Email';
 
   @override
-  String get verifyEmailMessage => '驗證信已送出，完成後回到 App 繼續建立 profile。';
+  String get verifyEmailMessage => '我們已寄出驗證信。請先到信箱點擊驗證連結，再回來按下按鈕。';
 
   @override
   String get verifyEmailAction => '我已完成驗證';
+
+  @override
+  String get verifyEmailStillPending => 'Email 尚未完成驗證，請先到信箱點擊驗證連結後再試。';
 
   @override
   String get pendingTitle => '等待啟用';

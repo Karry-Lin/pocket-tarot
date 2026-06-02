@@ -288,7 +288,7 @@ abstract class AppLocalizations {
   /// No description provided for @verifyEmailMessage.
   ///
   /// In en, this message translates to:
-  /// **'The verification email has been sent. Return to the app after verifying to continue creating your profile.'**
+  /// **'We sent a verification email. Open it and tap the verification link before continuing.'**
   String get verifyEmailMessage;
 
   /// No description provided for @verifyEmailAction.
@@ -296,6 +296,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'I have verified'**
   String get verifyEmailAction;
+
+  /// No description provided for @verifyEmailStillPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Email is not verified yet. Open the verification email first, then try again.'**
+  String get verifyEmailStillPending;
 
   /// No description provided for @pendingTitle.
   ///
