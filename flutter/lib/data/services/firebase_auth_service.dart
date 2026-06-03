@@ -85,8 +85,14 @@ class FirebaseAuthService {
     return _firebaseAuth.sendPasswordResetEmail(email);
   }
 
-  Future<String?> getIdToken({bool forceRefresh = false}) {
-    return _firebaseAuth.getCurrentUserIdToken(forceRefresh: forceRefresh);
+  Future<String?> getIdToken({bool forceRefresh = false}) async {
+    try {
+      return await _firebaseAuth
+          .getCurrentUserIdToken(forceRefresh: forceRefresh)
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {
+      rethrow;
+    }
   }
 
   Future<void> signOut() async {
