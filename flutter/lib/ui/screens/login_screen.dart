@@ -327,6 +327,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: false,
       body: mainContent,
     );
   }
@@ -376,6 +377,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _switchMode(EmailAuthMode mode) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+    }
     setState(() {
       _mode = mode;
       _errors = const {};
@@ -385,6 +389,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _openEmailAuthForm() {
+    if (mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+    }
     setState(() {
       _showEmailForm = true;
       _errors = const {};
@@ -394,6 +401,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void _returnToLoginOptions() {
+    if (mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+    }
     setState(() {
       _showEmailForm = false;
       _mode = EmailAuthMode.signIn;
