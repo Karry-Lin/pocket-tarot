@@ -10,7 +10,11 @@ class PocketTarotApiClient {
       'API_BASE_URL',
       defaultValue: 'http://127.0.0.1:4000/api/v1',
     ),
-  }) : _dio = dio ?? Dio(BaseOptions(baseUrl: baseUrl)),
+  }) : _dio = dio ?? Dio(BaseOptions(
+          baseUrl: baseUrl,
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 10),
+        )),
        _tokenProvider = tokenProvider ?? (() async => null) {
     _dio.options.baseUrl = _dio.options.baseUrl.isEmpty
         ? baseUrl

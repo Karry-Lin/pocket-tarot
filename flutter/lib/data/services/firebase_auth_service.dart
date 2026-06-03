@@ -25,10 +25,15 @@ class FirebaseAuthService {
   }
 
   Future<AuthSession> loadSession({bool reload = false}) async {
-    final user = reload
-        ? await _firebaseAuth.reloadCurrentUser()
-        : _firebaseAuth.currentUser;
-    return _toSession(user);
+    try {
+      final user = reload
+          ? await _firebaseAuth.reloadCurrentUser().timeout(const Duration(seconds: 5))
+          : _firebaseAuth.currentUser;
+      return _toSession(user);
+    } catch (_) {
+      final user = _firebaseAuth.currentUser;
+      return _toSession(user);
+    }
   }
 
   Future<AuthSession> signInWithEmail({
