@@ -1,28 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pocket-tarot-server-main
+  name: karrylin-pocket-tarot-server-main
   labels:
-    app.kubernetes.io/name: pocket-tarot-server
+    app.kubernetes.io/name: karrylin-pocket-tarot-server
     app.kubernetes.io/component: api
     app.kubernetes.io/instance: main
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: pocket-tarot-server
+      app.kubernetes.io/name: karrylin-pocket-tarot-server
       app.kubernetes.io/component: api
       app.kubernetes.io/instance: main
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: pocket-tarot-server
+        app.kubernetes.io/name: karrylin-pocket-tarot-server
         app.kubernetes.io/component: api
         app.kubernetes.io/instance: main
     spec:
       containers:
         - name: api
-          image: registry.kkserver.net/pocket-tarot-server:main-placeholder
+          image: registry.kkserver.net/karrylin-pocket-tarot-server:main-placeholder
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
@@ -36,7 +36,7 @@ spec:
               value: /var/run/secrets/pocket-tarot/firebase-service-account.json
           envFrom:
             - secretRef:
-                name: pocket-tarot-server-secrets-main
+                name: karrylin-pocket-tarot-server-secrets-main
           readinessProbe:
             httpGet:
               path: /healthz
@@ -63,7 +63,7 @@ spec:
       volumes:
         - name: firebase-service-account
           secret:
-            secretName: pocket-tarot-server-secrets-main
+            secretName: karrylin-pocket-tarot-server-secrets-main
             items:
               - key: firebase-service-account.json
                 path: firebase-service-account.json
