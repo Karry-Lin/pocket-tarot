@@ -10,16 +10,36 @@ class SafeMarkdownBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final locale = Localizations.localeOf(context);
+    final isChinese = locale.languageCode == 'zh';
 
     return MarkdownBody(
       data: sanitizeReadingMarkdown(data),
       inlineSyntaxes: [_AdjacentStrongEmphasisSyntax()],
       selectable: false,
       styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-        h1: theme.textTheme.headlineSmall,
-        h2: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-        h3: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        h1: isChinese
+            ? theme.textTheme.headlineSmall?.copyWith(
+                fontFamily: 'ChenYuluoyan',
+                fontWeight: FontWeight.w400,
+              )
+            : theme.textTheme.headlineSmall,
+        h2: isChinese
+            ? theme.textTheme.titleLarge?.copyWith(
+                fontFamily: 'ChenYuluoyan',
+                fontWeight: FontWeight.w400,
+              )
+            : theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        h3: isChinese
+            ? theme.textTheme.titleMedium?.copyWith(
+                fontFamily: 'ChenYuluoyan',
+                fontWeight: FontWeight.w400,
+              )
+            : theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
         p: theme.textTheme.bodyMedium,
+        strong: isChinese
+            ? theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700)
+            : null,
         blockquoteDecoration: BoxDecoration(
           color: theme.colorScheme.secondary.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(8),

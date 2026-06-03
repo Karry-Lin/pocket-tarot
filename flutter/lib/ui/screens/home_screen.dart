@@ -572,7 +572,7 @@ class _DailyEmptyState extends StatelessWidget {
             : 660.0;
         final compact = stageHeight < 560 || constraints.maxWidth < 320;
         final copyHeight = compact ? 172.0 : 164.0;
-        final deckTop = copyHeight + (compact ? 12.0 : 51.0);
+        final deckTop = copyHeight + (compact ? 12.0 : 100.0);
         final constellationBottom = compact ? 0.0 : 24.0;
         final title = usesChineseText
             ? '讓一張牌先替今天開口'
@@ -584,7 +584,7 @@ class _DailyEmptyState extends StatelessWidget {
           child: Stack(
             children: [
               Positioned(
-                top: compact ? 8.0 : 32.0,
+                top: compact ? 8.0 : 86.0,
                 right: 0,
                 left: 0,
                 child: SizedBox(
@@ -613,7 +613,15 @@ class _DailyEmptyState extends StatelessWidget {
                             ? '不用急著追完整答案，輕觸中央牌背，先接住此刻最靠近你的訊號。'
                             : 'Tap the deck and let the closest signal surface for today.',
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: usesChineseText
+                            ? const TextStyle(
+                                fontFamily: 'LXGWWenKaiMonoTC',
+                                fontSize: 14,
+                                color: _ArcanaColors.muted,
+                                fontWeight: FontWeight.w300,
+                                height: 1.55,
+                              )
+                            : Theme.of(context).textTheme.bodyMedium,
                       ),
                     ],
                   ),

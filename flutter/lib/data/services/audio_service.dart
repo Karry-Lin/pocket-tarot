@@ -37,10 +37,18 @@ class AudioService {
 
   void updateCachedSettings(LocalSettings settings) {
     _cachedSettings = settings;
-    if (!settings.bgmEnabled && _isBgmPlaying) {
-      _bgmPlayer.stop().catchError((_) {});
+    if (!settings.bgmEnabled) {
+      if (_isBgmPlaying) {
+        _bgmPlayer.stop().catchError((_) {});
+      }
     } else if (settings.bgmEnabled && _isBgmPlaying) {
-      _bgmPlayer.play(AssetSource('audio/bgm.mp3')).catchError((_) {});
+      if (_bgmPlayer.state != PlayerState.playing) {
+        _bgmPlayer.play(AssetSource('audio/bgm.mp3')).catchError((_) {});
+      }
+    }
+
+    if (!settings.sfxEnabled) {
+      _magicPlayer.stop().catchError((_) {});
     }
   }
 
@@ -52,7 +60,9 @@ class AudioService {
     }
 
     try {
-      await _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
+      if (_bgmPlayer.state != PlayerState.playing) {
+        await _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
+      }
     } catch (e) {
       debugPrint('AudioService playBgm error: $e');
     }
@@ -68,10 +78,13 @@ class AudioService {
   }
 
   Future<void> updateBgmState(bool enabled) async {
+    _cachedSettings = _cachedSettings.copyWith(bgmEnabled: enabled);
     if (enabled) {
       if (_isBgmPlaying) {
         try {
-          await _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
+          if (_bgmPlayer.state != PlayerState.playing) {
+            await _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
+          }
         } catch (_) {}
       } else {
         await playBgm();
@@ -80,6 +93,13 @@ class AudioService {
       try {
         await _bgmPlayer.stop();
       } catch (_) {}
+    }
+  }
+
+  void updateSfxState(bool enabled) {
+    _cachedSettings = _cachedSettings.copyWith(sfxEnabled: enabled);
+    if (!enabled) {
+      _magicPlayer.stop().catchError((_) {});
     }
   }
 

@@ -72,6 +72,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (mounted) {
       setState(() => _profileState = controller.state);
     }
+    _audioService.updateSfxState(sfxEnabled);
   }
 
   Future<void> _updateDisplayName(String displayName) async {
