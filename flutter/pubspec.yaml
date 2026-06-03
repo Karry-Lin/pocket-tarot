@@ -78,7 +78,9 @@ flutter:
     - assets/images/card-back.png
     - assets/images/pocket-tarot-logo.png
     - assets/images/cards/
-    - assets/audio/
+    - assets/audio/bgm.mp3
+    - assets/audio/card_draw.mp3
+    - assets/audio/magic_loading.mp3
 
   fonts:
     - family: Cinzel

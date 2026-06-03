@@ -63,11 +63,14 @@ class ProfileController {
     required ProfileSettingsLoader loadSettings,
     required ProfileSettingsSaver saveSettings,
     required ProfileSignOut signOut,
+    this.onProfileChanged,
   }) : _fetchProfile = fetchProfile,
        _updateDisplayName = updateDisplayName,
        _loadSettings = loadSettings,
        _saveSettings = saveSettings,
        _signOut = signOut;
+
+  final void Function(UserProfile?)? onProfileChanged;
 
   final ProfileFetcher _fetchProfile;
   final DisplayNameUpdater _updateDisplayName;
@@ -87,11 +90,13 @@ class ProfileController {
         _fetchProfile(),
         _loadSettings(),
       ]);
+      final snapshot = results[0] as ProfileSnapshot;
       _state = ProfileState(
         status: ProfileStatus.loaded,
-        snapshot: results[0] as ProfileSnapshot,
+        snapshot: snapshot,
         settings: results[1] as LocalSettings,
       );
+      onProfileChanged?.call(snapshot.user);
     } catch (error) {
       _state = ProfileState(
         status: ProfileStatus.error,
@@ -124,6 +129,7 @@ class ProfileController {
             ? null
             : ProfileSnapshot(user: user, stats: currentSnapshot.stats),
       );
+      onProfileChanged?.call(user);
     } catch (error) {
       _state = _state.copyWith(
         status: ProfileStatus.error,
@@ -154,6 +160,7 @@ class ProfileController {
     try {
       await _signOut();
       _state = _state.copyWith(status: ProfileStatus.signedOut);
+      onProfileChanged?.call(null);
     } catch (error) {
       _state = _state.copyWith(
         status: ProfileStatus.error,

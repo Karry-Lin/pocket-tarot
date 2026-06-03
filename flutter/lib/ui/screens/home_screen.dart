@@ -9,7 +9,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   DailyReadingState _dailyState = const DailyReadingState.initial();
-  String? _displayName;
   bool _isClearing = false;
 
   @override
@@ -25,16 +24,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     try {
       final controller = await ref.read(profileControllerProvider.future);
       await controller.load();
-      if (mounted) {
-        setState(
-          () => _displayName = controller.state.snapshot?.user.displayName,
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _displayName = null);
-      }
-    }
+    } catch (_) {}
   }
 
   Future<void> _loadToday() async {
@@ -134,14 +124,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(dailyReadingControllerProvider);
+    final userProfile = ref.watch(userProfileProvider);
+    debugPrint('HomeScreen: build called. userProfile.displayName=${userProfile?.displayName}');
     final l10n = AppLocalizations.of(context)!;
     final usesChinese = _usesChineseCardText(l10n);
     final loaded = _dailyState.status == DailyReadingStatus.loaded;
     final scrollable = loaded || _dailyState.status == DailyReadingStatus.error;
+    final displayName = userProfile?.displayName;
 
     return ScreenFrame(
       title: _homeTitle(
-        displayName: _displayName,
+        displayName: displayName,
         loaded: loaded,
         usesChinese: usesChinese,
         l10n: l10n,

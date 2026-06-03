@@ -1,4 +1,5 @@
 import 'dart:ui' show Locale, PlatformDispatcher;
+import 'package:flutter/foundation.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -256,6 +257,17 @@ final deepReadingControllerProvider = FutureProvider<DeepReadingController>((
   );
 });
 
+class UserProfileNotifier extends Notifier<UserProfile?> {
+  @override
+  UserProfile? build() => null;
+
+  set profile(UserProfile? value) => state = value;
+}
+
+final userProfileProvider = NotifierProvider<UserProfileNotifier, UserProfile?>(
+  UserProfileNotifier.new,
+);
+
 final profileControllerProvider = FutureProvider<ProfileController>((
   ref,
 ) async {
@@ -276,6 +288,10 @@ final profileControllerProvider = FutureProvider<ProfileController>((
       loadSettings: _visualFixtureSettings,
       saveSettings: (_) async {},
       signOut: () async {},
+      onProfileChanged: (profile) {
+        debugPrint('userProfileProvider: onProfileChanged (Mock) called with: ${profile?.displayName}');
+        ref.read(userProfileProvider.notifier).profile = profile;
+      },
     );
   }
 
@@ -291,6 +307,10 @@ final profileControllerProvider = FutureProvider<ProfileController>((
     loadSettings: localSettingsRepository.load,
     saveSettings: localSettingsRepository.save,
     signOut: authActions.signOut,
+    onProfileChanged: (profile) {
+      debugPrint('userProfileProvider: onProfileChanged called with: ${profile?.displayName}');
+      ref.read(userProfileProvider.notifier).profile = profile;
+    },
   );
 });
 
