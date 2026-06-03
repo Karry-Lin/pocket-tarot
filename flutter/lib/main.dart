@@ -196,6 +196,7 @@ TextStyle _displayTextStyle({
     fontFamily: 'Cinzel',
     color: _ArcanaColors.ivory,
     fontFamilyFallback: const [
+      'LXGWWenKaiMonoTC',
       'Noto Serif TC',
       'Source Han Serif TC',
       'Iowan Old Style',
@@ -219,6 +220,7 @@ TextStyle _bodyTextStyle({
     fontFamily: 'Lora',
     color: color,
     fontFamilyFallback: const [
+      'LXGWWenKaiMonoTC',
       'Noto Sans TC',
       'Microsoft JhengHei',
       'Segoe UI',

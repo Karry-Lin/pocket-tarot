@@ -91,6 +91,16 @@ flutter:
         - asset: assets/fonts/lora-v37-latin-regular.ttf
         - asset: assets/fonts/lora-v37-latin-700.ttf
           weight: 700
+    - family: ChenYuluoyan
+      fonts:
+        - asset: assets/fonts/ChenYuluoyan-Thin.ttf
+    - family: LXGWWenKaiMonoTC
+      fonts:
+        - asset: assets/fonts/LXGWWenKaiMonoTC-Regular.ttf
+        - asset: assets/fonts/LXGWWenKaiMonoTC-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/LXGWWenKaiMonoTC-Light.ttf
+          weight: 300
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

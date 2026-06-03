@@ -11,20 +11,43 @@ class AudioService {
 
     _magicPlayer.setReleaseMode(ReleaseMode.loop);
     _magicPlayer.setVolume(0.14);
+
+    // 非同步載入初始設定
+    _ref.read(localSettingsRepositoryProvider.future).then((repository) async {
+      final settings = await repository.load();
+      updateCachedSettings(settings);
+    }).catchError((e) {
+      debugPrint('AudioService load initial settings error: $e');
+    });
   }
 
   final Ref _ref;
   final AudioPlayer _bgmPlayer = AudioPlayer();
   final AudioPlayer _magicPlayer = AudioPlayer();
 
+  LocalSettings _cachedSettings = const LocalSettings(
+    localeMode: LocaleMode.system,
+    weatherEnabled: true,
+    bgmEnabled: true,
+    sfxEnabled: true,
+  );
+
   bool _isBgmPlaying = false;
   bool _isMagicPlaying = false;
+
+  void updateCachedSettings(LocalSettings settings) {
+    _cachedSettings = settings;
+    if (!settings.bgmEnabled && _isBgmPlaying) {
+      _bgmPlayer.stop().catchError((_) {});
+    } else if (settings.bgmEnabled && _isBgmPlaying) {
+      _bgmPlayer.play(AssetSource('audio/bgm.mp3')).catchError((_) {});
+    }
+  }
 
   Future<void> playBgm() async {
     _isBgmPlaying = true;
 
-    final settings = await _loadSettings();
-    if (!settings.bgmEnabled) {
+    if (!_cachedSettings.bgmEnabled) {
       return;
     }
 
@@ -61,8 +84,7 @@ class AudioService {
   }
 
   Future<void> playCardDraw() async {
-    final settings = await _loadSettings();
-    if (!settings.sfxEnabled) {
+    if (!_cachedSettings.sfxEnabled) {
       return;
     }
 
@@ -84,8 +106,7 @@ class AudioService {
     }
     _isMagicPlaying = true;
 
-    final settings = await _loadSettings();
-    if (!settings.sfxEnabled) {
+    if (!_cachedSettings.sfxEnabled) {
       return;
     }
 
@@ -105,18 +126,6 @@ class AudioService {
     }
   }
 
-  Future<LocalSettings> _loadSettings() async {
-    try {
-      final repository = await _ref.read(localSettingsRepositoryProvider.future);
-      return await repository.load();
-    } catch (_) {
-      return const LocalSettings(
-        localeMode: LocaleMode.system,
-        weatherEnabled: true,
-      );
-    }
-  }
-
   void dispose() {
     _bgmPlayer.dispose();
     _magicPlayer.dispose();
@@ -125,6 +134,16 @@ class AudioService {
 
 final audioServiceProvider = Provider<AudioService>((ref) {
   final service = AudioService(ref);
+  
+  ref.listen(localSettingsRepositoryProvider, (previous, next) {
+    next.whenData((repository) async {
+      try {
+        final settings = await repository.load();
+        service.updateCachedSettings(settings);
+      } catch (_) {}
+    });
+  });
+
   ref.onDispose(() => service.dispose());
   return service;
 });

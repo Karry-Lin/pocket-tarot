@@ -584,7 +584,7 @@ class _DailyEmptyState extends StatelessWidget {
           child: Stack(
             children: [
               Positioned(
-                top: 0,
+                top: compact ? 8.0 : 32.0,
                 right: 0,
                 left: 0,
                 child: SizedBox(
@@ -598,7 +598,14 @@ class _DailyEmptyState extends StatelessWidget {
                       Text(
                         title,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleLarge,
+                        style: usesChineseText
+                            ? const TextStyle(
+                                fontFamily: 'ChenYuluoyan',
+                                fontSize: 28,
+                                color: _ArcanaColors.ivory,
+                                fontWeight: FontWeight.w400,
+                              )
+                            : Theme.of(context).textTheme.titleLarge,
                       ),
                       const SizedBox(height: 10),
                       Text(
