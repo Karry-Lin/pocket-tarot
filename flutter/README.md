@@ -23,7 +23,7 @@ flutter build web --release
 For Android emulator testing against the local backend, use `10.0.2.2` so the emulator can reach the host machine:
 
 ```bash
-flutter build apk --release --dart-define=API_BASE_URL=https://tarot-api-dev.julojulo.com/api/v1
+flutter build apk --release --dart-define=API_BASE_URL=https://tarot-api.julojulo.com/api/v1
 ```
 
 The generated APK is written to:
