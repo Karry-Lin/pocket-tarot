@@ -19,6 +19,19 @@ subprojects {
     project.evaluationDependsOn(":app")
 }
 
+subprojects {
+    configurations.all {
+        resolutionStrategy {
+            force("androidx.datastore:datastore:1.1.7")
+            force("androidx.datastore:datastore-android:1.1.7")
+            force("androidx.datastore:datastore-core:1.1.7")
+            force("androidx.datastore:datastore-core-android:1.1.7")
+            force("androidx.datastore:datastore-preferences:1.1.7")
+            force("androidx.datastore:datastore-preferences-android:1.1.7")
+        }
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }

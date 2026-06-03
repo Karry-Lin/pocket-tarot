@@ -36,11 +36,19 @@ final firebaseInitializationProvider = FutureProvider<void>((ref) async {
   if (Firebase.apps.isEmpty) {
     // ignore: avoid_print
     print('DEBUG: Firebase.initializeApp() starting...');
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    // ignore: avoid_print
-    print('DEBUG: Firebase.initializeApp() finished');
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      // ignore: avoid_print
+      print('DEBUG: Firebase.initializeApp() finished');
+    } catch (e, stack) {
+      // ignore: avoid_print
+      print('DEBUG: Firebase.initializeApp() failed with error: $e');
+      // ignore: avoid_print
+      print('DEBUG: Stacktrace: $stack');
+      rethrow;
+    }
   } else {
     // ignore: avoid_print
     print('DEBUG: Firebase already initialized');
@@ -134,10 +142,18 @@ final deepReadingRepositoryProvider = Provider<DeepReadingRepository>((ref) {
 final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) async {
   // ignore: avoid_print
   print('DEBUG: sharedPreferencesProvider starting...');
-  final prefs = await SharedPreferences.getInstance();
-  // ignore: avoid_print
-  print('DEBUG: sharedPreferencesProvider finished');
-  return prefs;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    // ignore: avoid_print
+    print('DEBUG: sharedPreferencesProvider finished successfully');
+    return prefs;
+  } catch (e, stack) {
+    // ignore: avoid_print
+    print('DEBUG: sharedPreferencesProvider failed with error: $e');
+    // ignore: avoid_print
+    print('DEBUG: Stacktrace: $stack');
+    rethrow;
+  }
 });
 
 final localSettingsRepositoryProvider = FutureProvider<LocalSettingsRepository>(
