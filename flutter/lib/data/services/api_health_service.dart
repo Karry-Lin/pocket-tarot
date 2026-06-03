@@ -10,6 +10,8 @@ class ApiHealthService {
   })  : _dio = dio ?? Dio(),
         _healthUri = _healthUriFromBaseUrl(baseUrl) {
     _dio.options.validateStatus = (_) => true;
+    _dio.options.connectTimeout = const Duration(seconds: 4);
+    _dio.options.receiveTimeout = const Duration(seconds: 4);
   }
 
   final Dio _dio;
