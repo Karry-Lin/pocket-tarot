@@ -48,7 +48,6 @@ dependencies:
   markdown: ^7.3.0
   geolocator: ^14.0.2
   audioplayers: ^6.1.0
-  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -81,6 +80,18 @@ flutter:
     - assets/images/cards/
     - assets/audio/
 
+  fonts:
+    - family: Cinzel
+      fonts:
+        - asset: assets/fonts/cinzel-v26-latin-regular.ttf
+        - asset: assets/fonts/cinzel-v26-latin-700.ttf
+          weight: 700
+    - family: Lora
+      fonts:
+        - asset: assets/fonts/lora-v37-latin-regular.ttf
+        - asset: assets/fonts/lora-v37-latin-700.ttf
+          weight: 700
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
@@ -106,3 +117,6 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+dependency_overrides:
+  path_provider_android: 2.2.1
