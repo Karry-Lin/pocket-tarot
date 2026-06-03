@@ -123,7 +123,7 @@ class DailyReadingController {
 
   Future<void> redrawToday() async {
     _state = DailyReadingState(
-      status: DailyReadingStatus.creating,
+      status: DailyReadingStatus.loading,
       reading: _state.reading,
     );
 

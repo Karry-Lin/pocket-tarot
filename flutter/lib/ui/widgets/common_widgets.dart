@@ -21,42 +21,26 @@ class ScreenFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget mainContent;
-    if (scrollable) {
-      mainContent = CustomScrollView(
-        physics: onRefresh != null ? const AlwaysScrollableScrollPhysics() : null,
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
-            sliver: SliverToBoxAdapter(child: _header(context)),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(26, 12, 26, 18),
-            sliver: SliverToBoxAdapter(child: child),
-          ),
-        ],
-      );
-    } else {
-      mainContent = Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
-            child: _header(context),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(26, 12, 26, 10),
-              child: child,
-            ),
-          ),
-        ],
-      );
-      if (onRefresh != null) {
-        mainContent = SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: mainContent,
-        );
-      }
-    }
+    mainContent = CustomScrollView(
+      physics: onRefresh != null
+          ? const AlwaysScrollableScrollPhysics()
+          : (scrollable ? null : const NeverScrollableScrollPhysics()),
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+          sliver: SliverToBoxAdapter(child: _header(context)),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(26, 12, 26, 18),
+          sliver: scrollable
+              ? SliverToBoxAdapter(child: child)
+              : SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: child,
+                ),
+        ),
+      ],
+    );
 
     if (onRefresh != null) {
       mainContent = RefreshIndicator(

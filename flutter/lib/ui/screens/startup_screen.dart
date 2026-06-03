@@ -65,8 +65,15 @@ class SplashCheckingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final usesChinese = l10n.localeName.contains('zh');
+
     return AppBackdrop(
-      child: SafeArea(child: const Center(child: CircularProgressIndicator())),
+      child: SafeArea(
+        child: _AppLoadingIndicator(
+          message: usesChinese ? '啟動中，請稍候...' : 'Initializing Pocket Tarot...',
+        ),
+      ),
     );
   }
 }

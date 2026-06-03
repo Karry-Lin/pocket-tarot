@@ -10,6 +10,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   DailyReadingState _dailyState = const DailyReadingState.initial();
   String? _displayName;
+  bool _isClearing = false;
 
   @override
   void initState() {
@@ -107,6 +108,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _redrawToday() async {
+    setState(() => _isClearing = true);
     final controller = await ref.read(dailyReadingControllerProvider.future);
     final redrawFuture = controller.redrawToday();
     if (mounted) {
@@ -114,7 +116,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     await redrawFuture;
     if (mounted) {
-      setState(() => _dailyState = controller.state);
+      setState(() {
+        _dailyState = controller.state;
+        _isClearing = false;
+      });
     }
   }
 
@@ -132,6 +137,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
     final usesChinese = _usesChineseCardText(l10n);
     final loaded = _dailyState.status == DailyReadingStatus.loaded;
+    final scrollable = loaded || _dailyState.status == DailyReadingStatus.error;
 
     return ScreenFrame(
       title: _homeTitle(
@@ -141,7 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         l10n: l10n,
       ),
       eyebrow: loaded ? 'Daily result' : 'Daily ritual',
-      scrollable: true,
+      scrollable: scrollable,
       onRefresh: _handleRefresh,
       trailing: loaded
           ? _DailyRedrawButton(
@@ -151,7 +157,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           : null,
       child: controllerAsync.when(
         loading: () => _AppLoadingIndicator(
-          message: usesChinese ? '正在召喚今日塔羅牌面...' : 'Summoning today\'s tarot spread...',
+          message: _isClearing
+              ? (usesChinese ? '正在重置今日抽卡...' : 'Resetting today\'s card...')
+              : (usesChinese ? '正在召喚今日塔羅牌面...' : 'Summoning today\'s tarot spread...'),
         ),
         error: (error, stackTrace) =>
             _DailyErrorPanel(message: error.toString(), onRetry: _loadToday),
@@ -166,7 +174,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return switch (_dailyState.status) {
       DailyReadingStatus.initial || DailyReadingStatus.loading => _AppLoadingIndicator(
-        message: usesChinese ? '正在召喚今日塔羅牌面...' : 'Summoning today\'s tarot spread...',
+        message: _isClearing
+            ? (usesChinese ? '正在重置今日抽卡...' : 'Resetting today\'s card...')
+            : (usesChinese ? '正在召喚今日塔羅牌面...' : 'Summoning today\'s tarot spread...'),
       ),
       DailyReadingStatus.empty => _DailyEmptyState(onDraw: _drawToday),
       DailyReadingStatus.creating => ArcanaLoadingView(
@@ -258,50 +268,34 @@ class DailyResultCard extends ConsumerWidget {
             ),
           ),
           const _ArcanaSectionDivider(),
-          Row(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const EyebrowText('Weather'),
-                    const SizedBox(height: 7),
-                    Text(
-                      weatherDisplay.title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(weatherDisplay.body, style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
+              const EyebrowText('Weather'),
+              const SizedBox(height: 7),
+              Text(
+                weatherDisplay.title,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const EyebrowText('Streak'),
-                    const SizedBox(height: 7),
-                    Text(
-                      streakDisplay.title,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(streakDisplay.body, style: Theme.of(context).textTheme.bodySmall),
-                  ],
-                ),
-              ),
+              const SizedBox(height: 6),
+              Text(weatherDisplay.body, style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
           const _ArcanaSectionDivider(),
-          Text(
-            usesChinese
-                ? '今日完整解讀'
-                : l10n.dailyReadingPanelTitle,
-            style: Theme.of(context).textTheme.titleLarge,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const EyebrowText('Streak'),
+              const SizedBox(height: 7),
+              Text(
+                streakDisplay.title,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 6),
+              Text(streakDisplay.body, style: Theme.of(context).textTheme.bodySmall),
+            ],
           ),
-          const SizedBox(height: 10),
+          const _ArcanaSectionDivider(),
           SafeMarkdownBody(data: reading.markdownResult),
         ],
       ),

@@ -55,8 +55,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final usesChinese = _usesChineseCardText(l10n);
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
 
+    final Widget mainContent;
     if (usesChinese && _showEmailForm) {
-      return _emailAuthBackScope(
+      mainContent = _emailAuthBackScope(
         _VisualEmailLoginScreen(
           mode: _mode,
           displayNameController: _displayNameController,
@@ -83,7 +84,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           onSubmit: _submit,
         ),
       );
-    }
+    } else {
 
     final content = AppBackdrop(
       child: SafeArea(
@@ -317,11 +318,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
     );
 
-    if (_showEmailForm) {
-      return _emailAuthBackScope(content);
+      if (_showEmailForm) {
+        mainContent = _emailAuthBackScope(content);
+      } else {
+        mainContent = _RootBackExitGuard(child: content);
+      }
     }
 
-    return _RootBackExitGuard(child: content);
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: mainContent,
+    );
   }
 
   Widget _emailAuthBackScope(Widget child) {
