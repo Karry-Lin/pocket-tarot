@@ -226,13 +226,19 @@ class DailyResultCard extends ConsumerWidget {
     final streakDisplay = _dailyStreakDisplay(reading, l10n);
     final usesChinese = _usesChineseCardText(l10n);
 
-    return GlassPanel(
-      ornate: true,
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ConstrainedBox(
+    final sections = reading.markdownResult
+        .split(RegExp(r'(?=^#{2,3}\s+)', multiLine: true))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        GlassPanel(
+          ornate: true,
+          padding: const EdgeInsets.all(18),
+          child: ConstrainedBox(
             constraints: BoxConstraints(
               minHeight: usesChinese ? 224 : 0,
             ),
@@ -267,38 +273,76 @@ class DailyResultCard extends ConsumerWidget {
               ],
             ),
           ),
-          const _ArcanaSectionDivider(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+        const SizedBox(height: 12),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const EyebrowText('Weather'),
-              const SizedBox(height: 7),
-              Text(
-                weatherDisplay.title,
-                style: Theme.of(context).textTheme.titleMedium,
+              Expanded(
+                child: GlassPanel(
+                  key: const ValueKey('daily-weather-card'),
+                  padding: const EdgeInsets.all(14),
+                  radius: 18,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const EyebrowText('Weather'),
+                      const SizedBox(height: 7),
+                      Text(
+                        weatherDisplay.title,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        weatherDisplay.body,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 6),
-              Text(weatherDisplay.body, style: Theme.of(context).textTheme.bodySmall),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GlassPanel(
+                  key: const ValueKey('daily-streak-card'),
+                  padding: const EdgeInsets.all(14),
+                  radius: 18,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const EyebrowText('Streak'),
+                      const SizedBox(height: 7),
+                      Text(
+                        streakDisplay.title,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        streakDisplay.body,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
-          const _ArcanaSectionDivider(),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        ),
+        const SizedBox(height: 12),
+        GlassPanel(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const EyebrowText('Streak'),
-              const SizedBox(height: 7),
-              Text(
-                streakDisplay.title,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 6),
-              Text(streakDisplay.body, style: Theme.of(context).textTheme.bodySmall),
+              for (var i = 0; i < sections.length; i++) ...[
+                SafeMarkdownBody(data: sections[i]),
+                const _ArcanaSectionDivider(),
+              ],
             ],
           ),
-          const _ArcanaSectionDivider(),
-          SafeMarkdownBody(data: reading.markdownResult),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
