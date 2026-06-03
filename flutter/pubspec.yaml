@@ -119,4 +119,4 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 
 dependency_overrides:
-  path_provider_android: 2.2.1
+  path_provider_android: 2.2.23
