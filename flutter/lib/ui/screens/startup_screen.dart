@@ -19,25 +19,41 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
   }
 
   Future<void> _checkStartup() async {
+    // ignore: avoid_print
+    print('DEBUG: _checkStartup() started');
     setState(
       () => _state = const AppStartupState(status: AppStartupStatus.checking),
     );
 
+    // ignore: avoid_print
+    print('DEBUG: Reading appStartupControllerProvider...');
     final controller = ref.read(appStartupControllerProvider);
+    // ignore: avoid_print
+    print('DEBUG: AppStartupController.check() starting...');
     await controller.check();
+    // ignore: avoid_print
+    print('DEBUG: AppStartupController.check() finished');
 
     if (!mounted) {
+      // ignore: avoid_print
+      print('DEBUG: StartupScreen is not mounted after check');
       return;
     }
 
     final nextState = controller.state;
+    // ignore: avoid_print
+    print('DEBUG: StartupScreen nextState status: ${nextState.status}, route: ${nextState.targetRoute}');
     if (nextState.status == AppStartupStatus.ready &&
         nextState.targetRoute != null) {
+      // ignore: avoid_print
+      print('DEBUG: Navigating to ${nextState.targetRoute}');
       context.go(nextState.targetRoute!);
       return;
     }
 
     setState(() => _state = nextState);
+    // ignore: avoid_print
+    print('DEBUG: _checkStartup() finished');
   }
 
   @override

@@ -31,26 +31,47 @@ class AuthGateEvaluator {
   final ProfileRegistrar _profileRegistrar;
 
   Future<AuthGateResult> evaluate() async {
+    // ignore: avoid_print
+    print('DEBUG: AuthGateEvaluator.evaluate() started');
+    
+    // ignore: avoid_print
+    print('DEBUG: AuthGateEvaluator -> _networkChecker() starting...');
     final networkAvailable = await _networkChecker();
+    // ignore: avoid_print
+    print('DEBUG: AuthGateEvaluator -> _networkChecker() finished. Available: $networkAvailable');
     if (!networkAvailable) {
       return const AuthGateResult(destination: AuthGateDestination.splashNetworkBlocked);
     }
 
+    // ignore: avoid_print
+    print('DEBUG: AuthGateEvaluator -> _authSessionLoader() starting...');
     final session = await _authSessionLoader();
+    // ignore: avoid_print
+    print('DEBUG: AuthGateEvaluator -> _authSessionLoader() finished. isSignedIn: ${session.isSignedIn}');
     if (!session.isSignedIn) {
       return const AuthGateResult(destination: AuthGateDestination.login);
     }
 
     if (session.requiresEmailVerification) {
+      // ignore: avoid_print
+      print('DEBUG: AuthGateEvaluator -> requiresEmailVerification is true');
       return const AuthGateResult(destination: AuthGateDestination.verifyEmail);
     }
 
+    // ignore: avoid_print
+    print('DEBUG: AuthGateEvaluator -> _profileLoader() starting...');
     final lookup = await _profileLoader();
+    // ignore: avoid_print
+    print('DEBUG: AuthGateEvaluator -> _profileLoader() finished. isDeleted: ${lookup.isDeleted}, hasProfile: ${lookup.profile != null}');
     if (lookup.isDeleted) {
       return const AuthGateResult(destination: AuthGateDestination.accountDeleted);
     }
 
+    // ignore: avoid_print
+    print('DEBUG: AuthGateEvaluator -> profile resolving...');
     final profile = lookup.profile ?? await _profileRegistrar();
+    // ignore: avoid_print
+    print('DEBUG: AuthGateEvaluator -> profile resolved. isActive: ${profile.isActive}');
 
     return _destinationForProfile(profile);
   }

@@ -25,15 +25,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 const visualFixtureMode = bool.fromEnvironment('VISUAL_FIXTURE');
 
 final firebaseInitializationProvider = FutureProvider<void>((ref) async {
+  // ignore: avoid_print
+  print('DEBUG: firebaseInitializationProvider started');
   if (visualFixtureMode) {
+    // ignore: avoid_print
+    print('DEBUG: visualFixtureMode is true, skipping Firebase init');
     return;
   }
 
   if (Firebase.apps.isEmpty) {
+    // ignore: avoid_print
+    print('DEBUG: Firebase.initializeApp() starting...');
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    // ignore: avoid_print
+    print('DEBUG: Firebase.initializeApp() finished');
+  } else {
+    // ignore: avoid_print
+    print('DEBUG: Firebase already initialized');
   }
+  // ignore: avoid_print
+  print('DEBUG: firebaseInitializationProvider finished');
 });
 
 final firebaseAuthServiceProvider = FutureProvider<FirebaseAuthService>((
@@ -118,8 +131,13 @@ final deepReadingRepositoryProvider = Provider<DeepReadingRepository>((ref) {
   return DeepReadingRepository(ref.watch(apiClientProvider));
 });
 
-final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) {
-  return SharedPreferences.getInstance();
+final sharedPreferencesProvider = FutureProvider<SharedPreferences>((ref) async {
+  // ignore: avoid_print
+  print('DEBUG: sharedPreferencesProvider starting...');
+  final prefs = await SharedPreferences.getInstance();
+  // ignore: avoid_print
+  print('DEBUG: sharedPreferencesProvider finished');
+  return prefs;
 });
 
 final localSettingsRepositoryProvider = FutureProvider<LocalSettingsRepository>(
