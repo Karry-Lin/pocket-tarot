@@ -105,7 +105,7 @@ class AppBackdrop extends StatelessWidget {
               children: [
                 const CustomPaint(painter: _CelestialBackdropPainter()),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(34),
+                  clipper: const _AppFrameClipper(),
                   child: child,
                 ),
                 Positioned(
@@ -132,6 +132,24 @@ class AppBackdrop extends StatelessWidget {
       ),
     );
   }
+}
+
+class _AppFrameClipper extends CustomClipper<RRect> {
+  const _AppFrameClipper();
+
+  @override
+  RRect getClip(Size size) {
+    return RRect.fromLTRBR(
+      12,
+      13,
+      size.width - 12,
+      size.height - 13,
+      const Radius.circular(34),
+    );
+  }
+
+  @override
+  bool shouldReclip(covariant _AppFrameClipper oldClipper) => false;
 }
 
 class _CelestialBackdropPainter extends CustomPainter {
