@@ -27,7 +27,7 @@ class ScreenFrame extends StatelessWidget {
         physics: onRefresh != null ? const AlwaysScrollableScrollPhysics() : null,
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+            padding: const EdgeInsets.fromLTRB(26, 32, 26, 8),
             sliver: SliverToBoxAdapter(child: _header(context)),
           ),
           SliverPadding(
@@ -51,7 +51,7 @@ class ScreenFrame extends StatelessWidget {
           final content = Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+                padding: const EdgeInsets.fromLTRB(26, 32, 26, 8),
                 child: _header(context),
               ),
               Expanded(

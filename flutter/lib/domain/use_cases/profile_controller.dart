@@ -140,6 +140,14 @@ class ProfileController {
     await _saveLocalSettings(_settingsWith(weatherEnabled: weatherEnabled));
   }
 
+  Future<void> setBgmEnabled(bool bgmEnabled) async {
+    await _saveLocalSettings(_settingsWith(bgmEnabled: bgmEnabled));
+  }
+
+  Future<void> setSfxEnabled(bool sfxEnabled) async {
+    await _saveLocalSettings(_settingsWith(sfxEnabled: sfxEnabled));
+  }
+
   Future<void> signOut() async {
     _state = _state.copyWith(status: ProfileStatus.signingOut);
 
@@ -154,7 +162,12 @@ class ProfileController {
     }
   }
 
-  LocalSettings _settingsWith({LocaleMode? localeMode, bool? weatherEnabled}) {
+  LocalSettings _settingsWith({
+    LocaleMode? localeMode,
+    bool? weatherEnabled,
+    bool? bgmEnabled,
+    bool? sfxEnabled,
+  }) {
     final settings =
         _state.settings ??
         const LocalSettings(
@@ -164,6 +177,8 @@ class ProfileController {
     return LocalSettings(
       localeMode: localeMode ?? settings.localeMode,
       weatherEnabled: weatherEnabled ?? settings.weatherEnabled,
+      bgmEnabled: bgmEnabled ?? settings.bgmEnabled,
+      sfxEnabled: sfxEnabled ?? settings.sfxEnabled,
     );
   }
 

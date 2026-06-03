@@ -18,6 +18,8 @@ import 'package:pocket_tarot/domain/use_cases/deep_reading_controller.dart';
 import 'package:pocket_tarot/domain/use_cases/profile_controller.dart';
 import 'package:pocket_tarot/l10n/generated/app_localizations.dart';
 import 'package:pocket_tarot/ui/core/widgets/safe_markdown_body.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:pocket_tarot/data/services/audio_service.dart';
 
 
 part 'ui/widgets/common_widgets.dart';
@@ -191,19 +193,21 @@ TextStyle _displayTextStyle({
   FontWeight fontWeight = FontWeight.w600,
   double height = 1.08,
 }) {
-  return TextStyle(
-    color: _ArcanaColors.ivory,
-    fontFamily: 'Noto Serif TC',
-    fontFamilyFallback: const [
-      'Source Han Serif TC',
-      'Iowan Old Style',
-      'Georgia',
-      'serif',
-    ],
-    fontSize: fontSize,
-    fontWeight: fontWeight,
-    height: height,
-    letterSpacing: 0,
+  return GoogleFonts.cinzel(
+    textStyle: TextStyle(
+      color: _ArcanaColors.ivory,
+      fontFamilyFallback: const [
+        'Noto Serif TC',
+        'Source Han Serif TC',
+        'Iowan Old Style',
+        'Georgia',
+        'serif',
+      ],
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      height: height,
+      letterSpacing: 0.5,
+    ),
   );
 }
 
@@ -213,14 +217,20 @@ TextStyle _bodyTextStyle({
   Color color = _ArcanaColors.muted,
   double height = 1.55,
 }) {
-  return TextStyle(
-    color: color,
-    fontFamily: 'Noto Sans TC',
-    fontFamilyFallback: const ['Microsoft JhengHei', 'Segoe UI', 'sans-serif'],
-    fontSize: fontSize,
-    fontWeight: fontWeight,
-    height: height,
-    letterSpacing: 0,
+  return GoogleFonts.lora(
+    textStyle: TextStyle(
+      color: color,
+      fontFamilyFallback: const [
+        'Noto Sans TC',
+        'Microsoft JhengHei',
+        'Segoe UI',
+        'sans-serif',
+      ],
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      height: height,
+      letterSpacing: 0,
+    ),
   );
 }
 

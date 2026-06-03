@@ -1,9 +1,23 @@
 part of '../../main.dart';
 
-class AppShell extends StatelessWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
+
+  @override
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+  late final AudioService _audioService;
+
+  @override
+  void initState() {
+    super.initState();
+    _audioService = ref.read(audioServiceProvider);
+    _audioService.playBgm();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +26,7 @@ class AppShell extends StatelessWidget {
     return Scaffold(
       backgroundColor: _ArcanaColors.ink,
       extendBody: false,
-      body: navigationShell,
+      body: widget.navigationShell,
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
@@ -45,28 +59,28 @@ class AppShell extends StatelessWidget {
                         icon: Icons.auto_awesome,
                         symbol: '⌂',
                         label: l10n.navHome,
-                        selected: navigationShell.currentIndex == 0,
+                        selected: widget.navigationShell.currentIndex == 0,
                         onTap: () => _goBranch(0),
                       ),
                       _BottomNavItem(
                         icon: Icons.grid_view,
                         symbol: '✦',
                         label: l10n.navDivination,
-                        selected: navigationShell.currentIndex == 1,
+                        selected: widget.navigationShell.currentIndex == 1,
                         onTap: () => _goBranch(1),
                       ),
                       _BottomNavItem(
                         icon: Icons.menu_book,
                         symbol: '☽',
                         label: l10n.navLibrary,
-                        selected: navigationShell.currentIndex == 2,
+                        selected: widget.navigationShell.currentIndex == 2,
                         onTap: () => _goBranch(2),
                       ),
                       _BottomNavItem(
                         icon: Icons.person,
                         symbol: '♙',
                         label: l10n.navProfile,
-                        selected: navigationShell.currentIndex == 3,
+                        selected: widget.navigationShell.currentIndex == 3,
                         onTap: () => _goBranch(3),
                       ),
                     ],
@@ -81,10 +95,16 @@ class AppShell extends StatelessWidget {
   }
 
   void _goBranch(int index) {
-    navigationShell.goBranch(
+    widget.navigationShell.goBranch(
       index,
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
+  }
+
+  @override
+  void dispose() {
+    _audioService.stopBgm();
+    super.dispose();
   }
 }
 

@@ -14,11 +14,19 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
   bool _isDraftLoading = true;
   bool _isCreatingResult = false;
   String? _errorMessage;
+  late final AudioService _audioService;
 
   @override
   void initState() {
     super.initState();
+    _audioService = ref.read(audioServiceProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadDraft());
+  }
+
+  @override
+  void dispose() {
+    _audioService.stopLoadingMagic();
+    super.dispose();
   }
 
   Future<void> _loadDraft() async {
@@ -26,13 +34,16 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
       _isDraftLoading = true;
       _errorMessage = null;
     });
+    _audioService.playLoadingMagic();
 
     final controller = await ref.read(deepReadingControllerProvider.future);
     await controller.startDraft(widget.initialQuestion);
     if (!mounted) {
+      _audioService.stopLoadingMagic();
       return;
     }
 
+    _audioService.stopLoadingMagic();
     setState(() {
       _deepState = controller.state;
       _isDraftLoading = false;
@@ -47,6 +58,8 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
         _deepState.selectedIndexes.length >= 3) {
       return;
     }
+
+    _audioService.playCardDraw();
 
     final controller = await ref.read(deepReadingControllerProvider.future);
     controller.toggleSelection(index);
@@ -66,6 +79,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
       _isCreatingResult = true;
       _errorMessage = null;
     });
+    _audioService.playLoadingMagic();
 
     await controller.createResult(
       messages: DeepReadingMessages(
@@ -73,6 +87,9 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
         noSavableResult: l10n.deepNoSavableResult,
       ),
     );
+
+    _audioService.stopLoadingMagic();
+
     if (!mounted) {
       return;
     }

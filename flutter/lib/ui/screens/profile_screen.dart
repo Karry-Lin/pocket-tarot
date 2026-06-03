@@ -9,10 +9,12 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   ProfileState _profileState = const ProfileState.initial();
+  late final AudioService _audioService;
 
   @override
   void initState() {
     super.initState();
+    _audioService = ref.read(audioServiceProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadProfile());
   }
 
@@ -55,6 +57,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
+  Future<void> _setBgmEnabled(bool bgmEnabled) async {
+    final controller = await ref.read(profileControllerProvider.future);
+    await controller.setBgmEnabled(bgmEnabled);
+    if (mounted) {
+      setState(() => _profileState = controller.state);
+    }
+    _audioService.updateBgmState(bgmEnabled);
+  }
+
+  Future<void> _setSfxEnabled(bool sfxEnabled) async {
+    final controller = await ref.read(profileControllerProvider.future);
+    await controller.setSfxEnabled(sfxEnabled);
+    if (mounted) {
+      setState(() => _profileState = controller.state);
+    }
+  }
+
   Future<void> _updateDisplayName(String displayName) async {
     final l10n = AppLocalizations.of(context)!;
     final controller = await ref.read(profileControllerProvider.future);
@@ -86,6 +105,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(profileControllerProvider);
     final l10n = AppLocalizations.of(context)!;
+    final usesChinese = _usesChineseCardText(l10n);
     final isLoading = controllerAsync.isLoading ||
         _profileState.status == ProfileStatus.initial ||
         _profileState.status == ProfileStatus.loading;
@@ -97,7 +117,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       scrollable: !isLoading,
       child: controllerAsync.when(
         loading: () => _AppLoadingIndicator(
-          message: l10n.localeName.contains('zh') ? '正在同步靈性檔案...' : 'Syncing spiritual profile...',
+          message: usesChinese ? '正在同步靈性檔案...' : 'Syncing spiritual profile...',
         ),
         error: (error, stackTrace) => InfoPanel(
           title: l10n.profileLoadFailed,
@@ -275,6 +295,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   : 'Only used to generate daily spiritual weather.',
               toggled: settings.weatherEnabled,
               onTap: () => _setWeatherEnabled(!settings.weatherEnabled),
+            ),
+            const SizedBox(height: 16),
+            _VisualSettingRow(
+              title: usesChinese ? '啟用背景音樂' : 'Background music',
+              subtitle: usesChinese
+                  ? '播放靜謐的占卜冥想環境音樂'
+                  : 'Play quiet ambient meditation music.',
+              toggled: settings.bgmEnabled,
+              onTap: () => _setBgmEnabled(!settings.bgmEnabled),
+            ),
+            const SizedBox(height: 16),
+            _VisualSettingRow(
+              title: usesChinese ? '啟用環境音效' : 'Sound effects',
+              subtitle: usesChinese
+                  ? '播放抽牌與召喚的魔法效果音'
+                  : 'Play card drawing and summoning sound effects.',
+              toggled: settings.sfxEnabled,
+              onTap: () => _setSfxEnabled(!settings.sfxEnabled),
             ),
             const SizedBox(height: 16),
             _VisualSettingRow(
