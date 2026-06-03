@@ -93,11 +93,13 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     final controllerAsync = ref.watch(deepReadingControllerProvider);
     final l10n = AppLocalizations.of(context)!;
     final usesChinese = _usesChineseCardText(l10n);
+    final isLoading = controllerAsync.isLoading;
 
     return ScreenFrame(
       title: l10n.divinationTitle,
       eyebrow: 'Reading room',
       trailing: null,
+      scrollable: !isLoading,
       onRefresh: _handleRefresh,
       child: controllerAsync.when(
         loading: () => _AppLoadingIndicator(

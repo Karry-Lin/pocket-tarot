@@ -33,11 +33,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final repository = ref.watch(tarotCatalogRepositoryProvider);
     final l10n = AppLocalizations.of(context)!;
     final usesChineseVisual = _usesChineseCardText(l10n);
+    final isLoading = cardsAsync.isLoading;
 
     return ScreenFrame(
       title: l10n.libraryTitle,
       eyebrow: 'Arcana library',
       trailing: null,
+      scrollable: !isLoading,
       onRefresh: _handleRefresh,
       child: cardsAsync.when(
         loading: () => _AppLoadingIndicator(

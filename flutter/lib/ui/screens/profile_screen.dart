@@ -86,11 +86,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(profileControllerProvider);
     final l10n = AppLocalizations.of(context)!;
+    final isLoading = controllerAsync.isLoading ||
+        _profileState.status == ProfileStatus.initial ||
+        _profileState.status == ProfileStatus.loading;
 
     return ScreenFrame(
       title: l10n.profileTitle,
       eyebrow: 'Profile',
       trailing: null,
+      scrollable: !isLoading,
       child: controllerAsync.when(
         loading: () => _AppLoadingIndicator(
           message: l10n.localeName.contains('zh') ? '正在同步靈性檔案...' : 'Syncing spiritual profile...',

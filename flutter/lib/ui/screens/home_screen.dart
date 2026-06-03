@@ -337,7 +337,7 @@ class DailyResultCard extends ConsumerWidget {
             children: [
               for (var i = 0; i < sections.length; i++) ...[
                 SafeMarkdownBody(data: sections[i]),
-                const _ArcanaSectionDivider(),
+                if (i < sections.length - 1) const _ArcanaSectionDivider(),
               ],
             ],
           ),

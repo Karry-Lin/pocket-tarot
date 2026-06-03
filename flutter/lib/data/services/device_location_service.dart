@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:pocket_tarot/domain/use_cases/daily_reading_controller.dart';
 
@@ -34,6 +35,7 @@ class DeviceLocationService {
     try {
       final serviceEnabled = await _isLocationServiceEnabled();
       if (!serviceEnabled) {
+        debugPrint('DeviceLocationService: 定位服務未啟用 (Location service is disabled in system settings).');
         return const DailyReadingLocationResult.permissionDenied();
       }
 
@@ -43,6 +45,7 @@ class DeviceLocationService {
       }
 
       if (!_canAccessLocation(permission)) {
+        debugPrint('DeviceLocationService: 定位權限不足 (Location permission: $permission).');
         return const DailyReadingLocationResult.permissionDenied();
       }
 
@@ -56,7 +59,9 @@ class DeviceLocationService {
         latitude: position.latitude,
         longitude: position.longitude,
       );
-    } catch (_) {
+    } catch (error, stack) {
+      debugPrint('DeviceLocationService: 獲取定位失敗 (Error fetching location): $error');
+      debugPrint(stack.toString());
       return const DailyReadingLocationResult.permissionDenied();
     }
   }
