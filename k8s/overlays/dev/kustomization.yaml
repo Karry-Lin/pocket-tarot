@@ -8,6 +8,6 @@ resources:
   - service.yaml
 
 images:
-  - name: registry.kkserver.net/pocket-tarot-server
-    newName: registry.kkserver.net/pocket-tarot-server
+  - name: registry.kkserver.net/karrylin-pocket-tarot-server
+    newName: registry.kkserver.net/karrylin-pocket-tarot-server
     newTag: dev-placeholder

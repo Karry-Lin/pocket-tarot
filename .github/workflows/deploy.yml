@@ -8,14 +8,14 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: pocket-tarot-server
+  IMAGE_NAME: karrylin-pocket-tarot-server
   IMAGE_REGISTRY: registry.kkserver.net
   K8S_NAMESPACE: apps
   SERVER_DIR: server
 
 jobs:
   verify:
-    runs-on: 'kkldream-pocket-tarot'
+    runs-on: "karrylin-pocket-tarot"
     environment: main
     defaults:
       run:
@@ -49,7 +49,7 @@ jobs:
         run: npm run build
 
   deploy:
-    runs-on: 'kkldream-pocket-tarot'
+    runs-on: "karrylin-pocket-tarot"
     needs: verify
     if: github.event_name != 'pull_request' && (github.ref_name == 'main' || github.ref_name == 'dev')
     environment: main
@@ -71,9 +71,9 @@ jobs:
           echo "IMAGE_TAG=${IMAGE_TAG}" >> "$GITHUB_ENV"
           echo "IMAGE_REF=${IMAGE_REF}" >> "$GITHUB_ENV"
           echo "DEPLOY_BRANCH=${DEPLOY_BRANCH}" >> "$GITHUB_ENV"
-          echo "SECRET_NAME=pocket-tarot-server-secrets-${DEPLOY_BRANCH}" >> "$GITHUB_ENV"
+          echo "SECRET_NAME=karrylin-pocket-tarot-server-secrets-${DEPLOY_BRANCH}" >> "$GITHUB_ENV"
           echo "KUSTOMIZE_DIR=k8s/overlays/${DEPLOY_BRANCH}" >> "$GITHUB_ENV"
-          echo "RESOURCE_NAME=pocket-tarot-server-${DEPLOY_BRANCH}" >> "$GITHUB_ENV"
+          echo "RESOURCE_NAME=karrylin-pocket-tarot-server-${DEPLOY_BRANCH}" >> "$GITHUB_ENV"
           echo "Deploy context: branch=${DEPLOY_BRANCH} image_tag=${IMAGE_TAG} image_ref=${IMAGE_REF}"
 
       - name: Build Docker image
@@ -144,7 +144,7 @@ jobs:
             --timeout=120s
 
           echo "========== Pods =========="
-          kubectl get pods -n "${{ env.K8S_NAMESPACE }}" -l "app.kubernetes.io/name=pocket-tarot-server,app.kubernetes.io/instance=${DEPLOY_BRANCH}"
+          kubectl get pods -n "${{ env.K8S_NAMESPACE }}" -l "app.kubernetes.io/name=karrylin-pocket-tarot-server,app.kubernetes.io/instance=${DEPLOY_BRANCH}"
 
           echo "========== Service =========="
           kubectl get svc "${RESOURCE_NAME}" -n "${{ env.K8S_NAMESPACE }}"

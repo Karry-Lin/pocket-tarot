@@ -1,15 +1,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: pocket-tarot-server-main
+  name: karrylin-pocket-tarot-server-main
   labels:
-    app.kubernetes.io/name: pocket-tarot-server
+    app.kubernetes.io/name: karrylin-pocket-tarot-server
     app.kubernetes.io/component: api
     app.kubernetes.io/instance: main
 spec:
   type: ClusterIP
   selector:
-    app.kubernetes.io/name: pocket-tarot-server
+    app.kubernetes.io/name: karrylin-pocket-tarot-server
     app.kubernetes.io/component: api
     app.kubernetes.io/instance: main
   ports:
