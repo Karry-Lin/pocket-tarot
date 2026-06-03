@@ -66,7 +66,7 @@ class SplashCheckingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final usesChinese = l10n.localeName.contains('zh');
+    final usesChinese = _usesChineseCardText(l10n);
 
     return AppBackdrop(
       child: SafeArea(

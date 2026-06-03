@@ -103,7 +103,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
         child: AppBackdrop(
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 34),
               child: Center(
                 child: ArcanaLoadingView(
                   title: l10n.deepLoadingTitle,
@@ -121,7 +121,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
         child: AppBackdrop(
           child: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 34),
               child: Center(
                 child: ArcanaLoadingView(
                   title: l10n.drawPreparingTitle,
@@ -138,7 +138,7 @@ class _DrawScreenState extends ConsumerState<DrawScreen> {
       child: AppBackdrop(
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 34),
             child: LayoutBuilder(
               builder: (context, _) {
                 return Column(

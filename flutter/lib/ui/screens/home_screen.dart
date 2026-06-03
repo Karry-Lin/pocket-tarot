@@ -227,7 +227,11 @@ class DailyResultCard extends ConsumerWidget {
     final usesChinese = _usesChineseCardText(l10n);
 
     final sections = reading.markdownResult
-        .split(RegExp(r'(?=^#{2,3}\s+)', multiLine: true))
+        .split(RegExp(
+          r'(?=^#{2,4}\s+)|(?=^#{2,4}(?=\S))|(?=^\s*\*\*(今日牌義|今日提醒|行動建議|問題核心|隱藏影響|總結|Card Meaning|Daily Reminder|Action Advice|Core Question|Hidden Influence|Summary)\*\*)|(?=^\s*(今日牌義|今日提醒|行動建議|問題核心|隱藏影響|總結|Card Meaning|Daily Reminder|Action Advice|Core Question|Hidden Influence|Summary)[\s：:])',
+          multiLine: true,
+          caseSensitive: false,
+        ))
         .map((s) => s.trim())
         .where((s) => s.isNotEmpty)
         .map((s) => s

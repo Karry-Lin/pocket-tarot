@@ -56,7 +56,7 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
       child: AppBackdrop(
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 60, 24, 34),
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 34),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -150,6 +150,19 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
   Widget _resultBody(BuildContext context, DeepReading? reading) {
     final l10n = AppLocalizations.of(context)!;
     if (reading != null) {
+      final sections = reading.markdownResult
+          .split(RegExp(
+            r'(?=^#{2,4}\s+)|(?=^#{2,4}(?=\S))|(?=^\s*\*\*(今日牌義|今日提醒|行動建議|問題核心|隱藏影響|總結|Card Meaning|Daily Reminder|Action Advice|Core Question|Hidden Influence|Summary)\*\*)|(?=^\s*(今日牌義|今日提醒|行動建議|問題核心|隱藏影響|總結|Card Meaning|Daily Reminder|Action Advice|Core Question|Hidden Influence|Summary)[\s：:])',
+            multiLine: true,
+            caseSensitive: false,
+          ))
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .map((s) => s
+              .replaceAll(RegExp(r'^\s*[-*_]{3,}\s*$', multiLine: true), '')
+              .trim())
+          .toList();
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -169,7 +182,10 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
           const SizedBox(height: 10),
           Text(reading.summary),
           const _ArcanaSectionDivider(),
-          SafeMarkdownBody(data: reading.markdownResult),
+          for (var i = 0; i < sections.length; i++) ...[
+            SafeMarkdownBody(data: sections[i]),
+            if (i < sections.length - 1) const _ArcanaSectionDivider(),
+          ],
         ],
       );
     }
