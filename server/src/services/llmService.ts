@@ -34,17 +34,41 @@ export interface LlmService {
 
 export class ChatCompletionsLlmService implements LlmService {
   async generateDailyReading(context: DailyReadingPromptContext): Promise<string> {
-    return this.complete(
-      buildDailyReadingPrompt(context),
-      envNumber("LLM_READING_TEMPERATURE", 0.8)
-    );
+    const maxAttempts = 3;
+    let lastContent = "";
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const content = await this.complete(
+        buildDailyReadingPrompt(context),
+        envNumber("LLM_READING_TEMPERATURE", 0.8)
+      );
+      if (isValidDailyReadingFormat(content, context.locale)) {
+        return content;
+      }
+      lastContent = content;
+      if (attempt < maxAttempts) {
+        console.warn(`Daily reading LLM format mismatch (attempt ${attempt}/${maxAttempts}). Retrying...`);
+      }
+    }
+    return lastContent;
   }
 
   async generateDeepReading(context: DeepReadingPromptContext): Promise<string> {
-    return this.complete(
-      buildDeepReadingPrompt(context),
-      envNumber("LLM_READING_TEMPERATURE", 0.8)
-    );
+    const maxAttempts = 3;
+    let lastContent = "";
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const content = await this.complete(
+        buildDeepReadingPrompt(context),
+        envNumber("LLM_READING_TEMPERATURE", 0.8)
+      );
+      if (isValidDeepReadingFormat(content, context.locale)) {
+        return content;
+      }
+      lastContent = content;
+      if (attempt < maxAttempts) {
+        console.warn(`Deep reading LLM format mismatch (attempt ${attempt}/${maxAttempts}). Retrying...`);
+      }
+    }
+    return lastContent;
   }
 
   async generateSummary(context: SummaryPromptContext): Promise<string> {
@@ -257,4 +281,24 @@ function envInteger(name: string, fallback: number): number {
 
   const parsed = Number.parseInt(value, 10);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+export function isValidDailyReadingFormat(content: string, locale: Locale): boolean {
+  if (!content) return false;
+  const headers =
+    locale === "zh-TW"
+      ? [/##\s*今日牌義/, /##\s*今日提醒/, /##\s*行動建議/]
+      : [/##\s*Card Meaning/i, /##\s*Daily Reminder/i, /##\s*Action Advice/i];
+
+  return headers.every((regex) => regex.test(content));
+}
+
+export function isValidDeepReadingFormat(content: string, locale: Locale): boolean {
+  if (!content) return false;
+  const headers =
+    locale === "zh-TW"
+      ? [/##\s*問題核心/, /##\s*隱藏影響/, /##\s*行動建議/, /##\s*總結/]
+      : [/##\s*Core Question/i, /##\s*Hidden Influence/i, /##\s*Action Advice/i, /##\s*Summary/i];
+
+  return headers.every((regex) => regex.test(content));
 }

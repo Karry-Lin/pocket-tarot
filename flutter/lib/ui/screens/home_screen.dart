@@ -10,14 +10,22 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   DailyReadingState _dailyState = const DailyReadingState.initial();
   bool _isClearing = false;
+  late final AudioService _audioService;
 
   @override
   void initState() {
     super.initState();
+    _audioService = ref.read(audioServiceProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadToday();
       _loadHomeProfile();
     });
+  }
+
+  @override
+  void dispose() {
+    _audioService.stopLoadingMagic();
+    super.dispose();
   }
 
   Future<void> _loadHomeProfile() async {
@@ -37,13 +45,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _drawToday() async {
     final controller = await ref.read(dailyReadingControllerProvider.future);
-    final drawFuture = controller.drawToday();
-    if (mounted) {
-      setState(() => _dailyState = controller.state);
-    }
-    await drawFuture;
-    if (mounted) {
-      setState(() => _dailyState = controller.state);
+    _audioService.playLoadingMagic();
+    try {
+      final drawFuture = controller.drawToday();
+      if (mounted) {
+        setState(() => _dailyState = controller.state);
+      }
+      await drawFuture;
+      _audioService.playCardDraw();
+    } finally {
+      _audioService.stopLoadingMagic();
+      if (mounted) {
+        setState(() => _dailyState = controller.state);
+      }
     }
   }
 

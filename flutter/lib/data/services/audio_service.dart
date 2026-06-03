@@ -39,8 +39,8 @@ class AudioService {
     }).catchError((e) {
       debugPrint('AudioService: _magicPlayer setReleaseMode error: $e');
     });
-    _magicPlayer.setVolume(0.45).then((_) {
-      debugPrint('AudioService: _magicPlayer volume set to 0.45');
+    _magicPlayer.setVolume(0.9).then((_) {
+      debugPrint('AudioService: _magicPlayer volume set to 0.9');
     }).catchError((e) {
       debugPrint('AudioService: _magicPlayer setVolume error: $e');
     });
@@ -175,7 +175,7 @@ class AudioService {
 
     try {
       final player = AudioPlayer();
-      player.setVolume(0.85);
+      player.setVolume(1.0);
       debugPrint('AudioService: playCardDraw calling play');
       await player.play(AssetSource('audio/card_draw.mp3'));
       player.onPlayerComplete.listen((_) {

@@ -56,7 +56,7 @@ export class OpenMeteoWeatherService implements WeatherService {
         provider: "open-meteo",
         latitude,
         longitude,
-        locationName: resolveTaiwanRegionName(latitude, longitude, locale),
+        locationName: await resolveLocationName(latitude, longitude, locale),
         timezone: "Asia/Taipei",
         current: normalizeCurrentWeather(body.current ?? {}),
         errorCode: null
@@ -135,8 +135,104 @@ const taiwanRegions: TaiwanRegion[] = [
   { zhTw: "連江縣", en: "Lienchiang County", latitude: 26.1602, longitude: 119.9517 }
 ];
 
+type GlobalRegion = {
+  zhTw: string;
+  en: string;
+  latitude: number;
+  longitude: number;
+};
+
+const globalRegions: GlobalRegion[] = [
+  { zhTw: "山景城", en: "Mountain View", latitude: 37.422, longitude: -122.084 },
+  { zhTw: "舊金山", en: "San Francisco", latitude: 37.7749, longitude: -122.4194 },
+  { zhTw: "洛杉磯", en: "Los Angeles", latitude: 34.0522, longitude: -118.2437 },
+  { zhTw: "紐約", en: "New York", latitude: 40.7128, longitude: -74.006 },
+  { zhTw: "西雅圖", en: "Seattle", latitude: 47.6062, longitude: -122.3321 },
+  { zhTw: "芝加哥", en: "Chicago", latitude: 41.8781, longitude: -87.6298 },
+  { zhTw: "休士頓", en: "Houston", latitude: 29.7604, longitude: -95.3698 },
+  { zhTw: "倫敦", en: "London", latitude: 51.5074, longitude: -0.1278 },
+  { zhTw: "巴黎", en: "Paris", latitude: 48.8566, longitude: 2.3522 },
+  { zhTw: "東京", en: "Tokyo", latitude: 35.6762, longitude: 139.6503 },
+  { zhTw: "首爾", en: "Seoul", latitude: 37.5665, longitude: 126.978 },
+  { zhTw: "雪梨", en: "Sydney", latitude: -33.8688, longitude: 151.2093 },
+  { zhTw: "新加坡", en: "Singapore", latitude: 1.3521, longitude: 103.8198 },
+  { zhTw: "香港", en: "Hong Kong", latitude: 22.3193, longitude: 114.1694 },
+  { zhTw: "上海", en: "Shanghai", latitude: 31.2304, longitude: 121.4737 },
+  { zhTw: "北京", en: "Beijing", latitude: 39.9042, longitude: 116.4074 }
+];
+
 const maxTaiwanRegionDistanceKm = 90;
 const earthRadiusKm = 6371;
+
+async function fetchNominatimLocationName(
+  latitude: number,
+  longitude: number,
+  locale: "zh-TW" | "en"
+): Promise<string | null> {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&accept-language=${locale === "zh-TW" ? "zh-TW,zh" : "en"}`;
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "PocketTarotApp/1.0 (contact@example.com)"
+      }
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const data = (await response.json()) as {
+      address?: {
+        city?: string;
+        town?: string;
+        village?: string;
+        suburb?: string;
+        county?: string;
+        state?: string;
+        country?: string;
+      };
+    };
+    const addr = data.address;
+    if (!addr) {
+      return null;
+    }
+    return addr.city || addr.town || addr.village || addr.suburb || addr.county || addr.state || null;
+  } catch (error) {
+    console.error("fetchNominatimLocationName error:", error);
+    return null;
+  }
+}
+
+export async function resolveLocationName(
+  latitude: number,
+  longitude: number,
+  locale: "zh-TW" | "en"
+): Promise<string | null> {
+  // 1. 先用台灣縣市清單比對
+  let nearestTaiwan: { region: TaiwanRegion; distanceKm: number } | null = null;
+  for (const region of taiwanRegions) {
+    const distanceKm = haversineKm(latitude, longitude, region.latitude, region.longitude);
+    if (!nearestTaiwan || distanceKm < nearestTaiwan.distanceKm) {
+      nearestTaiwan = { region, distanceKm };
+    }
+  }
+  if (nearestTaiwan && nearestTaiwan.distanceKm <= maxTaiwanRegionDistanceKm) {
+    return locale === "en" ? nearestTaiwan.region.en : nearestTaiwan.region.zhTw;
+  }
+
+  // 2. 再用全球大城市清單比對
+  let nearestGlobal: { region: GlobalRegion; distanceKm: number } | null = null;
+  for (const region of globalRegions) {
+    const distanceKm = haversineKm(latitude, longitude, region.latitude, region.longitude);
+    if (!nearestGlobal || distanceKm < nearestGlobal.distanceKm) {
+      nearestGlobal = { region, distanceKm };
+    }
+  }
+  if (nearestGlobal && nearestGlobal.distanceKm <= maxTaiwanRegionDistanceKm) {
+    return locale === "en" ? nearestGlobal.region.en : nearestGlobal.region.zhTw;
+  }
+
+  // 3. 都不在範圍內，則進行 OSM Nominatim 線上解析
+  return fetchNominatimLocationName(latitude, longitude, locale);
+}
 
 export function resolveTaiwanRegionName(latitude: number, longitude: number, locale: "zh-TW" | "en") {
   let nearest: { region: TaiwanRegion; distanceKm: number } | null = null;
