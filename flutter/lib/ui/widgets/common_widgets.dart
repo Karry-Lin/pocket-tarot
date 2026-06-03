@@ -21,33 +21,65 @@ class ScreenFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget mainContent;
-    mainContent = CustomScrollView(
-      physics: onRefresh != null
-          ? const AlwaysScrollableScrollPhysics()
-          : (scrollable ? null : const NeverScrollableScrollPhysics()),
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
-          sliver: SliverToBoxAdapter(child: _header(context)),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(26, 12, 26, 18),
-          sliver: scrollable
-              ? SliverToBoxAdapter(child: child)
-              : SliverFillRemaining(
-                  hasScrollBody: false,
+
+    if (scrollable) {
+      mainContent = CustomScrollView(
+        physics: onRefresh != null ? const AlwaysScrollableScrollPhysics() : null,
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+            sliver: SliverToBoxAdapter(child: _header(context)),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(26, 12, 26, 18),
+            sliver: SliverToBoxAdapter(child: child),
+          ),
+        ],
+      );
+      if (onRefresh != null) {
+        mainContent = RefreshIndicator(
+          onRefresh: onRefresh!,
+          color: _ArcanaColors.gold2,
+          backgroundColor: _ArcanaColors.ink2,
+          child: mainContent,
+        );
+      }
+    } else {
+      mainContent = LayoutBuilder(
+        builder: (context, constraints) {
+          final height = constraints.maxHeight;
+          final content = Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+                child: _header(context),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(26, 12, 26, 10),
                   child: child,
                 ),
-        ),
-      ],
-    );
+              ),
+            ],
+          );
 
-    if (onRefresh != null) {
-      mainContent = RefreshIndicator(
-        onRefresh: onRefresh!,
-        color: _ArcanaColors.gold2,
-        backgroundColor: _ArcanaColors.ink2,
-        child: mainContent,
+          if (onRefresh != null) {
+            return RefreshIndicator(
+              onRefresh: onRefresh!,
+              color: _ArcanaColors.gold2,
+              backgroundColor: _ArcanaColors.ink2,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SizedBox(
+                  height: height,
+                  child: content,
+                ),
+              ),
+            );
+          }
+
+          return content;
+        },
       );
     }
 
