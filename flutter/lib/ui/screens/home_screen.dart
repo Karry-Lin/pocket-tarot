@@ -230,6 +230,9 @@ class DailyResultCard extends ConsumerWidget {
         .split(RegExp(r'(?=^#{2,3}\s+)', multiLine: true))
         .map((s) => s.trim())
         .where((s) => s.isNotEmpty)
+        .map((s) => s
+            .replaceAll(RegExp(r'^\s*[-*_]{3,}\s*$', multiLine: true), '')
+            .trim())
         .toList();
 
     return Column(
