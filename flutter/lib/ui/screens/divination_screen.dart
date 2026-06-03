@@ -10,19 +10,38 @@ class DivinationScreen extends ConsumerStatefulWidget {
 class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   final TextEditingController _questionController = TextEditingController();
   DeepReadingState _deepState = const DeepReadingState.initial();
+  RouteInformationProvider? _routeInformationProvider;
+  String? _lastPath;
 
   @override
   void initState() {
     super.initState();
     _questionController.addListener(_onQuestionChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadHistory());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadHistory();
+      if (mounted) {
+        _routeInformationProvider = GoRouter.of(context).routeInformationProvider;
+        _lastPath = _routeInformationProvider?.value.uri.path;
+        _routeInformationProvider?.addListener(_onRouteChanged);
+      }
+    });
   }
 
   @override
   void dispose() {
     _questionController.removeListener(_onQuestionChanged);
     _questionController.dispose();
+    _routeInformationProvider?.removeListener(_onRouteChanged);
     super.dispose();
+  }
+
+  void _onRouteChanged() {
+    if (!mounted) return;
+    final currentPath = _routeInformationProvider?.value.uri.path;
+    if (currentPath == '/divination' && _lastPath != '/divination') {
+      _loadHistory();
+    }
+    _lastPath = currentPath;
   }
 
   void _onQuestionChanged() {
