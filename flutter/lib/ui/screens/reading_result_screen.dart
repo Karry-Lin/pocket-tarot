@@ -84,6 +84,7 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
                 ),
                 const SizedBox(height: 12),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     for (
                       var index = 0;
@@ -91,11 +92,58 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
                       index++
                     ) ...[
                       Expanded(
-                        child: TarotImageCard(
-                          imagePath: _imageForCardId(resultCards[index].cardId),
-                          height: 178,
-                          radius: 12,
-                          fit: BoxFit.contain,
+                        child: Builder(
+                          builder: (context) {
+                            final cards = ref.watch(tarotCardsProvider).asData?.value ?? const [];
+                            final cardDraw = resultCards[index];
+                            final card = _findCardById(cards, cardDraw.cardId);
+                            final cardName = card == null
+                                ? _cardNameFallback(cardDraw.cardId, l10n)
+                                : _primaryCardName(card, l10n);
+                            final orientation = _orientationLabel(cardDraw.orientation, l10n);
+                            return Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Center(
+                                  child: EyebrowText(
+                                    _usesChineseCardText(l10n)
+                                        ? cardDraw.positionLabel
+                                        : _selectedPositionLabel(cardDraw, l10n),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                TarotImageCard(
+                                  imagePath: _imageForCardId(cardDraw.cardId),
+                                  height: 178,
+                                  radius: 12,
+                                  fit: BoxFit.contain,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  cardName,
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: _ArcanaColors.ivory,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  _usesChineseCardText(l10n) ? orientation : '($orientation)',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    fontSize: 10,
+                                    color: _ArcanaColors.gold2,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            );
+                          },
                         ),
                       ),
                       if (index != resultCards.length - 1)
