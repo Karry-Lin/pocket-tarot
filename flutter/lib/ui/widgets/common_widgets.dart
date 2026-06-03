@@ -8,6 +8,7 @@ class ScreenFrame extends StatelessWidget {
     this.eyebrow,
     this.trailing,
     this.scrollable = true,
+    this.onRefresh,
   });
 
   final String title;
@@ -15,39 +16,61 @@ class ScreenFrame extends StatelessWidget {
   final Widget? trailing;
   final Widget child;
   final bool scrollable;
+  final Future<void> Function()? onRefresh;
 
   @override
   Widget build(BuildContext context) {
+    Widget mainContent;
+    if (scrollable) {
+      mainContent = CustomScrollView(
+        physics: onRefresh != null ? const AlwaysScrollableScrollPhysics() : null,
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+            sliver: SliverToBoxAdapter(child: _header(context)),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(26, 12, 26, 18),
+            sliver: SliverToBoxAdapter(child: child),
+          ),
+        ],
+      );
+    } else {
+      mainContent = Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
+            child: _header(context),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(26, 12, 26, 10),
+              child: child,
+            ),
+          ),
+        ],
+      );
+      if (onRefresh != null) {
+        mainContent = SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: mainContent,
+        );
+      }
+    }
+
+    if (onRefresh != null) {
+      mainContent = RefreshIndicator(
+        onRefresh: onRefresh!,
+        color: _ArcanaColors.gold2,
+        backgroundColor: _ArcanaColors.ink2,
+        child: mainContent,
+      );
+    }
+
     return _RootBackExitGuard(
       child: AppBackdrop(
         child: SafeArea(
-          child: scrollable
-              ? CustomScrollView(
-                  slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
-                      sliver: SliverToBoxAdapter(child: _header(context)),
-                    ),
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(26, 12, 26, 18),
-                      sliver: SliverToBoxAdapter(child: child),
-                    ),
-                  ],
-                )
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(26, 63, 26, 8),
-                      child: _header(context),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(26, 12, 26, 10),
-                        child: child,
-                      ),
-                    ),
-                  ],
-                ),
+          child: mainContent,
         ),
       ),
     );
@@ -850,6 +873,37 @@ class TagPill extends StatelessWidget {
           color: _ArcanaColors.gold2,
           height: 1,
         ),
+      ),
+    );
+  }
+}
+
+class _AppLoadingIndicator extends StatelessWidget {
+  const _AppLoadingIndicator({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(
+            color: _ArcanaColors.gold2,
+          ),
+          const SizedBox(height: 18),
+          Text(
+            message,
+            style: _bodyTextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: _ArcanaColors.gold2,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

@@ -72,6 +72,11 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     }
   }
 
+  Future<void> _handleRefresh() async {
+    _questionController.clear();
+    await _loadHistory();
+  }
+
   Future<void> _openHistoryReading(String id) async {
     final controller = await ref.read(deepReadingControllerProvider.future);
     await controller.loadSavedReading(id);
@@ -87,13 +92,17 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   Widget build(BuildContext context) {
     final controllerAsync = ref.watch(deepReadingControllerProvider);
     final l10n = AppLocalizations.of(context)!;
+    final usesChinese = _usesChineseCardText(l10n);
 
     return ScreenFrame(
       title: l10n.divinationTitle,
       eyebrow: 'Reading room',
       trailing: null,
+      onRefresh: _handleRefresh,
       child: controllerAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => _AppLoadingIndicator(
+          message: usesChinese ? '正在連結占卜房...' : 'Connecting to reading room...',
+        ),
         error: (error, stackTrace) => InfoPanel(
           title: l10n.divinationLoadFailed,
           child: Text(error.toString()),

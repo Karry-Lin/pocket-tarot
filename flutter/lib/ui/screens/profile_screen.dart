@@ -92,7 +92,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       eyebrow: 'Profile',
       trailing: null,
       child: controllerAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => _AppLoadingIndicator(
+          message: l10n.localeName.contains('zh') ? '正在同步靈性檔案...' : 'Syncing spiritual profile...',
+        ),
         error: (error, stackTrace) => InfoPanel(
           title: l10n.profileLoadFailed,
           child: Text(error.toString()),
@@ -115,7 +117,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     if (_profileState.status == ProfileStatus.initial ||
         _profileState.status == ProfileStatus.loading) {
-      return const Center(child: CircularProgressIndicator());
+      return _AppLoadingIndicator(
+        message: usesChinese ? '正在同步靈性檔案...' : 'Syncing spiritual profile...',
+      );
     }
 
     if (snapshot == null) {
@@ -467,9 +471,22 @@ class DeepHistoryPanel extends StatelessWidget {
         Text(l10n.historyTitle, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 14),
         if (state.status == DeepReadingStatus.historyLoading)
-          const GlassPanel(
-            padding: EdgeInsets.all(18),
-            child: Center(child: CircularProgressIndicator()),
+          GlassPanel(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 36),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const LinearProgressIndicator(
+                  color: _ArcanaColors.gold2,
+                  backgroundColor: Colors.white10,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  usesChinese ? '讀取歷史紀錄中...' : 'Loading history...',
+                  style: _bodyTextStyle(color: _ArcanaColors.gold2, fontSize: 12),
+                ),
+              ],
+            ),
           )
         else if (state.historyErrorMessage != null)
           GlassPanel(
@@ -488,13 +505,21 @@ class DeepHistoryPanel extends StatelessWidget {
             child: Text(l10n.emptyHistory),
           )
         else
-          for (var index = 0; index < previewHistory.length; index++) ...[
-            _VisualHistoryCard(
-              item: previewHistory[index],
-              onTap: () => onOpenHistory(previewHistory[index].id),
-            ),
-            if (index != previewHistory.length - 1) const SizedBox(height: 10),
-          ],
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: previewHistory.length,
+            itemBuilder: (context, index) {
+              final item = previewHistory[index];
+              return Padding(
+                padding: EdgeInsets.only(bottom: index == previewHistory.length - 1 ? 0 : 10),
+                child: _VisualHistoryCard(
+                  item: item,
+                  onTap: () => onOpenHistory(item.id),
+                ),
+              );
+            },
+          ),
       ],
     );
   }

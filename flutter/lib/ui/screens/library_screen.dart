@@ -18,6 +18,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     super.dispose();
   }
 
+  Future<void> _handleRefresh() async {
+    _searchController.clear();
+    setState(() {
+      _category = TarotCategory.all;
+      _query = '';
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 360));
+  }
+
   @override
   Widget build(BuildContext context) {
     final cardsAsync = ref.watch(tarotCardsProvider);
@@ -29,8 +38,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       title: l10n.libraryTitle,
       eyebrow: 'Arcana library',
       trailing: null,
+      onRefresh: _handleRefresh,
       child: cardsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => _AppLoadingIndicator(
+          message: usesChineseVisual ? '正在翻閱奧秘卡庫...' : 'Consulting the arcana library...',
+        ),
         error: (error, stackTrace) =>
             InfoPanel(title: l10n.libraryLoadFailed, child: Text('$error')),
         data: (cards) {
@@ -45,24 +57,41 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 Text(l10n.searchCardsLabel),
                 const SizedBox(height: 8),
               ],
-              TextField(
+              SearchBar(
                 controller: _searchController,
                 onChanged: (value) => setState(() => _query = value),
-                decoration: InputDecoration(
-                  labelText: usesChineseVisual ? null : l10n.searchCardsLabel,
-                  hintText: usesChineseVisual ? '月亮、關係、修復' : null,
-                  prefixIcon: usesChineseVisual
-                      ? null
-                      : const Icon(Icons.search),
-                  suffixIcon: _query.isEmpty
-                      ? null
-                      : IconButton(
+                hintText: usesChineseVisual ? '月亮、關係、修復' : l10n.searchCardsLabel,
+                leading: const Icon(Icons.search, color: _ArcanaColors.muted),
+                trailing: _query.isEmpty
+                    ? null
+                    : [
+                        IconButton(
                           onPressed: () {
                             _searchController.clear();
                             setState(() => _query = '');
                           },
                           icon: const Icon(Icons.close),
                         ),
+                      ],
+                elevation: WidgetStateProperty.all(0),
+                backgroundColor: WidgetStateProperty.all(
+                  _ArcanaColors.ink.withValues(alpha: 0.68),
+                ),
+                side: WidgetStateProperty.all(
+                  BorderSide(
+                    color: _ArcanaColors.muted.withValues(alpha: 0.24),
+                  ),
+                ),
+                shape: WidgetStateProperty.all(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                textStyle: WidgetStateProperty.all(
+                  _bodyTextStyle(color: _ArcanaColors.ivory),
+                ),
+                hintStyle: WidgetStateProperty.all(
+                  _bodyTextStyle(color: _ArcanaColors.subtle),
                 ),
               ),
               const SizedBox(height: 16),

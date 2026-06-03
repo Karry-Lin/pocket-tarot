@@ -470,9 +470,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (error) {
       if (mounted) {
         setState(() {
-          _formError = _emailAuthFailureMessage(error, l10n);
+          _formError = null;
           _formMessage = null;
         });
+        _showErrorSnackBar(context, _emailAuthFailureMessage(error, l10n));
       }
     } finally {
       if (mounted) {
@@ -498,9 +499,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (_) {
       if (mounted) {
         setState(() {
-          _formError = l10n.googleFailure;
+          _formError = null;
           _formMessage = null;
         });
+        _showErrorSnackBar(context, l10n.googleFailure);
       }
     } finally {
       if (mounted) {
@@ -526,15 +528,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (error) {
       if (mounted) {
         setState(() {
-          _formError = _playGamesAuthFailureMessage(error, l10n);
+          _formError = null;
           _formMessage = null;
         });
+        _showErrorSnackBar(context, _playGamesAuthFailureMessage(error, l10n));
       }
     } finally {
       if (mounted) {
         setState(() => _submitting = false);
       }
     }
+  }
+
+  void _showErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: _bodyTextStyle(color: _ArcanaColors.ivory, fontWeight: FontWeight.w700),
+        ),
+        backgroundColor: _ArcanaColors.wine,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: _ArcanaColors.gold.withValues(alpha: 0.38)),
+        ),
+      ),
+    );
   }
 }
 
