@@ -15,7 +15,10 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkStartup());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(audioServiceProvider).playBgm();
+      _checkStartup();
+    });
   }
 
   Future<void> _checkStartup() async {

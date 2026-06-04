@@ -37,6 +37,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _showEmailForm = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(audioServiceProvider).playBgm();
+    });
+  }
+
+  @override
   void dispose() {
     _displayNameController.dispose();
     _emailController.dispose();
