@@ -8,9 +8,10 @@ class AudioService {
   AudioService(this._ref) {
     debugPrint('AudioService: Initializing...');
     
-    // 設定 Global AudioContext 以忽略靜音模式並正常路由音訊
+    // 設定 Global AudioContext 以忽略靜音模式並正常路由音訊，並允許與其他音效混合播放（防止播放音效時 BGM 中斷）
     AudioPlayer.global.setAudioContext(
       AudioContextConfig(
+        focus: AudioContextConfigFocus.mixWithOthers,
         respectSilence: false,
         stayAwake: true,
       ).build(),
@@ -28,8 +29,9 @@ class AudioService {
     }).catchError((e) {
       debugPrint('AudioService: _bgmPlayer setReleaseMode error: $e');
     });
-    _bgmPlayer.setVolume(0.45).then((_) {
-      debugPrint('AudioService: _bgmPlayer volume set to 0.45');
+    // 將背景音樂音量調低為 0.15，維持溫和平靜的背景冥想氛圍
+    _bgmPlayer.setVolume(0.15).then((_) {
+      debugPrint('AudioService: _bgmPlayer volume set to 0.15');
     }).catchError((e) {
       debugPrint('AudioService: _bgmPlayer setVolume error: $e');
     });
@@ -39,8 +41,9 @@ class AudioService {
     }).catchError((e) {
       debugPrint('AudioService: _magicPlayer setReleaseMode error: $e');
     });
-    _magicPlayer.setVolume(0.9).then((_) {
-      debugPrint('AudioService: _magicPlayer volume set to 0.9');
+    // 將魔法環境音效音量調大至 1.0，使其清晰
+    _magicPlayer.setVolume(1.0).then((_) {
+      debugPrint('AudioService: _magicPlayer volume set to 1.0');
     }).catchError((e) {
       debugPrint('AudioService: _magicPlayer setVolume error: $e');
     });
