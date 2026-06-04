@@ -8,17 +8,28 @@ class AudioService {
   AudioService(this._ref) {
     debugPrint('AudioService: Initializing...');
     
+    final audioContext = AudioContextConfig(
+      focus: AudioContextConfigFocus.mixWithOthers,
+      respectSilence: false,
+      stayAwake: true,
+    ).build();
+
     // 設定 Global AudioContext
-    AudioPlayer.global.setAudioContext(
-      AudioContextConfig(
-        focus: AudioContextConfigFocus.mixWithOthers,
-        respectSilence: false,
-        stayAwake: true,
-      ).build(),
-    ).then((_) {
+    AudioPlayer.global.setAudioContext(audioContext).then((_) {
       debugPrint('AudioService: Global audio context configured successfully');
     }).catchError((e) {
       debugPrint('AudioService: Global audio context configuration error: $e');
+    });
+
+    // 分別為三個播放器實例設定獨立的 AudioContext，確保混音正常、不互相奪取音訊焦點
+    _bgmPlayer.setAudioContext(audioContext).catchError((e) {
+      debugPrint('AudioService: _bgmPlayer setAudioContext error: $e');
+    });
+    _magicPlayer.setAudioContext(audioContext).catchError((e) {
+      debugPrint('AudioService: _magicPlayer setAudioContext error: $e');
+    });
+    _sfxPlayer.setAudioContext(audioContext).catchError((e) {
+      debugPrint('AudioService: _sfxPlayer setAudioContext error: $e');
     });
 
     _bgmPlayer.onLog.listen((log) => debugPrint('BGM PLAYER LOG: $log'));
@@ -246,8 +257,13 @@ class AudioService {
     debugPrint('AudioService: stopLoadingMagic() called');
     _isMagicPlaying = false;
     try {
-      await _magicPlayer.stop();
-      debugPrint('AudioService: stopLoadingMagic() complete');
+      _magicPlayer.stop().then((_) {
+        debugPrint('AudioService: stopLoadingMagic() complete, restoring BGM');
+        playBgm();
+      }).catchError((e) {
+        debugPrint('AudioService stopLoadingMagic player stop error: $e');
+        playBgm();
+      });
     } catch (e) {
       debugPrint('AudioService stopLoadingMagic error: $e');
     }
