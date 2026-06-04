@@ -36,11 +36,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _submitting = false;
   bool _showEmailForm = false;
 
+  Timer? _bgmTimer;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 800), () {
+      _bgmTimer = Timer(const Duration(milliseconds: 800), () {
         if (mounted) {
           ref.read(audioServiceProvider).playBgm();
         }
@@ -50,6 +52,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   void dispose() {
+    _bgmTimer?.cancel();
     _displayNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();

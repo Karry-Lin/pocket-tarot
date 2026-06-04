@@ -12,17 +12,25 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
     status: AppStartupStatus.initial,
   );
 
+  Timer? _bgmTimer;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(milliseconds: 800), () {
+      _bgmTimer = Timer(const Duration(milliseconds: 800), () {
         if (mounted) {
           ref.read(audioServiceProvider).playBgm();
         }
       });
       _checkStartup();
     });
+  }
+
+  @override
+  void dispose() {
+    _bgmTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _checkStartup() async {
