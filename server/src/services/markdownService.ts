@@ -1,14 +1,16 @@
 import { ApiError } from "../http/apiError.js";
 
+const LLM_DEPENDENCY_STATUS_CODE = 503;
+
 export function cleanReadingMarkdown(markdown: string) {
   const cleaned = markdown.trim();
 
   if (!cleaned) {
-    throw new ApiError(502, "LLM_UNAVAILABLE", "LLM 回應為空");
+    throw new ApiError(LLM_DEPENDENCY_STATUS_CODE, "LLM_UNAVAILABLE", "LLM 回應為空");
   }
 
   if (containsUnsupportedMarkdown(cleaned)) {
-    throw new ApiError(502, "LLM_UNAVAILABLE", "LLM 回應格式不符合預期", {
+    throw new ApiError(LLM_DEPENDENCY_STATUS_CODE, "LLM_UNAVAILABLE", "LLM 回應格式不符合預期", {
       internalCode: "LLM_INVALID_RESPONSE"
     });
   }

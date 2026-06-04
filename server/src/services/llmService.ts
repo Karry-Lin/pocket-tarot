@@ -7,6 +7,7 @@ import { fallbackSummary } from "./markdownService.js";
 
 export type Locale = "zh-TW" | "en";
 type PromptCard = TarotCard & CardDraw;
+const LLM_DEPENDENCY_STATUS_CODE = 503;
 
 export type DailyReadingPromptContext = {
   locale: Locale;
@@ -96,7 +97,7 @@ export class ChatCompletionsLlmService implements LlmService {
     const model = process.env.LLM_MODEL;
 
     if (!baseUrl || !apiKey || !model) {
-      throw new ApiError(502, "LLM_UNAVAILABLE", "LLM 尚未設定");
+      throw new ApiError(LLM_DEPENDENCY_STATUS_CODE, "LLM_UNAVAILABLE", "LLM 尚未設定");
     }
 
     const endpoint = `${baseUrl.replace(/\/$/, "")}/chat/completions`;
@@ -120,7 +121,7 @@ export class ChatCompletionsLlmService implements LlmService {
       }
     }
 
-    throw new ApiError(502, "LLM_UNAVAILABLE", "LLM 服務不可用");
+    throw new ApiError(LLM_DEPENDENCY_STATUS_CODE, "LLM_UNAVAILABLE", "LLM 服務不可用");
   }
 }
 
@@ -223,12 +224,12 @@ async function sendChatCompletion(options: ChatCompletionRequest): Promise<strin
     });
   } catch (error) {
     if (isAbortError(error)) {
-      throw new ApiError(504, "LLM_TIMEOUT", "LLM 請求逾時", {
+      throw new ApiError(LLM_DEPENDENCY_STATUS_CODE, "LLM_TIMEOUT", "LLM 請求逾時", {
         retryable: true
       });
     }
 
-    throw new ApiError(502, "LLM_UNAVAILABLE", "LLM 服務不可用", {
+    throw new ApiError(LLM_DEPENDENCY_STATUS_CODE, "LLM_UNAVAILABLE", "LLM 服務不可用", {
       retryable: true
     });
   } finally {
@@ -237,13 +238,13 @@ async function sendChatCompletion(options: ChatCompletionRequest): Promise<strin
 
   if (!response.ok) {
     if (response.status === 504) {
-      throw new ApiError(504, "LLM_TIMEOUT", "LLM 請求逾時", {
+      throw new ApiError(LLM_DEPENDENCY_STATUS_CODE, "LLM_TIMEOUT", "LLM 請求逾時", {
         providerStatus: response.status,
         retryable: true
       });
     }
 
-    throw new ApiError(502, "LLM_UNAVAILABLE", "LLM 服務不可用", {
+    throw new ApiError(LLM_DEPENDENCY_STATUS_CODE, "LLM_UNAVAILABLE", "LLM 服務不可用", {
       providerStatus: response.status,
       retryable: response.status >= 500
     });
@@ -259,7 +260,7 @@ async function sendChatCompletion(options: ChatCompletionRequest): Promise<strin
   const content = body.choices?.[0]?.message?.content;
 
   if (typeof content !== "string") {
-    throw new ApiError(502, "LLM_UNAVAILABLE", "LLM 回應格式不符合預期", {
+    throw new ApiError(LLM_DEPENDENCY_STATUS_CODE, "LLM_UNAVAILABLE", "LLM 回應格式不符合預期", {
       internalCode: "LLM_INVALID_RESPONSE"
     });
   }
