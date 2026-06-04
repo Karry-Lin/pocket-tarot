@@ -406,13 +406,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         context.go('/splash');
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         setState(() {
           _formError = null;
           _formMessage = null;
         });
-        _showErrorSnackBar(context, l10n.googleFailure);
+        _showErrorSnackBar(context, _socialAuthFailureMessage(error, l10n, l10n.googleFailure));
       }
     } finally {
       if (mounted) {
@@ -471,7 +471,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _formError = null;
           _formMessage = null;
         });
-        _showErrorSnackBar(context, l10n.githubFailure);
+        _showErrorSnackBar(context, _socialAuthFailureMessage(error, l10n, l10n.githubFailure));
       }
     } finally {
       if (mounted) {
@@ -519,6 +519,17 @@ const _emailCredentialFailureCodes = {
   'wrong-password',
 };
 
+String _socialAuthFailureMessage(Object error, AppLocalizations l10n, String defaultMessage) {
+  if (error is firebase.FirebaseAuthException &&
+      error.code == 'account-exists-with-different-credential') {
+    final usesChinese = _usesChineseCardText(l10n);
+    return usesChinese
+        ? '此 Email 已被其他登入方式使用，請用原方式登入。'
+        : 'This email is already registered using another sign-in method. Please use your original sign-in method.';
+  }
+  return defaultMessage;
+}
+
 String _playGamesAuthFailureMessage(Object error, AppLocalizations l10n) {
   if (error is PlatformException &&
       error.code == 'play-games-unregistered-sha1') {
@@ -536,7 +547,7 @@ String _playGamesAuthFailureMessage(Object error, AppLocalizations l10n) {
     return 'Play Games setup is incomplete. Register this APK signature$suffix.';
   }
 
-  return l10n.playGamesFailure;
+  return _socialAuthFailureMessage(error, l10n, l10n.playGamesFailure);
 }
 
 class _LoginLanguageButton extends StatelessWidget {
