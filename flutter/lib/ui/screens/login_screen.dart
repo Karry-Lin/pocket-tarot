@@ -146,7 +146,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           children: [
                             OutlinedButton.icon(
                               onPressed: _submitting ? null : _signInWithGoogle,
-                              icon: const Text('G'),
+                              icon: const FaIcon(FontAwesomeIcons.google, size: 18),
                               label: Text(
                                 usesChinese ? '使用 Google 繼續' : l10n.googleLogin,
                               ),
@@ -168,7 +168,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               onPressed: _submitting
                                   ? null
                                   : _signInWithGithub,
-                              icon: const Text('GH'),
+                              icon: const FaIcon(FontAwesomeIcons.github, size: 18),
                               label: Text(
                                 usesChinese
                                     ? '使用 GitHub 繼續'
@@ -598,7 +598,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         context.go('/splash');
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      debugPrint('GitHub Sign-in failed with error: $error\n$stackTrace');
       if (mounted) {
         setState(() {
           _formError = null;
