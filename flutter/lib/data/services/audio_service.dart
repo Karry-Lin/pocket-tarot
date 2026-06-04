@@ -25,25 +25,6 @@ class AudioService {
     _magicPlayer.onLog.listen((log) => debugPrint('MAGIC PLAYER LOG: $log'));
     _sfxPlayer.onLog.listen((log) => debugPrint('SFX PLAYER LOG: $log'));
 
-    // 預先載入 Source 以提升播放反應速度，並避免重複載入導致的解碼卡頓
-    _bgmPlayer.setSource(AssetSource('audio/bgm.mp3')).then((_) {
-      debugPrint('AudioService: _bgmPlayer source loaded');
-    }).catchError((e) {
-      debugPrint('AudioService: _bgmPlayer setSource error: $e');
-    });
-
-    _magicPlayer.setSource(AssetSource('audio/magic_loading.mp3')).then((_) {
-      debugPrint('AudioService: _magicPlayer source loaded');
-    }).catchError((e) {
-      debugPrint('AudioService: _magicPlayer setSource error: $e');
-    });
-
-    _sfxPlayer.setSource(AssetSource('audio/card_draw.mp3')).then((_) {
-      debugPrint('AudioService: _sfxPlayer source loaded');
-    }).catchError((e) {
-      debugPrint('AudioService: _sfxPlayer setSource error: $e');
-    });
-
     _bgmPlayer.setReleaseMode(ReleaseMode.loop).then((_) {
       debugPrint('AudioService: _bgmPlayer loop mode set');
     }).catchError((e) {
@@ -112,8 +93,8 @@ class AudioService {
     } else if (settings.bgmEnabled && _isBgmPlaying) {
       if (_bgmPlayer.state != PlayerState.playing) {
         debugPrint('AudioService: Resume BGM because bgmEnabled is true and _isBgmPlaying is true');
-        _bgmPlayer.resume().catchError((e) {
-          debugPrint('AudioService: Resume BGM error in updateCachedSettings: $e');
+        _bgmPlayer.play(AssetSource('audio/bgm.mp3')).catchError((e) {
+          debugPrint('AudioService: Play BGM error in updateCachedSettings: $e');
         });
       }
     }
@@ -137,9 +118,9 @@ class AudioService {
 
     try {
       if (_bgmPlayer.state != PlayerState.playing) {
-        debugPrint('AudioService: Calling _bgmPlayer.resume');
-        _bgmPlayer.resume().catchError((e) {
-          debugPrint('AudioService: BGM resume error: $e');
+        debugPrint('AudioService: Calling _bgmPlayer.play');
+        _bgmPlayer.play(AssetSource('audio/bgm.mp3')).catchError((e) {
+          debugPrint('AudioService BGM play error: $e');
         });
       } else {
         debugPrint('AudioService: playBgm() skipped, already playing');
@@ -153,8 +134,10 @@ class AudioService {
     debugPrint('AudioService: stopBgm() called');
     _isBgmPlaying = false;
     try {
-      await _bgmPlayer.stop();
-      debugPrint('AudioService: stopBgm() complete');
+      _bgmPlayer.stop().catchError((e) {
+        debugPrint('AudioService stopBgm error: $e');
+      });
+      debugPrint('AudioService: stopBgm() initiated');
     } catch (e) {
       debugPrint('AudioService stopBgm error: $e');
     }
@@ -167,9 +150,9 @@ class AudioService {
       if (_isBgmPlaying) {
         try {
           if (_bgmPlayer.state != PlayerState.playing) {
-            debugPrint('AudioService: updateBgmState calling resume');
-            _bgmPlayer.resume().catchError((e) {
-              debugPrint('AudioService: updateBgmState resume error: $e');
+            debugPrint('AudioService: updateBgmState calling play');
+            _bgmPlayer.play(AssetSource('audio/bgm.mp3')).catchError((e) {
+              debugPrint('AudioService: updateBgmState play error: $e');
             });
           }
         } catch (e) {
@@ -209,15 +192,15 @@ class AudioService {
     }
 
     try {
-      debugPrint('AudioService: playCardDraw calling seek and resume');
-      _sfxPlayer.seek(Duration.zero).then((_) {
-        _sfxPlayer.resume().catchError((e) {
-          debugPrint('AudioService playCardDraw resume error: $e');
+      debugPrint('AudioService: playCardDraw calling stop and play');
+      _sfxPlayer.stop().then((_) {
+        _sfxPlayer.play(AssetSource('audio/card_draw.mp3')).catchError((e) {
+          debugPrint('AudioService playCardDraw play error: $e');
         });
       }).catchError((e) {
-        debugPrint('AudioService playCardDraw seek failed, trying resume: $e');
-        _sfxPlayer.resume().catchError((err) {
-          debugPrint('AudioService playCardDraw direct resume error: $err');
+        debugPrint('AudioService playCardDraw stop failed, playing directly: $e');
+        _sfxPlayer.play(AssetSource('audio/card_draw.mp3')).catchError((err) {
+          debugPrint('AudioService playCardDraw direct play error: $err');
         });
       });
     } catch (e) {
@@ -237,16 +220,9 @@ class AudioService {
     }
 
     try {
-      debugPrint('AudioService: playLoadingMagic calling seek and resume');
-      _magicPlayer.seek(Duration.zero).then((_) {
-        _magicPlayer.resume().catchError((e) {
-          debugPrint('AudioService playLoadingMagic resume error: $e');
-        });
-      }).catchError((e) {
-        debugPrint('AudioService playLoadingMagic seek failed, trying resume: $e');
-        _magicPlayer.resume().catchError((err) {
-          debugPrint('AudioService playLoadingMagic direct resume error: $err');
-        });
+      debugPrint('AudioService: playLoadingMagic calling play');
+      _magicPlayer.play(AssetSource('audio/magic_loading.mp3')).catchError((e) {
+        debugPrint('AudioService playLoadingMagic error: $e');
       });
     } catch (e) {
       debugPrint('AudioService playLoadingMagic error: $e');
