@@ -663,11 +663,7 @@ class _VisualEmailLoginScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: BrandMark(size: 58, radius: 18),
-                      ),
-                      const SizedBox(height: 19),
+                      const SizedBox(height: 56),
                       const EyebrowText('Pocket Tarot'),
                       const SizedBox(height: 7),
                       Text(
