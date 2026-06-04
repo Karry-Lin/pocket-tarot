@@ -40,7 +40,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(audioServiceProvider).playBgm();
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          ref.read(audioServiceProvider).playBgm();
+        }
+      });
     });
   }
 

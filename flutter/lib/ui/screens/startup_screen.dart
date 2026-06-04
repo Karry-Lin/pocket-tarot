@@ -16,7 +16,11 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(audioServiceProvider).playBgm();
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          ref.read(audioServiceProvider).playBgm();
+        }
+      });
       _checkStartup();
     });
   }

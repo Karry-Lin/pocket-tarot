@@ -93,7 +93,11 @@ class AudioService {
     } else if (settings.bgmEnabled && _isBgmPlaying) {
       if (_bgmPlayer.state != PlayerState.playing) {
         debugPrint('AudioService: Resume BGM because bgmEnabled is true and _isBgmPlaying is true');
-        _bgmPlayer.play(AssetSource('audio/bgm.mp3')).catchError((e) {
+        _bgmPlayer.play(AssetSource('audio/bgm.mp3')).then((_) {
+          _bgmPlayer.setReleaseMode(ReleaseMode.loop).catchError((e) {
+            debugPrint('AudioService updateCachedSettings setReleaseMode error: $e');
+          });
+        }).catchError((e) {
           debugPrint('AudioService: Play BGM error in updateCachedSettings: $e');
         });
       }
@@ -119,7 +123,11 @@ class AudioService {
     try {
       if (_bgmPlayer.state != PlayerState.playing) {
         debugPrint('AudioService: Calling _bgmPlayer.play');
-        _bgmPlayer.play(AssetSource('audio/bgm.mp3')).catchError((e) {
+        _bgmPlayer.play(AssetSource('audio/bgm.mp3')).then((_) {
+          _bgmPlayer.setReleaseMode(ReleaseMode.loop).catchError((e) {
+            debugPrint('AudioService playBgm setReleaseMode error: $e');
+          });
+        }).catchError((e) {
           debugPrint('AudioService BGM play error: $e');
         });
       } else {
@@ -151,7 +159,11 @@ class AudioService {
         try {
           if (_bgmPlayer.state != PlayerState.playing) {
             debugPrint('AudioService: updateBgmState calling play');
-            _bgmPlayer.play(AssetSource('audio/bgm.mp3')).catchError((e) {
+            _bgmPlayer.play(AssetSource('audio/bgm.mp3')).then((_) {
+              _bgmPlayer.setReleaseMode(ReleaseMode.loop).catchError((e) {
+                debugPrint('AudioService updateBgmState setReleaseMode error: $e');
+              });
+            }).catchError((e) {
               debugPrint('AudioService: updateBgmState play error: $e');
             });
           }
@@ -192,16 +204,13 @@ class AudioService {
     }
 
     try {
-      debugPrint('AudioService: playCardDraw calling stop and play');
-      _sfxPlayer.stop().then((_) {
-        _sfxPlayer.play(AssetSource('audio/card_draw.mp3')).catchError((e) {
-          debugPrint('AudioService playCardDraw play error: $e');
-        });
-      }).catchError((e) {
-        debugPrint('AudioService playCardDraw stop failed, playing directly: $e');
-        _sfxPlayer.play(AssetSource('audio/card_draw.mp3')).catchError((err) {
-          debugPrint('AudioService playCardDraw direct play error: $err');
-        });
+      debugPrint('AudioService: playCardDraw calling stop and play (non-blocking)');
+      // 獨立異步呼叫，不使用 then 串接，避免 stop() 的 Future 因從未播放而懸空掛起
+      _sfxPlayer.stop().catchError((e) {
+        debugPrint('AudioService playCardDraw stop error: $e');
+      });
+      _sfxPlayer.play(AssetSource('audio/card_draw.mp3')).catchError((e) {
+        debugPrint('AudioService playCardDraw play error: $e');
       });
     } catch (e) {
       debugPrint('AudioService playCardDraw error: $e');
@@ -221,7 +230,11 @@ class AudioService {
 
     try {
       debugPrint('AudioService: playLoadingMagic calling play');
-      _magicPlayer.play(AssetSource('audio/magic_loading.mp3')).catchError((e) {
+      _magicPlayer.play(AssetSource('audio/magic_loading.mp3')).then((_) {
+        _magicPlayer.setReleaseMode(ReleaseMode.loop).catchError((e) {
+          debugPrint('AudioService playLoadingMagic setReleaseMode error: $e');
+        });
+      }).catchError((e) {
         debugPrint('AudioService playLoadingMagic error: $e');
       });
     } catch (e) {
