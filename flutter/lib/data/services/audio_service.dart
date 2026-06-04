@@ -21,17 +21,6 @@ class AudioService {
       debugPrint('AudioService: Global audio context configuration error: $e');
     });
 
-    // 分別為三個播放器實例設定獨立的 AudioContext，確保混音正常、不互相奪取音訊焦點
-    _bgmPlayer.setAudioContext(audioContext).catchError((e) {
-      debugPrint('AudioService: _bgmPlayer setAudioContext error: $e');
-    });
-    _magicPlayer.setAudioContext(audioContext).catchError((e) {
-      debugPrint('AudioService: _magicPlayer setAudioContext error: $e');
-    });
-    _sfxPlayer.setAudioContext(audioContext).catchError((e) {
-      debugPrint('AudioService: _sfxPlayer setAudioContext error: $e');
-    });
-
     _bgmPlayer.onLog.listen((log) => debugPrint('BGM PLAYER LOG: $log'));
     _magicPlayer.onLog.listen((log) => debugPrint('MAGIC PLAYER LOG: $log'));
     _sfxPlayer.onLog.listen((log) => debugPrint('SFX PLAYER LOG: $log'));
