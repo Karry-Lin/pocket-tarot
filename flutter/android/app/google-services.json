@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "412089008005-gabo3qsvh1micl2licmpniboqoa53p2c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.karry.pocket_tarot",
+            "certificate_hash": "df3245817963a6527a6bc1c579a5ae39bf49b7d5"
+          }
+        },
+        {
           "client_id": "412089008005-bb66da5h7geec8f89geb4e77cjr60gbn.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -43,7 +51,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "412089008005-bb66da5h7geec8f89geb4e77cjr60gbn.apps.googleusercontent.com",
+              "client_id": "412089008005-74up1s277eqb3jipjvi0dunnk0vqie2p.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
