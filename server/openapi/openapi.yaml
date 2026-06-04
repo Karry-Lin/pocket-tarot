@@ -4,8 +4,8 @@ info:
   version: 0.1.0
   description: Pocket Tarot Express API for auth, readings, profile, admin maintenance, and API documentation.
 servers:
-  - url: /api/v1
-    description: API base path
+  - url: /
+    description: Application root path
 tags:
   - name: Auth
   - name: Users
