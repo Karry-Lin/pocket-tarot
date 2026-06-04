@@ -7,7 +7,7 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingObserver {
   final TextEditingController _displayNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -41,6 +41,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _bgmTimer = Timer(const Duration(milliseconds: 800), () {
         if (mounted) {
@@ -52,6 +53,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _bgmTimer?.cancel();
     _displayNameController.dispose();
     _emailController.dispose();
@@ -62,6 +64,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _passwordFocusNode.dispose();
     _confirmPasswordFocusNode.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // 當從外部瀏覽器/SDK 返回 App 時，如果依然停留在登入畫面且處於 submitting 狀態
+      // 延遲 1.5 秒以給予 Firebase Auth 足夠時間接收 token 並觸發 auth_gate 轉導
+      // 如果 1.5 秒後使用者仍然停留在 LoginScreen 且 _submitting 為 true，則自動重設狀態，避免 Future 懸空鎖死
+      if (_submitting) {
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (mounted && _submitting) {
+            debugPrint('LoginScreen: Resumed but sign-in did not transition. Resetting submitting state...');
+            setState(() {
+              _submitting = false;
+            });
+          }
+        });
+      }
+    }
   }
 
   @override
