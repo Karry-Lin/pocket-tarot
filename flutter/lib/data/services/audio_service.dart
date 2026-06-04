@@ -8,7 +8,7 @@ class AudioService {
   AudioService(this._ref) {
     debugPrint('AudioService: Initializing...');
     
-    // 設定 Global AudioContext 以忽略靜音模式並正常路由音訊，並允許與其他音效混合播放（防止播放音效時 BGM 中斷）
+    // 設定 Global AudioContext
     AudioPlayer.global.setAudioContext(
       AudioContextConfig(
         focus: AudioContextConfigFocus.mixWithOthers,
@@ -23,15 +23,35 @@ class AudioService {
 
     _bgmPlayer.onLog.listen((log) => debugPrint('BGM PLAYER LOG: $log'));
     _magicPlayer.onLog.listen((log) => debugPrint('MAGIC PLAYER LOG: $log'));
+    _sfxPlayer.onLog.listen((log) => debugPrint('SFX PLAYER LOG: $log'));
+
+    // 預先載入 Source 以提升播放反應速度，並避免重複載入導致的解碼卡頓
+    _bgmPlayer.setSource(AssetSource('audio/bgm.mp3')).then((_) {
+      debugPrint('AudioService: _bgmPlayer source loaded');
+    }).catchError((e) {
+      debugPrint('AudioService: _bgmPlayer setSource error: $e');
+    });
+
+    _magicPlayer.setSource(AssetSource('audio/magic_loading.mp3')).then((_) {
+      debugPrint('AudioService: _magicPlayer source loaded');
+    }).catchError((e) {
+      debugPrint('AudioService: _magicPlayer setSource error: $e');
+    });
+
+    _sfxPlayer.setSource(AssetSource('audio/card_draw.mp3')).then((_) {
+      debugPrint('AudioService: _sfxPlayer source loaded');
+    }).catchError((e) {
+      debugPrint('AudioService: _sfxPlayer setSource error: $e');
+    });
 
     _bgmPlayer.setReleaseMode(ReleaseMode.loop).then((_) {
       debugPrint('AudioService: _bgmPlayer loop mode set');
     }).catchError((e) {
       debugPrint('AudioService: _bgmPlayer setReleaseMode error: $e');
     });
-    // 將背景音樂音量調為 0.35，維持溫和平靜但清晰可辨的背景冥想氛圍
-    _bgmPlayer.setVolume(0.35).then((_) {
-      debugPrint('AudioService: _bgmPlayer volume set to 0.35');
+
+    _bgmPlayer.setVolume(0.7).then((_) {
+      debugPrint('AudioService: _bgmPlayer volume set to 0.7');
     }).catchError((e) {
       debugPrint('AudioService: _bgmPlayer setVolume error: $e');
     });
@@ -41,7 +61,7 @@ class AudioService {
     }).catchError((e) {
       debugPrint('AudioService: _magicPlayer setReleaseMode error: $e');
     });
-    // 將魔法環境音效音量調大至 1.0，使其清晰
+
     _magicPlayer.setVolume(1.0).then((_) {
       debugPrint('AudioService: _magicPlayer volume set to 1.0');
     }).catchError((e) {
@@ -91,9 +111,9 @@ class AudioService {
       }
     } else if (settings.bgmEnabled && _isBgmPlaying) {
       if (_bgmPlayer.state != PlayerState.playing) {
-        debugPrint('AudioService: Play BGM because bgmEnabled is true and _isBgmPlaying is true');
-        _bgmPlayer.play(AssetSource('audio/bgm.mp3')).catchError((e) {
-          debugPrint('AudioService: Play BGM error in updateCachedSettings: $e');
+        debugPrint('AudioService: Resume BGM because bgmEnabled is true and _isBgmPlaying is true');
+        _bgmPlayer.resume().catchError((e) {
+          debugPrint('AudioService: Resume BGM error in updateCachedSettings: $e');
         });
       }
     }
@@ -117,9 +137,10 @@ class AudioService {
 
     try {
       if (_bgmPlayer.state != PlayerState.playing) {
-        debugPrint('AudioService: Calling _bgmPlayer.play');
-        await _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
-        debugPrint('AudioService: _bgmPlayer.play complete');
+        debugPrint('AudioService: Calling _bgmPlayer.resume');
+        _bgmPlayer.resume().catchError((e) {
+          debugPrint('AudioService: BGM resume error: $e');
+        });
       } else {
         debugPrint('AudioService: playBgm() skipped, already playing');
       }
@@ -146,8 +167,10 @@ class AudioService {
       if (_isBgmPlaying) {
         try {
           if (_bgmPlayer.state != PlayerState.playing) {
-            debugPrint('AudioService: updateBgmState calling play');
-            await _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
+            debugPrint('AudioService: updateBgmState calling resume');
+            _bgmPlayer.resume().catchError((e) {
+              debugPrint('AudioService: updateBgmState resume error: $e');
+            });
           }
         } catch (e) {
           debugPrint('AudioService: updateBgmState play error: $e');
@@ -159,7 +182,9 @@ class AudioService {
     } else {
       try {
         debugPrint('AudioService: updateBgmState calling stop');
-        await _bgmPlayer.stop();
+        _bgmPlayer.stop().catchError((e) {
+          debugPrint('AudioService: updateBgmState stop error: $e');
+        });
       } catch (e) {
         debugPrint('AudioService: updateBgmState stop error: $e');
       }
@@ -184,9 +209,17 @@ class AudioService {
     }
 
     try {
-      debugPrint('AudioService: playCardDraw calling play on persistent player');
-      await _sfxPlayer.stop();
-      await _sfxPlayer.play(AssetSource('audio/card_draw.mp3'));
+      debugPrint('AudioService: playCardDraw calling seek and resume');
+      _sfxPlayer.seek(Duration.zero).then((_) {
+        _sfxPlayer.resume().catchError((e) {
+          debugPrint('AudioService playCardDraw resume error: $e');
+        });
+      }).catchError((e) {
+        debugPrint('AudioService playCardDraw seek failed, trying resume: $e');
+        _sfxPlayer.resume().catchError((err) {
+          debugPrint('AudioService playCardDraw direct resume error: $err');
+        });
+      });
     } catch (e) {
       debugPrint('AudioService playCardDraw error: $e');
     }
@@ -204,9 +237,17 @@ class AudioService {
     }
 
     try {
-      debugPrint('AudioService: playLoadingMagic calling play');
-      await _magicPlayer.play(AssetSource('audio/magic_loading.mp3'));
-      debugPrint('AudioService: playLoadingMagic complete');
+      debugPrint('AudioService: playLoadingMagic calling seek and resume');
+      _magicPlayer.seek(Duration.zero).then((_) {
+        _magicPlayer.resume().catchError((e) {
+          debugPrint('AudioService playLoadingMagic resume error: $e');
+        });
+      }).catchError((e) {
+        debugPrint('AudioService playLoadingMagic seek failed, trying resume: $e');
+        _magicPlayer.resume().catchError((err) {
+          debugPrint('AudioService playLoadingMagic direct resume error: $err');
+        });
+      });
     } catch (e) {
       debugPrint('AudioService playLoadingMagic error: $e');
     }
