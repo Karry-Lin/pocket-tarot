@@ -15,7 +15,7 @@ env:
 
 jobs:
   verify:
-    runs-on: "karrylin-pocket-tarot"
+    runs-on: "pocket-tarot"
     environment: main
     defaults:
       run:
@@ -49,7 +49,7 @@ jobs:
         run: npm run build
 
   deploy:
-    runs-on: "karrylin-pocket-tarot"
+    runs-on: "pocket-tarot"
     needs: verify
     if: github.event_name != 'pull_request' && (github.ref_name == 'main' || github.ref_name == 'dev')
     environment: main
