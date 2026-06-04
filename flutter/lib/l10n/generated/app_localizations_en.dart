@@ -52,6 +52,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playGamesLogin => 'Play Games sign-in';
 
   @override
+  String get githubLogin => 'GitHub sign-in';
+
+  @override
   String get loginAction => 'Sign in';
 
   @override
@@ -79,6 +82,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get playGamesFailure =>
       'Play Games sign-in failed. Please try again later.';
+
+  @override
+  String get githubFailure => 'GitHub sign-in failed. Please try again later.';
 
   @override
   String get emailLogin => 'Email sign-in';

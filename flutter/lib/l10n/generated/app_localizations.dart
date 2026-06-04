@@ -183,6 +183,12 @@ abstract class AppLocalizations {
   /// **'Play Games sign-in'**
   String get playGamesLogin;
 
+  /// No description provided for @githubLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub sign-in'**
+  String get githubLogin;
+
   /// No description provided for @loginAction.
   ///
   /// In en, this message translates to:
@@ -236,6 +242,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Play Games sign-in failed. Please try again later.'**
   String get playGamesFailure;
+
+  /// No description provided for @githubFailure.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub sign-in failed. Please try again later.'**
+  String get githubFailure;
 
   /// No description provided for @emailLogin.
   ///

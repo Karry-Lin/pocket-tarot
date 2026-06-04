@@ -239,6 +239,10 @@ function resolveProfileEmail(firebaseUser: DecodedFirebaseToken, providerIds: st
     return `playgames+${emailSafeFirebaseUid(firebaseUser.uid)}@pocket-tarot.local`;
   }
 
+  if (providerIds.includes("github.com")) {
+    return `github+${emailSafeFirebaseUid(firebaseUser.uid)}@pocket-tarot.local`;
+  }
+
   throw new ApiError(422, "VALIDATION_ERROR", "Firebase token 缺少 email");
 }
 

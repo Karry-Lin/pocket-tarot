@@ -51,6 +51,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get playGamesLogin => 'Play Games 登入';
 
   @override
+  String get githubLogin => 'GitHub 登入';
+
+  @override
   String get loginAction => '登入';
 
   @override
@@ -76,6 +79,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get playGamesFailure => 'Play Games 登入失敗，請稍後再試';
+
+  @override
+  String get githubFailure => 'GitHub 登入失敗，請稍後再試';
 
   @override
   String get emailLogin => 'Email 登入';
@@ -425,6 +431,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get playGamesLogin => 'Play Games 登入';
 
   @override
+  String get githubLogin => 'GitHub 登入';
+
+  @override
   String get loginAction => '登入';
 
   @override
@@ -450,6 +459,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get playGamesFailure => 'Play Games 登入失敗，請稍後再試';
+
+  @override
+  String get githubFailure => 'GitHub 登入失敗，請稍後再試';
 
   @override
   String get emailLogin => 'Email 登入';

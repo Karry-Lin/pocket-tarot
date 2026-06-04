@@ -81,6 +81,10 @@ class FirebaseAuthService {
     return _toSession(await _firebaseAuth.signInWithPlayGames());
   }
 
+  Future<AuthSession> signInWithGithub() async {
+    return _toSession(await _firebaseAuth.signInWithGithub());
+  }
+
   Future<void> sendPasswordResetEmail(String email) {
     return _firebaseAuth.sendPasswordResetEmail(email);
   }
@@ -151,6 +155,8 @@ abstract interface class FirebaseAuthGateway {
   Future<FirebaseUserSnapshot> signInWithGoogleIdToken(String idToken);
 
   Future<FirebaseUserSnapshot> signInWithPlayGames();
+
+  Future<FirebaseUserSnapshot> signInWithGithub();
 
   Future<void> updateCurrentUserDisplayName(String displayName);
 
@@ -290,6 +296,15 @@ class FirebaseAuthSdkGateway implements FirebaseAuthGateway {
   @override
   Future<FirebaseUserSnapshot> signInWithPlayGames() async {
     final credential = await games_auth.signInWithPlayGames(_auth);
+    return _snapshotCredential(credential);
+  }
+
+  @override
+  Future<FirebaseUserSnapshot> signInWithGithub() async {
+    final provider = firebase.GithubAuthProvider();
+    final credential = kIsWeb
+        ? await _auth.signInWithPopup(provider)
+        : await _auth.signInWithProvider(provider);
     return _snapshotCredential(credential);
   }
 

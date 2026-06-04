@@ -164,6 +164,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                             ),
                             const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              onPressed: _submitting
+                                  ? null
+                                  : _signInWithGithub,
+                              icon: const Text('GH'),
+                              label: Text(
+                                usesChinese
+                                    ? '使用 GitHub 繼續'
+                                    : l10n.githubLogin,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
                             if (usesChinese)
                               ArcanaPrimaryButton(
                                 onPressed: _submitting
@@ -564,6 +576,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _formMessage = null;
         });
         _showErrorSnackBar(context, _playGamesAuthFailureMessage(error, l10n));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
+    }
+  }
+
+  Future<void> _signInWithGithub() async {
+    final l10n = AppLocalizations.of(context)!;
+
+    setState(() {
+      _formError = null;
+      _formMessage = null;
+      _submitting = true;
+    });
+
+    try {
+      await ref.read(authActionsProvider).signInWithGithub();
+      if (mounted) {
+        context.go('/splash');
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _formError = null;
+          _formMessage = null;
+        });
+        _showErrorSnackBar(context, l10n.githubFailure);
       }
     } finally {
       if (mounted) {
