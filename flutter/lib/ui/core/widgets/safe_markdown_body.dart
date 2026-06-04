@@ -13,8 +13,10 @@ class SafeMarkdownBody extends StatelessWidget {
     final locale = Localizations.localeOf(context);
     final isChinese = locale.languageCode == 'zh';
 
+    final localizedData = _localizeMarkdownHeadings(data, isChinese);
+
     return MarkdownBody(
-      data: sanitizeReadingMarkdown(data),
+      data: sanitizeReadingMarkdown(localizedData),
       inlineSyntaxes: [_AdjacentStrongEmphasisSyntax()],
       selectable: false,
       styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
@@ -133,4 +135,47 @@ bool _looksLikeMarkdownTable(String line) {
 
 bool _looksLikeMarkdownTableDivider(String line) {
   return RegExp(r'^\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+$').hasMatch(line);
+}
+
+String _localizeMarkdownHeadings(String markdown, bool toChinese) {
+  var result = markdown;
+  final translations = toChinese
+      ? const {
+          'Card Meaning': '今日牌義',
+          'Daily Reminder': '今日提醒',
+          'Action Advice': '行動建議',
+          'Core Question': '問題核心',
+          'Hidden Influence': '隱藏影響',
+          'Summary': '總結',
+        }
+      : const {
+          '今日牌義': 'Card Meaning',
+          '今日提醒': 'Daily Reminder',
+          '行動建議': 'Action Advice',
+          '問題核心': 'Core Question',
+          '隱藏影響': 'Hidden Influence',
+          '總結': 'Summary',
+        };
+
+  for (final entry in translations.entries) {
+    final key = entry.key;
+    final value = entry.value;
+
+    // 1. Heading style: e.g., "## Key"
+    result = result.replaceAllMapped(
+      RegExp('(#{1,6}\\s*)${RegExp.escape(key)}', caseSensitive: false),
+      (m) => '${m[1]}$value',
+    );
+    // 2. Bold style: e.g., "**Key**"
+    result = result.replaceAllMapped(
+      RegExp('(\\*\\*\\s*)${RegExp.escape(key)}(\\s*\\*\\*)', caseSensitive: false),
+      (m) => '${m[1]}$value${m[2]}',
+    );
+    // 3. Line start style with optional colon/newline: e.g., "Key:", "Key："
+    result = result.replaceAllMapped(
+      RegExp('(^|\\r?\\n)(\\s*[-*+]?\\s*)${RegExp.escape(key)}(\\s*[:：])', multiLine: true, caseSensitive: false),
+      (m) => '${m[1]}${m[2]}$value${m[3]}',
+    );
+  }
+  return result;
 }
