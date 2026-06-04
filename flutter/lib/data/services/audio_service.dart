@@ -92,33 +92,45 @@ class AudioService {
   bool _isMagicPlaying = false;
 
   void updateCachedSettings(LocalSettings settings) {
-    debugPrint('AudioService: updateCachedSettings: bgmEnabled=${settings.bgmEnabled}, sfxEnabled=${settings.sfxEnabled}, _isBgmPlaying=$_isBgmPlaying');
+    debugPrint('AudioService: updateCachedSettings called: bgmEnabled=${settings.bgmEnabled}, sfxEnabled=${settings.sfxEnabled}');
+    
+    // 如果設定無實質變化，則直接返回，避免與 updateBgmState/updateSfxState 產生重複操作衝突
+    if (settings.bgmEnabled == _cachedSettings.bgmEnabled &&
+        settings.sfxEnabled == _cachedSettings.sfxEnabled) {
+      debugPrint('AudioService: updateCachedSettings skipped (no changes)');
+      return;
+    }
+
+    final oldSettings = _cachedSettings;
     _cachedSettings = settings;
-    if (!settings.bgmEnabled) {
-      if (_isBgmPlaying) {
-        debugPrint('AudioService: Stop BGM because bgmEnabled is false');
+
+    // 背景音樂狀態改變時才進行操作
+    if (settings.bgmEnabled != oldSettings.bgmEnabled) {
+      if (!settings.bgmEnabled) {
+        debugPrint('AudioService: Stop BGM because bgmEnabled changed to false');
         _bgmPlayer.stop().catchError((e) {
-          debugPrint('AudioService: Stop BGM error in updateCachedSettings: $e');
+          debugPrint('AudioService: Stop BGM error: $e');
         });
-      }
-    } else if (settings.bgmEnabled && _isBgmPlaying) {
-      if (_bgmPlayer.state != PlayerState.playing) {
-        debugPrint('AudioService: Resume BGM because bgmEnabled is true and _isBgmPlaying is true');
-        _bgmPlayer.play(AssetSource('audio/bgm.mp3')).then((_) {
-          _bgmPlayer.setReleaseMode(ReleaseMode.loop).catchError((e) {
-            debugPrint('AudioService updateCachedSettings setReleaseMode error: $e');
+      } else {
+        if (_isBgmPlaying && _bgmPlayer.state != PlayerState.playing) {
+          debugPrint('AudioService: Resume BGM because bgmEnabled changed to true');
+          _bgmPlayer.play(AssetSource('audio/bgm.mp3')).then((_) {
+            _bgmPlayer.setReleaseMode(ReleaseMode.loop).catchError((e) => debugPrint('BGM loop error: $e'));
+          }).catchError((e) {
+            debugPrint('AudioService: Play BGM error: $e');
           });
-        }).catchError((e) {
-          debugPrint('AudioService: Play BGM error in updateCachedSettings: $e');
-        });
+        }
       }
     }
 
-    if (!settings.sfxEnabled) {
-      debugPrint('AudioService: Stop Magic SFX because sfxEnabled is false');
-      _magicPlayer.stop().catchError((e) {
-        debugPrint('AudioService: Stop Magic SFX error in updateCachedSettings: $e');
-      });
+    // 環境音效狀態改變時才進行操作
+    if (settings.sfxEnabled != oldSettings.sfxEnabled) {
+      if (!settings.sfxEnabled) {
+        debugPrint('AudioService: Stop Magic SFX because sfxEnabled changed to false');
+        _magicPlayer.stop().catchError((e) {
+          debugPrint('AudioService: Stop Magic SFX error: $e');
+        });
+      }
     }
   }
 
@@ -164,6 +176,10 @@ class AudioService {
 
   Future<void> updateBgmState(bool enabled) async {
     debugPrint('AudioService: updateBgmState($enabled) called');
+    if (_cachedSettings.bgmEnabled == enabled) {
+      debugPrint('AudioService: updateBgmState skipped (no changes)');
+      return;
+    }
     _cachedSettings = _cachedSettings.copyWith(bgmEnabled: enabled);
     if (enabled) {
       if (_isBgmPlaying) {
@@ -199,6 +215,10 @@ class AudioService {
 
   void updateSfxState(bool enabled) {
     debugPrint('AudioService: updateSfxState($enabled) called');
+    if (_cachedSettings.sfxEnabled == enabled) {
+      debugPrint('AudioService: updateSfxState skipped (no changes)');
+      return;
+    }
     _cachedSettings = _cachedSettings.copyWith(sfxEnabled: enabled);
     if (!enabled) {
       debugPrint('AudioService: updateSfxState calling stop magic');
