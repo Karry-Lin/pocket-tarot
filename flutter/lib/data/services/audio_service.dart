@@ -60,7 +60,10 @@ class AudioService with WidgetsBindingObserver {
     _ref.read(localSettingsRepositoryProvider.future).then((repository) async {
       final settings = await repository.load();
       debugPrint('AudioService: Loaded initial settings: bgmEnabled=${settings.bgmEnabled}, sfxEnabled=${settings.sfxEnabled}');
-      updateCachedSettings(settings);
+      _cachedSettings = settings;
+      if (settings.bgmEnabled) {
+        playBgm();
+      }
     }).catchError((e) {
       debugPrint('AudioService load initial settings error: $e');
     });
@@ -93,14 +96,19 @@ class AudioService with WidgetsBindingObserver {
       }
     } else if (state == AppLifecycleState.resumed) {
       if (_isBgmPlaying && _cachedSettings.bgmEnabled) {
-        debugPrint('AudioService: App resumed. Restoring BGM playback...');
-        _bgmPlayer.resume().then((_) {
-          if (_bgmPlayer.state != PlayerState.playing) {
-            _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
+        debugPrint('AudioService: App resumed. Scheduling BGM restoration with delay...');
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (_isBgmPlaying && _cachedSettings.bgmEnabled) {
+            debugPrint('AudioService: Restoring BGM playback after delay...');
+            _bgmPlayer.resume().then((_) {
+              if (_bgmPlayer.state != PlayerState.playing) {
+                _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
+              }
+            }).catchError((e) {
+              debugPrint('AudioService resume BGM failed, falling back to play: $e');
+              _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
+            });
           }
-        }).catchError((e) {
-          debugPrint('AudioService resume BGM failed, falling back to play: $e');
-          _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
         });
       }
     }
@@ -183,7 +191,10 @@ class AudioService with WidgetsBindingObserver {
     }
 
     if (_bgmPlayer.state == PlayerState.playing) {
-      debugPrint('AudioService: playBgm() skipped, BGM is already playing');
+      debugPrint('AudioService: playBgm() - BGM is already in playing state. Ensuring playback...');
+      _bgmPlayer.resume().catchError((e) {
+        debugPrint('AudioService playBgm resume error: $e');
+      });
       return;
     }
 
