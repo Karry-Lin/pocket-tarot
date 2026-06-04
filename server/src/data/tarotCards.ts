@@ -94,6 +94,65 @@ export function isValidCardId(cardId: string): boolean {
   return tarotCardMap.has(cardId);
 }
 
+const majorZhNames = [
+  "愚者", "魔術師", "女祭司", "女皇", "皇帝",
+  "教皇", "戀人", "戰車", "力量", "隱士",
+  "命運之輪", "正義", "倒吊人", "死亡", "節制",
+  "惡魔", "高塔", "星星", "月亮", "太陽",
+  "審判", "世界"
+];
+
+const suitZhNames: Record<string, string> = {
+  wands: "權杖",
+  cups: "聖杯",
+  swords: "寶劍",
+  pentacles: "星幣"
+};
+
+const rankZhNames: Record<string, string> = {
+  "01": "王牌",
+  "02": "二",
+  "03": "三",
+  "04": "四",
+  "05": "五",
+  "06": "六",
+  "07": "七",
+  "08": "八",
+  "09": "九",
+  "10": "十",
+  "11": "侍者",
+  "12": "騎士",
+  "13": "皇后",
+  "14": "國王"
+};
+
+export function getCardDisplayName(cardId: string, locale: "zh-TW" | "en"): string {
+  const card = getTarotCard(cardId);
+  if (!card) return cardId;
+
+  if (locale === "en") {
+    return card.name;
+  }
+
+  const parts = cardId.split("-");
+  if (parts.length < 3) return card.name;
+
+  if (parts[0] === "major") {
+    const index = Number.parseInt(parts[1], 10);
+    if (!Number.isNaN(index) && index >= 0 && index < majorZhNames.length) {
+      return majorZhNames[index];
+    }
+  } else {
+    const suit = suitZhNames[parts[0]];
+    const rank = rankZhNames[parts[1]];
+    if (suit && rank) {
+      return `${suit}${rank}`;
+    }
+  }
+
+  return card.name;
+}
+
 function capitalize(value: string) {
   return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }

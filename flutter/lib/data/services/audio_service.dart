@@ -141,12 +141,41 @@ class AudioService with WidgetsBindingObserver {
     }
   }
 
+  void updateBgmState(bool enabled) {
+    debugPrint('AudioService: updateBgmState($enabled) called');
+    _cachedSettings = _cachedSettings.copyWith(bgmEnabled: enabled);
+    if (enabled) {
+      playBgm();
+    } else {
+      stopBgm();
+    }
+  }
+
+  void updateSfxState(bool enabled) {
+    debugPrint('AudioService: updateSfxState($enabled) called');
+    _cachedSettings = _cachedSettings.copyWith(sfxEnabled: enabled);
+    if (!enabled) {
+      debugPrint('AudioService: Stop all SFX because sfxEnabled changed to false');
+      _magicPlayer.stop().catchError((e) {
+        debugPrint('AudioService: updateSfxState stop magic error: $e');
+      });
+      _sfxPlayer.stop().catchError((e) {
+        debugPrint('AudioService: updateSfxState stop sfx error: $e');
+      });
+    }
+  }
+
   Future<void> playBgm() async {
     debugPrint('AudioService: playBgm() called. current bgmEnabled=${_cachedSettings.bgmEnabled}');
     _isBgmPlaying = true;
 
     if (!_cachedSettings.bgmEnabled) {
       debugPrint('AudioService: playBgm() aborted, bgmEnabled is false');
+      return;
+    }
+
+    if (_bgmPlayer.state == PlayerState.playing) {
+      debugPrint('AudioService: playBgm() skipped, BGM is already playing');
       return;
     }
 
@@ -248,19 +277,6 @@ class AudioService with WidgetsBindingObserver {
 
 final audioServiceProvider = Provider<AudioService>((ref) {
   final service = AudioService(ref);
-  
-  ref.listen(localSettingsRepositoryProvider, (previous, next) {
-    next.whenData((repository) async {
-      try {
-        final settings = await repository.load();
-        debugPrint('AudioService: Provider listened to settings change: bgmEnabled=${settings.bgmEnabled}');
-        service.updateCachedSettings(settings);
-      } catch (e) {
-        debugPrint('AudioService: Provider listened settings load error: $e');
-      }
-    });
-  });
-
   ref.onDispose(() => service.dispose());
   return service;
 });
