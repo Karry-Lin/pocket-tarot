@@ -552,20 +552,29 @@ String _socialAuthFailureMessage(Object error, AppLocalizations l10n, String def
 }
 
 String _playGamesAuthFailureMessage(Object error, AppLocalizations l10n) {
-  if (error is PlatformException &&
-      error.code == 'play-games-unregistered-sha1') {
-    final currentSha1 = switch (error.details) {
-      {'currentSha1': final String value} when value.isNotEmpty => value,
-      _ => null,
-    };
+  if (error is PlatformException) {
+    if (error.code == 'play-games-unregistered-sha1') {
+      final currentSha1 = switch (error.details) {
+        {'currentSha1': final String value} when value.isNotEmpty => value,
+        _ => null,
+      };
 
-    if (_usesChineseCardText(l10n)) {
-      final suffix = currentSha1 == null ? '' : '（SHA-1：$currentSha1）';
-      return 'Play Games 設定未完成，請先登記此 APK 簽章$suffix。';
+      if (_usesChineseCardText(l10n)) {
+        final suffix = currentSha1 == null ? '' : '（SHA-1：$currentSha1）';
+        return 'Play Games 設定未完成，請先登記此 APK 簽章$suffix。';
+      }
+
+      final suffix = currentSha1 == null ? '' : ' (SHA-1: $currentSha1)';
+      return 'Play Games setup is incomplete. Register this APK signature$suffix.';
     }
 
-    final suffix = currentSha1 == null ? '' : ' (SHA-1: $currentSha1)';
-    return 'Play Games setup is incomplete. Register this APK signature$suffix.';
+    if (error.code.startsWith('play-games-')) {
+      final detailStr = error.details != null ? ' (${error.details})' : '';
+      if (_usesChineseCardText(l10n)) {
+        return 'Play Games 登入失敗：${error.message ?? error.code}$detailStr';
+      }
+      return 'Play Games sign-in failed: ${error.message ?? error.code}$detailStr';
+    }
   }
 
   return _socialAuthFailureMessage(error, l10n, l10n.playGamesFailure);
