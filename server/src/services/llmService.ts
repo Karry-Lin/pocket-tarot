@@ -31,6 +31,7 @@ export interface LlmService {
   generateDailyReading(context: DailyReadingPromptContext): Promise<string>;
   generateDeepReading(context: DeepReadingPromptContext): Promise<string>;
   generateSummary(context: SummaryPromptContext): Promise<string>;
+  testPrompt(prompt: string): Promise<string>;
 }
 
 export class ChatCompletionsLlmService implements LlmService {
@@ -83,6 +84,10 @@ export class ChatCompletionsLlmService implements LlmService {
       const limit = context.readingType === "daily" ? 40 : 60;
       return fallbackSummary(context.markdownResult, limit);
     }
+  }
+
+  async testPrompt(prompt: string): Promise<string> {
+    return this.complete(prompt, envNumber("LLM_READING_TEMPERATURE", 0.8));
   }
 
   private async complete(prompt: string, temperature: number): Promise<string> {

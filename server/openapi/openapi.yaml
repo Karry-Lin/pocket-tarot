@@ -230,6 +230,33 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HistoryVisibilityResponse"
+  /api/v1/admin/llm/test:
+    post:
+      tags: [Admin]
+      summary: Send an internal test prompt to the configured LLM provider.
+      security:
+        - adminKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLlmTestRequest"
+      responses:
+        "200":
+          description: LLM test completion.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLlmTestResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+        "422":
+          $ref: "#/components/responses/ErrorResponse"
+        "502":
+          $ref: "#/components/responses/ErrorResponse"
+        "504":
+          $ref: "#/components/responses/ErrorResponse"
   /api/v1/admin/users:
     get:
       tags: [Admin]
@@ -479,6 +506,28 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/User"
+    AdminLlmTestRequest:
+      type: object
+      required: [prompt]
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 8000
+    AdminLlmTestResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [content, model]
+          properties:
+            content:
+              type: string
+            model:
+              type:
+                - string
+                - "null"
     Locale:
       type: string
       enum: [zh-TW, en]

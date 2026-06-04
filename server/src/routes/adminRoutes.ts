@@ -34,6 +34,21 @@ export function createAdminRouter(dependencies: AppDependencies) {
     })
   );
 
+  router.post(
+    "/llm/test",
+    asyncHandler(async (request, response) => {
+      const prompt = validatePrompt(request.body?.prompt);
+      const content = await dependencies.llmService.testPrompt(prompt);
+
+      response.json({
+        data: {
+          content,
+          model: process.env.LLM_MODEL ?? null
+        }
+      });
+    })
+  );
+
   router.get(
     "/users/:id",
     asyncHandler(async (request, response) => {
@@ -74,4 +89,21 @@ export function createAdminRouter(dependencies: AppDependencies) {
   );
 
   return router;
+}
+
+function validatePrompt(value: unknown): string {
+  if (typeof value !== "string") {
+    throw new ApiError(422, "VALIDATION_ERROR", "prompt 必須是字串");
+  }
+
+  const prompt = value.trim();
+  if (prompt.length === 0) {
+    throw new ApiError(422, "VALIDATION_ERROR", "prompt 不可為空");
+  }
+
+  if (prompt.length > 8000) {
+    throw new ApiError(422, "VALIDATION_ERROR", "prompt 不可超過 8000 字元");
+  }
+
+  return prompt;
 }
