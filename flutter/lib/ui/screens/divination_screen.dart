@@ -9,6 +9,7 @@ class DivinationScreen extends ConsumerStatefulWidget {
 
 class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   final TextEditingController _questionController = TextEditingController();
+  final FocusNode _questionFocusNode = FocusNode();
   DeepReadingState _deepState = const DeepReadingState.initial();
   RouteInformationProvider? _routeInformationProvider;
   String? _lastPath;
@@ -20,9 +21,16 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadHistory();
       if (mounted) {
-        _routeInformationProvider = GoRouter.of(context).routeInformationProvider;
-        _lastPath = _routeInformationProvider?.value.uri.path;
-        _routeInformationProvider?.addListener(_onRouteChanged);
+        try {
+          _routeInformationProvider = GoRouter.of(context).routeInformationProvider;
+          _lastPath = _routeInformationProvider?.value.uri.path;
+          _routeInformationProvider?.addListener(_onRouteChanged);
+        } catch (_) {
+          // 忽略無 GoRouter 的 context
+        }
+        if (_questionFocusNode.hasFocus) {
+          _questionFocusNode.unfocus();
+        }
       }
     });
   }
@@ -31,6 +39,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
   void dispose() {
     _questionController.removeListener(_onQuestionChanged);
     _questionController.dispose();
+    _questionFocusNode.dispose();
     _routeInformationProvider?.removeListener(_onRouteChanged);
     super.dispose();
   }
@@ -40,6 +49,11 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
     final currentPath = _routeInformationProvider?.value.uri.path;
     if (currentPath == '/divination' && _lastPath != '/divination') {
       _loadHistory();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_questionFocusNode.hasFocus) {
+          _questionFocusNode.unfocus();
+        }
+      });
     }
     _lastPath = currentPath;
   }
@@ -149,6 +163,7 @@ class _DivinationScreenState extends ConsumerState<DivinationScreen> {
                   SizedBox(
                     height: 108,
                     child: TextField(
+                      focusNode: _questionFocusNode,
                       controller: _questionController,
                       expands: true,
                       maxLines: null,

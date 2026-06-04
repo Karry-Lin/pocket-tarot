@@ -86,7 +86,13 @@ class ScreenFrame extends StatelessWidget {
     return _RootBackExitGuard(
       child: AppBackdrop(
         child: SafeArea(
-          child: mainContent,
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onTap: () {
+              FocusManager.instance.primaryFocus?.unfocus();
+            },
+            child: mainContent,
+          ),
         ),
       ),
     );

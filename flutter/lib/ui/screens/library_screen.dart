@@ -9,13 +9,50 @@ class LibraryScreen extends ConsumerStatefulWidget {
 
 class _LibraryScreenState extends ConsumerState<LibraryScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  RouteInformationProvider? _routeInformationProvider;
+  String? _lastPath;
   TarotCategory _category = TarotCategory.all;
   String _query = '';
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        try {
+          _routeInformationProvider = GoRouter.of(context).routeInformationProvider;
+          _lastPath = _routeInformationProvider?.value.uri.path;
+          _routeInformationProvider?.addListener(_onRouteChanged);
+        } catch (_) {
+          // 忽略無 GoRouter 的 context
+        }
+        if (_searchFocusNode.hasFocus) {
+          _searchFocusNode.unfocus();
+        }
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
+    _routeInformationProvider?.removeListener(_onRouteChanged);
     super.dispose();
+  }
+
+  void _onRouteChanged() {
+    if (!mounted) return;
+    final currentPath = _routeInformationProvider?.value.uri.path;
+    if (currentPath == '/library' && _lastPath != '/library') {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_searchFocusNode.hasFocus) {
+          _searchFocusNode.unfocus();
+        }
+      });
+    }
+    _lastPath = currentPath;
   }
 
   Future<void> _handleRefresh() async {
@@ -60,6 +97,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 const SizedBox(height: 8),
               ],
               SearchBar(
+                focusNode: _searchFocusNode,
                 controller: _searchController,
                 onChanged: (value) => setState(() => _query = value),
                 hintText: usesChineseVisual ? '月亮、關係、修復' : l10n.searchCardsLabel,
