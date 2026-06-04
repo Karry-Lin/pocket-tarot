@@ -197,6 +197,14 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
 
   Widget _resultBody(BuildContext context, DeepReading? reading) {
     final l10n = AppLocalizations.of(context)!;
+    final usesChinese = _usesChineseCardText(l10n);
+    final titleStyle = usesChinese
+        ? Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontFamily: 'ChenYuluoyan',
+              fontWeight: FontWeight.w400,
+            )
+        : Theme.of(context).textTheme.titleLarge;
+
     if (reading != null) {
       final sections = reading.markdownResult
           .split(RegExp(
@@ -216,7 +224,7 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
         children: [
           Text(
             l10n.resultQuestionTitle,
-            style: Theme.of(context).textTheme.titleLarge,
+            style: titleStyle,
           ),
           const SizedBox(height: 10),
           Text(
@@ -225,7 +233,7 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
           const _ArcanaSectionDivider(),
           Text(
             l10n.resultCardsTitle,
-            style: Theme.of(context).textTheme.titleLarge,
+            style: titleStyle,
           ),
           const SizedBox(height: 10),
           Text(reading.summary),
@@ -243,14 +251,14 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
       children: [
         Text(
           l10n.resultQuestionTitle,
-          style: Theme.of(context).textTheme.titleLarge,
+          style: titleStyle,
         ),
         const SizedBox(height: 10),
         Text(l10n.fallbackResultQuestion),
         const _ArcanaSectionDivider(),
         Text(
           l10n.resultCardsTitle,
-          style: Theme.of(context).textTheme.titleLarge,
+          style: titleStyle,
         ),
         const SizedBox(height: 10),
         _VisualBulletText(l10n.fallbackResultBulletMoon),
@@ -259,7 +267,7 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
         const _ArcanaSectionDivider(),
         Text(
           l10n.fallbackResultAdviceTitle,
-          style: Theme.of(context).textTheme.titleLarge,
+          style: titleStyle,
         ),
         const SizedBox(height: 10),
         Text(l10n.fallbackResultAdvice),
