@@ -103,7 +103,6 @@ class _AppShellState extends ConsumerState<AppShell> {
 
   @override
   void dispose() {
-    _audioService.stopBgm();
     super.dispose();
   }
 }
