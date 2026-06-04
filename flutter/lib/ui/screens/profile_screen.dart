@@ -9,12 +9,10 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   ProfileState _profileState = const ProfileState.initial();
-  late final AudioService _audioService;
 
   @override
   void initState() {
     super.initState();
-    _audioService = ref.read(audioServiceProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadProfile());
   }
 
@@ -63,7 +61,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (mounted) {
       setState(() => _profileState = controller.state);
     }
-    _audioService.updateBgmState(bgmEnabled);
   }
 
   Future<void> _setSfxEnabled(bool sfxEnabled) async {
@@ -72,7 +69,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (mounted) {
       setState(() => _profileState = controller.state);
     }
-    _audioService.updateSfxState(sfxEnabled);
   }
 
   Future<void> _updateDisplayName(String displayName) async {
