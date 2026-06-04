@@ -104,7 +104,17 @@ class ScreenFrame extends StatelessWidget {
                 EyebrowText(eyebrow!),
                 const SizedBox(height: 6),
               ],
-              Text(title, style: Theme.of(context).textTheme.displaySmall),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  fontSize: title.length > 24
+                      ? 22
+                      : title.length > 16
+                          ? 28
+                          : 34,
+                  height: 1.12,
+                ),
+              ),
             ],
           ),
         ),
@@ -235,14 +245,16 @@ class _CelestialBackdropPainter extends CustomPainter {
 }
 
 class EyebrowText extends StatelessWidget {
-  const EyebrowText(this.text, {super.key});
+  const EyebrowText(this.text, {super.key, this.textAlign});
 
   final String text;
+  final TextAlign? textAlign;
 
   @override
   Widget build(BuildContext context) {
     return Text(
       text.toUpperCase(),
+      textAlign: textAlign,
       style: _bodyTextStyle(
         fontSize: 10,
         fontWeight: FontWeight.w800,
@@ -726,14 +738,20 @@ class ArcanaPrimaryButton extends StatelessWidget {
           onTap: onPressed,
           customBorder: const StadiumBorder(),
           child: Center(
-            child: DefaultTextStyle.merge(
-              style: _bodyTextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w900,
-                color: resolvedForegroundColor,
-                height: 1,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: DefaultTextStyle.merge(
+                  style: _bodyTextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                    color: resolvedForegroundColor,
+                    height: 1,
+                  ),
+                  child: child,
+                ),
               ),
-              child: child,
             ),
           ),
         ),

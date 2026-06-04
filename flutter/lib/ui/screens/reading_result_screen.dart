@@ -105,11 +105,15 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Center(
-                                  child: EyebrowText(
-                                    _usesChineseCardText(l10n)
-                                        ? cardDraw.positionLabel
-                                        : _selectedPositionLabel(cardDraw, l10n),
+                                SizedBox(
+                                  height: 28,
+                                  child: Center(
+                                    child: EyebrowText(
+                                      _usesChineseCardText(l10n)
+                                          ? cardDraw.positionLabel
+                                          : _selectedPositionLabel(cardDraw, l10n),
+                                      textAlign: TextAlign.center,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 6),
@@ -120,26 +124,38 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
                                   fit: BoxFit.contain,
                                 ),
                                 const SizedBox(height: 8),
-                                Text(
-                                  cardName,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: _ArcanaColors.ivory,
+                                SizedBox(
+                                  height: 18,
+                                  child: Center(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        cardName,
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          fontWeight: FontWeight.w800,
+                                          color: _ArcanaColors.ivory,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
                                   ),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 2),
-                                Text(
-                                  _usesChineseCardText(l10n) ? orientation : '($orientation)',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    fontSize: 10,
-                                    color: _ArcanaColors.gold2,
+                                SizedBox(
+                                  height: 14,
+                                  child: Center(
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        _usesChineseCardText(l10n) ? orientation : '($orientation)',
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          fontSize: 10,
+                                          color: _ArcanaColors.gold2,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
                                   ),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             );
@@ -161,7 +177,13 @@ class _ReadingResultScreenState extends ConsumerState<ReadingResultScreen> {
                         height: 50,
                         child: OutlinedButton(
                           onPressed: () => context.go('/divination'),
-                          child: Text(l10n.resultBackToReading),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              child: Text(l10n.resultBackToReading),
+                            ),
+                          ),
                         ),
                       ),
                     ),
