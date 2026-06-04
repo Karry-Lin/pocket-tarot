@@ -84,15 +84,23 @@ class AudioService with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     debugPrint('AudioService: didChangeAppLifecycleState: $state');
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      if (_isBgmPlaying) {
+        debugPrint('AudioService: App paused/inactive. Pausing BGM...');
+        _bgmPlayer.pause().catchError((e) {
+          debugPrint('AudioService pause BGM error: $e');
+        });
+      }
+    } else if (state == AppLifecycleState.resumed) {
       if (_isBgmPlaying && _cachedSettings.bgmEnabled) {
         debugPrint('AudioService: App resumed. Restoring BGM playback...');
-        _bgmPlayer.play(AssetSource('audio/bgm.mp3')).then((_) {
-          _bgmPlayer.setReleaseMode(ReleaseMode.loop).catchError((e) {
-            debugPrint('AudioService resume playBgm setReleaseMode error: $e');
-          });
+        _bgmPlayer.resume().then((_) {
+          if (_bgmPlayer.state != PlayerState.playing) {
+            _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
+          }
         }).catchError((e) {
-          debugPrint('AudioService resume playBgm error: $e');
+          debugPrint('AudioService resume BGM failed, falling back to play: $e');
+          _bgmPlayer.play(AssetSource('audio/bgm.mp3'));
         });
       }
     }
