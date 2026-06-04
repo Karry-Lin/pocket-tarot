@@ -3,6 +3,7 @@ import type { TarotCard } from "../data/tarotCards.js";
 import type { WeatherSnapshot } from "../models/DailyReading.js";
 import type { CardDraw } from "./cardDrawService.js";
 import type { TimeContext } from "./timeContextService.js";
+import { fallbackSummary } from "./markdownService.js";
 
 export type Locale = "zh-TW" | "en";
 type PromptCard = TarotCard & CardDraw;
@@ -34,48 +35,70 @@ export interface LlmService {
 
 export class ChatCompletionsLlmService implements LlmService {
   async generateDailyReading(context: DailyReadingPromptContext): Promise<string> {
-    const maxAttempts = 3;
-    let lastContent = "";
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const content = await this.complete(
-        buildDailyReadingPrompt(context),
-        envNumber("LLM_READING_TEMPERATURE", 0.8)
-      );
-      if (isValidDailyReadingFormat(content, context.locale)) {
-        return content;
+    try {
+      const maxAttempts = 3;
+      let lastContent = "";
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const content = await this.complete(
+          buildDailyReadingPrompt(context),
+          envNumber("LLM_READING_TEMPERATURE", 0.8)
+        );
+        if (isValidDailyReadingFormat(content, context.locale)) {
+          return content;
+        }
+        lastContent = content;
+        if (attempt < maxAttempts) {
+          console.warn(`Daily reading LLM format mismatch (attempt ${attempt}/${maxAttempts}). Retrying...`);
+        }
       }
-      lastContent = content;
-      if (attempt < maxAttempts) {
-        console.warn(`Daily reading LLM format mismatch (attempt ${attempt}/${maxAttempts}). Retrying...`);
+      if (isValidDailyReadingFormat(lastContent, context.locale)) {
+        return lastContent;
       }
+      throw new Error("LLM response format invalid after max attempts");
+    } catch (error) {
+      console.error("generateDailyReading failed, using local mock fallback:", error);
+      return getDailyReadingFallback(context);
     }
-    return lastContent;
   }
 
   async generateDeepReading(context: DeepReadingPromptContext): Promise<string> {
-    const maxAttempts = 3;
-    let lastContent = "";
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      const content = await this.complete(
-        buildDeepReadingPrompt(context),
-        envNumber("LLM_READING_TEMPERATURE", 0.8)
-      );
-      if (isValidDeepReadingFormat(content, context.locale)) {
-        return content;
+    try {
+      const maxAttempts = 3;
+      let lastContent = "";
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        const content = await this.complete(
+          buildDeepReadingPrompt(context),
+          envNumber("LLM_READING_TEMPERATURE", 0.8)
+        );
+        if (isValidDeepReadingFormat(content, context.locale)) {
+          return content;
+        }
+        lastContent = content;
+        if (attempt < maxAttempts) {
+          console.warn(`Deep reading LLM format mismatch (attempt ${attempt}/${maxAttempts}). Retrying...`);
+        }
       }
-      lastContent = content;
-      if (attempt < maxAttempts) {
-        console.warn(`Deep reading LLM format mismatch (attempt ${attempt}/${maxAttempts}). Retrying...`);
+      if (isValidDeepReadingFormat(lastContent, context.locale)) {
+        return lastContent;
       }
+      throw new Error("LLM response format invalid after max attempts");
+    } catch (error) {
+      console.error("generateDeepReading failed, using local mock fallback:", error);
+      return getDeepReadingFallback(context);
     }
-    return lastContent;
   }
 
   async generateSummary(context: SummaryPromptContext): Promise<string> {
-    return this.complete(
-      buildSummaryPrompt(context),
-      envNumber("LLM_SUMMARY_TEMPERATURE", 0.3)
-    );
+    try {
+      return await this.complete(
+        buildSummaryPrompt(context),
+        envNumber("LLM_SUMMARY_TEMPERATURE", 0.3)
+      );
+    } catch (error) {
+      console.error("generateSummary failed, using fallbackSummary:", error);
+      const limit = context.readingType === "daily" ? 40 : 60;
+      return fallbackSummary(context.markdownResult, limit);
+    }
   }
 
   private async complete(prompt: string, temperature: number): Promise<string> {
@@ -301,4 +324,27 @@ export function isValidDeepReadingFormat(content: string, locale: Locale): boole
       : [/##\s*Core Question/i, /##\s*Hidden Influence/i, /##\s*Action Advice/i, /##\s*Summary/i];
 
   return headers.every((regex) => regex.test(content));
+}
+
+function getDailyReadingFallback(context: DailyReadingPromptContext): string {
+  const isZh = context.locale === "zh-TW";
+  const cardName = context.card.zhName || context.card.cardId;
+  const orientationStr = context.card.orientation === "upright" ? (isZh ? "正位" : "Upright") : (isZh ? "逆位" : "Reversed");
+  
+  if (isZh) {
+    return `## 今日牌義\n今日你抽到了 **${cardName} (${orientationStr})**。這張牌代表著此時此刻你所面臨的核心能量。請細心感受卡牌帶給你的直覺啟發。\n\n## 今日提醒\n在今天的日常生活中，請保持覺察，注意周遭細微的變化。這張牌提醒你，一切外在的顯現都是內在心境的投射。\n\n## 行動建議\n建議你今天多給自己一些安靜的時間，傾聽內心的聲音。在做決定前，深呼吸，順應直覺的引導前行。`;
+  } else {
+    return `## Card Meaning\nToday you drew **${context.card.enName || cardName} (${orientationStr})**. This card represents the core energy surrounding you right now. Listen closely to the intuitive insights it offers.\n\n## Daily Reminder\nKeep an open heart and stay aware of your environment today. Remember that external events often mirror your inner state.\n\n## Action Advice\nWe suggest taking some quiet time for reflection today. Breathe deeply, trust your intuition, and proceed with mindful steps.`;
+  }
+}
+
+function getDeepReadingFallback(context: DeepReadingPromptContext): string {
+  const isZh = context.locale === "zh-TW";
+  const cardNames = context.selectedCards.map(c => `${isZh ? c.zhName : c.enName} (${c.orientation === "upright" ? (isZh ? "正位" : "Upright") : (isZh ? "逆位" : "Reversed")})`).join(", ");
+
+  if (isZh) {
+    return `## 問題核心\n關於你的提問「${context.question || "未指定問題的整體狀態占卜"}」，目前核心點在於你選取的第一張牌所對應的象徵。這指引你重新檢視內在的真實想法。\n\n## 隱藏影響\n你所選取的第二張牌揭示了潛意識中的隱藏影響。有些你未曾察覺的因素正在暗中作用，影響著你的決策與感受。\n\n## 行動建議\n第三張牌為你提供了實用的行動建議。建議你接納當下的現狀，放手不必要的執著，並採取主動與溫和的溝通方式。\n\n## 總結\n綜合以上卡牌（${cardNames}），這次占卜的核心啟示是：保持平靜與信任，所有的經歷都是心靈成長的寶貴資產。`;
+  } else {
+    return `## Core Question\nRegarding your question "${context.question || "General Reading"}", the core issue is represented by your first card. It guides you to examine your true thoughts.\n\n## Hidden Influence\nYour second card reveals the hidden influences in your subconscious. Unseen forces or feelings are currently shaping your decisions.\n\n## Action Advice\nYour third card offers practical advice. We recommend accepting the current situation, letting go of unnecessary attachments, and communicating gently.\n\n## Summary\nCombining these cards (${cardNames}), the final guidance is: stay calm and trust the process. Every experience is a valuable lesson for your spiritual growth.`;
+  }
 }
