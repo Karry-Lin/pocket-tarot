@@ -29,9 +29,9 @@ class AudioService {
     }).catchError((e) {
       debugPrint('AudioService: _bgmPlayer setReleaseMode error: $e');
     });
-    // 將背景音樂音量調低為 0.15，維持溫和平靜的背景冥想氛圍
-    _bgmPlayer.setVolume(0.15).then((_) {
-      debugPrint('AudioService: _bgmPlayer volume set to 0.15');
+    // 將背景音樂音量調為 0.35，維持溫和平靜但清晰可辨的背景冥想氛圍
+    _bgmPlayer.setVolume(0.35).then((_) {
+      debugPrint('AudioService: _bgmPlayer volume set to 0.35');
     }).catchError((e) {
       debugPrint('AudioService: _bgmPlayer setVolume error: $e');
     });
@@ -48,6 +48,12 @@ class AudioService {
       debugPrint('AudioService: _magicPlayer setVolume error: $e');
     });
 
+    _sfxPlayer.setVolume(1.0).then((_) {
+      debugPrint('AudioService: _sfxPlayer volume set to 1.0');
+    }).catchError((e) {
+      debugPrint('AudioService: _sfxPlayer setVolume error: $e');
+    });
+
     // 非同步載入初始設定
     _ref.read(localSettingsRepositoryProvider.future).then((repository) async {
       final settings = await repository.load();
@@ -61,6 +67,7 @@ class AudioService {
   final Ref _ref;
   final AudioPlayer _bgmPlayer = AudioPlayer();
   final AudioPlayer _magicPlayer = AudioPlayer();
+  final AudioPlayer _sfxPlayer = AudioPlayer();
 
   LocalSettings _cachedSettings = const LocalSettings(
     localeMode: LocaleMode.system,
@@ -177,14 +184,9 @@ class AudioService {
     }
 
     try {
-      final player = AudioPlayer();
-      player.setVolume(1.0);
-      debugPrint('AudioService: playCardDraw calling play');
-      await player.play(AssetSource('audio/card_draw.mp3'));
-      player.onPlayerComplete.listen((_) {
-        debugPrint('AudioService: playCardDraw complete, disposing player');
-        player.dispose();
-      });
+      debugPrint('AudioService: playCardDraw calling play on persistent player');
+      await _sfxPlayer.stop();
+      await _sfxPlayer.play(AssetSource('audio/card_draw.mp3'));
     } catch (e) {
       debugPrint('AudioService playCardDraw error: $e');
     }
@@ -225,6 +227,7 @@ class AudioService {
     debugPrint('AudioService: dispose() called');
     _bgmPlayer.dispose();
     _magicPlayer.dispose();
+    _sfxPlayer.dispose();
   }
 }
 
