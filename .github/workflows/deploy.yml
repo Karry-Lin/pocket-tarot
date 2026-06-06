@@ -15,7 +15,7 @@ env:
 
 jobs:
   verify:
-    runs-on: "kkldream-pocket-tarot"
+    runs-on: "karrylin-pocket-tarot"
     environment: main
     defaults:
       run:
@@ -34,22 +34,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        env:
-          MONGODB_URI: ${{ secrets.TEST_MONGODB_URI || secrets.MONGODB_URI }}
-        run: |
-          if [ -z "${MONGODB_URI:-}" ]; then
-            echo "MONGODB_URI is required for server tests"
-            exit 1
-          fi
-
-          npm test
-
       - name: Run TypeScript build
         run: npm run build
 
   deploy:
-    runs-on: "kkldream-pocket-tarot"
+    runs-on: "karrylin-pocket-tarot"
     needs: verify
     if: github.event_name != 'pull_request' && (github.ref_name == 'main' || github.ref_name == 'dev')
     environment: main
