@@ -124,14 +124,35 @@ jobs:
         working-directory: ${{ env.FLUTTER_DIR }}
         run: flutter pub get
 
+      - name: Tune Gradle for CI runner
+        if: steps.release_state.outputs.exists != 'true'
+        working-directory: ${{ env.FLUTTER_DIR }}
+        run: |
+          set -euo pipefail
+
+          {
+            echo "org.gradle.jvmargs=-Xmx768m -XX:MaxMetaspaceSize=384m -XX:ReservedCodeCacheSize=128m -XX:+HeapDumpOnOutOfMemoryError"
+            echo "org.gradle.daemon=false"
+            echo "org.gradle.parallel=false"
+            echo "org.gradle.workers.max=1"
+            grep -vE '^(org\.gradle\.jvmargs|org\.gradle\.daemon|org\.gradle\.parallel|org\.gradle\.workers\.max)=' android/gradle.properties
+          } > android/gradle.properties.ci
+
+          mv android/gradle.properties.ci android/gradle.properties
+          cat android/gradle.properties
+
       - name: Build release APK
         if: steps.release_state.outputs.exists != 'true'
         working-directory: ${{ env.FLUTTER_DIR }}
         run: |
           set -euo pipefail
 
+          free -h
+          df -h
+
           flutter build apk \
             --release \
+            --no-pub \
             --dart-define=API_BASE_URL="${API_BASE_URL}"
 
       - name: Prepare release assets
