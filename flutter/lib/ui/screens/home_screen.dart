@@ -153,6 +153,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         usesChinese: usesChinese,
         l10n: l10n,
       ),
+      titleStyle: displayName != null && displayName.trim().isNotEmpty
+          ? Theme.of(context).textTheme.displaySmall?.copyWith(
+                fontFamily: 'Lora',
+              )
+          : null,
       eyebrow: loaded ? 'Daily result' : 'Daily ritual',
       scrollable: scrollable,
       onRefresh: _handleRefresh,

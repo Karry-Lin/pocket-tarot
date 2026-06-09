@@ -9,6 +9,7 @@ class ScreenFrame extends StatelessWidget {
     this.trailing,
     this.scrollable = true,
     this.onRefresh,
+    this.titleStyle,
   });
 
   final String title;
@@ -17,6 +18,7 @@ class ScreenFrame extends StatelessWidget {
   final Widget child;
   final bool scrollable;
   final Future<void> Function()? onRefresh;
+  final TextStyle? titleStyle;
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +114,7 @@ class ScreenFrame extends StatelessWidget {
               ],
               Text(
                 title,
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                style: (titleStyle ?? Theme.of(context).textTheme.displaySmall)?.copyWith(
                   fontSize: title.length > 24
                       ? 22
                       : title.length > 16
