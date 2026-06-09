@@ -1,0 +1,179 @@
+name: Build and Publish Android Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_DIR: flutter
+  API_BASE_URL: https://tarot-api.julojulo.com/api/v1
+
+jobs:
+  release:
+    name: Build APK and publish GitHub Release
+    runs-on: "karrylin-pocket-tarot"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare release metadata
+        id: release
+        run: |
+          set -euo pipefail
+
+          SHORT_SHA="${GITHUB_SHA::7}"
+          APP_VERSION=$(sed -nE 's/^version:[[:space:]]*([^[:space:]]+).*/\1/p' "${FLUTTER_DIR}/pubspec.yaml")
+          ASSET_NAME="pocket-tarot-${SHORT_SHA}-release.apk"
+
+          {
+            echo "short_sha=${SHORT_SHA}"
+            echo "app_version=${APP_VERSION}"
+            echo "tag_name=${SHORT_SHA}"
+            echo "release_name=${SHORT_SHA}"
+            echo "asset_name=${ASSET_NAME}"
+          } >> "${GITHUB_OUTPUT}"
+
+          echo "Preparing release ${SHORT_SHA}"
+
+      - name: Check whether release already exists
+        id: release_state
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = '${{ steps.release.outputs.tag_name }}';
+
+            try {
+              await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag,
+              });
+              core.setOutput('exists', 'true');
+              core.notice(`Release ${tag} already exists; skipping build and publish.`);
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+              core.setOutput('exists', 'false');
+            }
+
+      - name: Setup Java
+        if: steps.release_state.outputs.exists != 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Setup Flutter
+        if: steps.release_state.outputs.exists != 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.41.7"
+          cache: true
+
+      - name: Install Flutter dependencies
+        if: steps.release_state.outputs.exists != 'true'
+        working-directory: ${{ env.FLUTTER_DIR }}
+        run: flutter pub get
+
+      - name: Build release APK
+        if: steps.release_state.outputs.exists != 'true'
+        working-directory: ${{ env.FLUTTER_DIR }}
+        run: |
+          set -euo pipefail
+
+          flutter build apk \
+            --release \
+            --dart-define=API_BASE_URL="${API_BASE_URL}"
+
+      - name: Prepare release assets
+        if: steps.release_state.outputs.exists != 'true'
+        id: assets
+        working-directory: ${{ env.FLUTTER_DIR }}
+        env:
+          ASSET_NAME: ${{ steps.release.outputs.asset_name }}
+        run: |
+          set -euo pipefail
+
+          APK_DIR="build/app/outputs/flutter-apk"
+          APK_PATH="${APK_DIR}/${ASSET_NAME}"
+          CHECKSUM_PATH="${APK_PATH}.sha256"
+
+          cp "${APK_DIR}/app-release.apk" "${APK_PATH}"
+          sha256sum "${APK_PATH}" | sed "s#  .*#  ${ASSET_NAME}#" > "${CHECKSUM_PATH}"
+
+          {
+            echo "apk_path=${FLUTTER_DIR}/${APK_PATH}"
+            echo "checksum_path=${FLUTTER_DIR}/${CHECKSUM_PATH}"
+            echo "checksum=$(cut -d ' ' -f 1 "${CHECKSUM_PATH}")"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Create GitHub Release
+        if: steps.release_state.outputs.exists != 'true'
+        uses: actions/github-script@v7
+        env:
+          TAG_NAME: ${{ steps.release.outputs.tag_name }}
+          RELEASE_NAME: ${{ steps.release.outputs.release_name }}
+          SHORT_SHA: ${{ steps.release.outputs.short_sha }}
+          APP_VERSION: ${{ steps.release.outputs.app_version }}
+          APK_PATH: ${{ steps.assets.outputs.apk_path }}
+          CHECKSUM_PATH: ${{ steps.assets.outputs.checksum_path }}
+          CHECKSUM: ${{ steps.assets.outputs.checksum }}
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const body = [
+              'Android release built from main.',
+              '',
+              `- Release: ${process.env.SHORT_SHA}`,
+              `- App version: ${process.env.APP_VERSION || 'unknown'}`,
+              `- API base URL: ${process.env.API_BASE_URL}`,
+              `- Commit: ${context.sha}`,
+              `- SHA256: ${process.env.CHECKSUM}`,
+            ].join('\n');
+
+            const { data: release } = await github.rest.repos.createRelease({
+              owner,
+              repo,
+              tag_name: process.env.TAG_NAME,
+              target_commitish: context.sha,
+              name: process.env.RELEASE_NAME,
+              body,
+              draft: false,
+              prerelease: false,
+            });
+
+            for (const assetPath of [process.env.APK_PATH, process.env.CHECKSUM_PATH]) {
+              const data = fs.readFileSync(assetPath);
+              const name = path.basename(assetPath);
+              const contentType = name.endsWith('.apk') ? 'application/vnd.android.package-archive' : 'text/plain';
+
+              await github.rest.repos.uploadReleaseAsset({
+                owner,
+                repo,
+                release_id: release.id,
+                name,
+                data,
+                headers: {
+                  'content-type': contentType,
+                  'content-length': data.length,
+                },
+              });
+            }
