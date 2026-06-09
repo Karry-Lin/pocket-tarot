@@ -68,6 +68,23 @@ jobs:
               core.setOutput('exists', 'false');
             }
 
+      - name: Install runner dependencies
+        if: steps.release_state.outputs.exists != 'true'
+        run: |
+          set -euo pipefail
+
+          if command -v xz >/dev/null 2>&1; then
+            exit 0
+          fi
+
+          if ! command -v apt-get >/dev/null 2>&1; then
+            echo "::error::xz is required to extract Flutter SDK archives, but apt-get is unavailable on this runner."
+            exit 1
+          fi
+
+          sudo apt-get update
+          sudo apt-get install -y xz-utils
+
       - name: Setup Java
         if: steps.release_state.outputs.exists != 'true'
         uses: actions/setup-java@v4
