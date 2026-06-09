@@ -485,6 +485,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
       if (mounted) {
         context.go('/splash');
       }
+    } on AccountLinkingRequired catch (linking) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      await _handleAccountLinking(linking, l10n);
     } catch (error, stackTrace) {
       debugPrint('GitHub Sign-in failed with error: $error\n$stackTrace');
       if (mounted) {
@@ -499,6 +503,118 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with WidgetsBindingOb
         setState(() => _submitting = false);
       }
     }
+  }
+
+  Future<void> _handleAccountLinking(
+    AccountLinkingRequired linking,
+    AppLocalizations l10n,
+  ) async {
+    final usesChinese = _usesChineseCardText(l10n);
+
+    final method = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => _AccountLinkingSheet(
+        email: linking.email,
+        usesChinese: usesChinese,
+      ),
+    );
+
+    if (method == null || !mounted) return;
+
+    setState(() => _submitting = true);
+
+    try {
+      final authActions = ref.read(authActionsProvider);
+      if (method == 'google') {
+        await authActions.signInWithGoogle();
+      } else if (method == 'email') {
+        final password = await _showPasswordInputDialog(linking.email, usesChinese);
+        if (password == null || !mounted) {
+          setState(() => _submitting = false);
+          return;
+        }
+        await authActions.signInWithEmail(
+          email: linking.email,
+          password: password,
+        );
+      }
+
+      await authActions.linkPendingCredential(linking.pendingCredential);
+
+      if (mounted) {
+        context.go('/splash');
+      }
+    } catch (error) {
+      if (mounted) {
+        _showErrorSnackBar(
+          context,
+          usesChinese ? '驗證失敗，請確認帳號密碼後重試。' : 'Verification failed. Please check your credentials.',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
+    }
+  }
+
+  Future<String?> _showPasswordInputDialog(String email, bool usesChinese) async {
+    final passwordController = TextEditingController();
+    final result = await showDialog<String>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          usesChinese ? '輸入密碼' : 'Enter Password',
+          style: _bodyTextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            color: _ArcanaColors.ivory,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              usesChinese
+                  ? '請輸入 $email 的密碼以連結 GitHub。'
+                  : 'Enter the password for $email to link GitHub.',
+              style: _bodyTextStyle(fontSize: 13, color: _ArcanaColors.muted),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              autofocus: true,
+              style: Theme.of(dialogContext)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: _ArcanaColors.ivory),
+              decoration: InputDecoration(
+                hintText: usesChinese ? '密碼' : 'Password',
+              ),
+              onSubmitted: (value) => Navigator.of(dialogContext).pop(value),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(null),
+            child: Text(usesChinese ? '取消' : 'Cancel'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(passwordController.text),
+            child: Text(usesChinese ? '確認' : 'Confirm'),
+          ),
+        ],
+      ),
+    );
+    passwordController.dispose();
+    return result;
   }
 
   void _showErrorSnackBar(BuildContext context, String message) {
@@ -578,6 +694,72 @@ String _playGamesAuthFailureMessage(Object error, AppLocalizations l10n) {
   }
 
   return _socialAuthFailureMessage(error, l10n, l10n.playGamesFailure);
+}
+class _AccountLinkingSheet extends StatelessWidget {
+  const _AccountLinkingSheet({
+    required this.email,
+    required this.usesChinese,
+  });
+
+  final String email;
+  final bool usesChinese;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+      decoration: BoxDecoration(
+        color: _ArcanaColors.ink2,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _ArcanaColors.gold.withValues(alpha: 0.3)),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              usesChinese ? '連結 GitHub 帳號' : 'Link GitHub Account',
+              style: _bodyTextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: _ArcanaColors.ivory,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              usesChinese
+                  ? '$email 已經註冊過了。\n請選擇原本的登入方式來驗證身份，驗證後會自動連結 GitHub。'
+                  : '$email is already registered.\nPlease verify with your original sign-in method to link GitHub.',
+              style: _bodyTextStyle(fontSize: 13, color: _ArcanaColors.muted),
+            ),
+            const SizedBox(height: 22),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).pop('google'),
+              icon: const FaIcon(FontAwesomeIcons.google, size: 18),
+              label: Text(
+                usesChinese ? '用 Google 驗證' : 'Verify with Google',
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).pop('email'),
+              icon: const Icon(Icons.email_outlined, size: 20),
+              label: Text(
+                usesChinese ? '用 Email 密碼驗證' : 'Verify with Email & Password',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: Text(usesChinese ? '取消' : 'Cancel'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _LoginLanguageButton extends StatelessWidget {

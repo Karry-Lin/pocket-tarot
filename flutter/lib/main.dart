@@ -20,6 +20,7 @@ import 'package:pocket_tarot/domain/use_cases/profile_controller.dart';
 import 'package:pocket_tarot/l10n/generated/app_localizations.dart';
 import 'package:pocket_tarot/ui/core/widgets/safe_markdown_body.dart';
 import 'package:pocket_tarot/data/services/audio_service.dart';
+import 'package:pocket_tarot/data/services/firebase_auth_service.dart';
 
 
 part 'ui/widgets/common_widgets.dart';

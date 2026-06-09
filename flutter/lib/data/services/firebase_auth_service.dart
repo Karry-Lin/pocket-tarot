@@ -82,7 +82,27 @@ class FirebaseAuthService {
   }
 
   Future<AuthSession> signInWithGithub() async {
-    return _toSession(await _firebaseAuth.signInWithGithub());
+    try {
+      return _toSession(await _firebaseAuth.signInWithGithub());
+    } on firebase.FirebaseAuthException catch (e) {
+      if (e.code != 'account-exists-with-different-credential' ||
+          e.credential == null) {
+        rethrow;
+      }
+
+      throw AccountLinkingRequired(
+        email: e.email ?? '',
+        pendingCredential: e.credential!,
+      );
+    }
+  }
+
+  Future<AuthSession> linkPendingCredential(
+    firebase.AuthCredential credential,
+  ) async {
+    return _toSession(
+      await _firebaseAuth.linkCurrentUserWithCredential(credential),
+    );
   }
 
   Future<void> sendPasswordResetEmail(String email) {
@@ -157,6 +177,10 @@ abstract interface class FirebaseAuthGateway {
   Future<FirebaseUserSnapshot> signInWithPlayGames();
 
   Future<FirebaseUserSnapshot> signInWithGithub();
+
+  Future<FirebaseUserSnapshot> linkCurrentUserWithCredential(
+    firebase.AuthCredential credential,
+  );
 
   Future<void> updateCurrentUserDisplayName(String displayName);
 
@@ -309,6 +333,15 @@ class FirebaseAuthSdkGateway implements FirebaseAuthGateway {
   }
 
   @override
+  Future<FirebaseUserSnapshot> linkCurrentUserWithCredential(
+    firebase.AuthCredential credential,
+  ) async {
+    final user = _requireCurrentUser();
+    final linked = await user.linkWithCredential(credential);
+    return _snapshotCredential(linked);
+  }
+
+  @override
   Future<void> signOut() {
     return _auth.signOut();
   }
@@ -377,4 +410,14 @@ class GoogleSignInSdkGateway implements GoogleSignInGateway {
   Future<void> signOut() {
     return GoogleSignIn.instance.signOut();
   }
+}
+
+class AccountLinkingRequired implements Exception {
+  const AccountLinkingRequired({
+    required this.email,
+    required this.pendingCredential,
+  });
+
+  final String email;
+  final firebase.AuthCredential pendingCredential;
 }

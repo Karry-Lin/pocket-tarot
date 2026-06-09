@@ -1,4 +1,5 @@
 import 'dart:ui' show Locale, PlatformDispatcher;
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/foundation.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -74,6 +75,7 @@ final authActionsProvider = Provider<AuthActions>((ref) {
       signInWithGoogle: () async {},
       signInWithPlayGames: () async {},
       signInWithGithub: () async {},
+      linkPendingCredential: (_) async {},
       sendPasswordResetEmail: (_) async {},
       signOut: () async {},
     );
@@ -108,6 +110,10 @@ final authActionsProvider = Provider<AuthActions>((ref) {
     signInWithGithub: () async {
       final service = await authService();
       await service.signInWithGithub();
+    },
+    linkPendingCredential: (credential) async {
+      final service = await authService();
+      await service.linkPendingCredential(credential);
     },
     sendPasswordResetEmail: (email) async {
       final service = await authService();
@@ -368,6 +374,7 @@ class AuthActions {
     required this.signInWithGoogle,
     required this.signInWithPlayGames,
     required this.signInWithGithub,
+    required this.linkPendingCredential,
     required this.sendPasswordResetEmail,
     required this.signOut,
   });
@@ -383,6 +390,8 @@ class AuthActions {
   final Future<void> Function() signInWithGoogle;
   final Future<void> Function() signInWithPlayGames;
   final Future<void> Function() signInWithGithub;
+  final Future<void> Function(firebase.AuthCredential credential)
+      linkPendingCredential;
   final Future<void> Function(String email) sendPasswordResetEmail;
   final Future<void> Function() signOut;
 }
